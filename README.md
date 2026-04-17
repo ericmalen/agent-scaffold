@@ -2,8 +2,8 @@
 
 ## What this is
 
-A Copilot customization scaffold for internal use. Ships the folder structure,
-conventions, annotated `_example` files, and four meta-skills
+A scaffold for adding GitHub Copilot to internal repos. Ships the folder
+structure, conventions, annotated `_example` files, and four meta-skills
 (`create-skill`, `create-agent`, `create-prompt`, `create-instruction`) that
 scaffold new assets to match the conventions.
 
@@ -16,7 +16,7 @@ but is not shipped here.
 
 ## Who it's for
 
-Developers adding GitHub Copilot customization to a project for the first time.
+Developers setting up GitHub Copilot in a project for the first time.
 
 ## Quick start
 
@@ -55,7 +55,7 @@ Each asset-type folder has a `README.md` explaining the pattern and an
 
 - [`docs/conventions.md`](./docs/conventions.md) — the do's and don'ts.
 - [`docs/copilot-customization-reference.md`](./docs/copilot-customization-reference.md)
-  — authoritative reference for Copilot customization concepts.
+  — authoritative reference for Copilot concepts.
 - [`docs/built-in-reference.md`](./docs/built-in-reference.md) — what's
   available out of the box with VS Code + Copilot.
 - [`docs/workflow-tips.md`](./docs/workflow-tips.md) — practical tips for
