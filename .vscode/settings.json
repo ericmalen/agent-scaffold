@@ -1,0 +1,30 @@
+{
+  // ===== Instructions =====
+  // This scaffold ships .github/copilot-instructions.md as the repo-wide
+  // instructions file. The two AGENTS.md flags below leave Copilot able to
+  // also discover an AGENTS.md if one is added later; remove if not wanted.
+  "chat.useAgentsMdFile": true,
+  "chat.useNestedAgentsMdFiles": true,
+  // Load path-scoped instructions whose applyTo glob matches the active file.
+  "chat.includeApplyingInstructions": true,
+  // Follow Markdown links in instructions (eager-load). Agent ## Documents
+  // sections use plain-text paths specifically to bypass this.
+  "chat.includeReferencedInstructions": true,
+
+  // ===== Monorepo discovery =====
+  // Discover customizations from parent folders up to the repo root so that a
+  // package-level .github/ is picked up in addition to the root .github/.
+  "chat.useCustomizationsInParentRepositories": true,
+
+  // ===== Agents / skills =====
+  // Allow custom agents to be invoked as subagents from other agents.
+  "chat.customAgentInSubagent.enabled": true,
+  // Enable pre/postRun hooks defined in a specific agent's frontmatter.
+  "chat.useCustomAgentHooks": true,
+
+  // ===== Terminal auto-approve (use cautiously) =====
+  // Explicitly disabled so users opt in consciously. Leave the allow-list
+  // empty until specific commands are reviewed and added.
+  "chat.tools.terminal.enableAutoApprove": false,
+  "chat.tools.terminal.autoApprove": []
+}
