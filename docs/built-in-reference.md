@@ -5,9 +5,8 @@ required. This is the "what do I get for free" doc. For customization (custom
 instructions, prompts, agents, skills), see
 [`copilot-customization-reference.md`](./copilot-customization-reference.md).
 
-Reflects the April 2026 state of VS Code (~v1.115). VS Code releases weekly, so
-treat specifics as a starting point and verify against the official docs if
-something looks off.
+VS Code releases weekly, so treat specifics as a starting point and verify
+against the official docs if something looks off.
 
 ---
 
@@ -19,7 +18,7 @@ CLI, some in both.
 
 | Command                                | What it does                                                                                                         | Where                  |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `/init`                                | Generate a repo-wide `copilot-instructions.md` tailored to the codebase                                              | VS Code, Visual Studio |
+| `/init`                                | Generate a repo-wide `.github/copilot-instructions.md` tailored to the codebase. This scaffold uses `AGENTS.md` instead — move the generated content into `AGENTS.md` and delete the generated file. | VS Code, Visual Studio |
 | `/create-instruction`                  | Generate a path-specific `.instructions.md` file                                                                     | VS Code                |
 | `/create-prompt`                       | Generate a `.prompt.md` file from a description                                                                      | VS Code                |
 | `/create-skill`                        | Generate a skill folder with `SKILL.md`                                                                              | VS Code                |

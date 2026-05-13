@@ -1,4 +1,5 @@
 ---
+description: "API/server layer conventions — controller/service/repository layering, validation, error handling"
 # applyTo supports glob patterns, comma-separated for multiple paths.
 applyTo: "src/api/**,src/server/**"
 ---
@@ -6,7 +7,7 @@ applyTo: "src/api/**,src/server/**"
 # API Layer Conventions
 
 <!-- Keep this file focused on what's *specific* to the scoped paths.
-     Universal rules belong in copilot-instructions.md. -->
+     Universal rules belong in AGENTS.md. -->
 
 ## Architecture
 

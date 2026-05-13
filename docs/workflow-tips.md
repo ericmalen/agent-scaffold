@@ -4,7 +4,7 @@ Practices for getting the most out of a customized Copilot system. This is the
 opinionated companion to [`built-in-reference.md`](./built-in-reference.md):
 that doc describes what exists, this one recommends how to use it. Not a
 general prompt engineering guide — scoped to working with this scaffold's
-conventions. Reflects April 2026.
+conventions.
 
 ---
 

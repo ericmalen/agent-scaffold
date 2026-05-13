@@ -20,6 +20,7 @@ TODO: One-line role statement.
 
 ## Documents
 
-<!-- Plain-text paths (no Markdown links) so they load on demand, not eagerly. -->
+<!-- Project convention: plain-text paths. The agent reads them on demand via
+     the `read` tool. See docs/conventions.md for rationale. -->
 
 TODO/path/to/relevant/doc.md

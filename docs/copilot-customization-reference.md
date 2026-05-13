@@ -1,6 +1,6 @@
 # GitHub Copilot Customization Reference
 
-A practical reference for customizing GitHub Copilot in a repository: what the customization primitives are, how they load, and how they compose. Reflects the state of VS Code + Copilot as of **April 2026** (VS Code v1.115 / Visual Studio March 2026 update).
+A practical reference for customizing GitHub Copilot in a repository: what the customization primitives are, how they load, and how they compose.
 
 Start at Level 1 and progress as needs grow. Every level delivers value on its own.
 
@@ -22,7 +22,7 @@ Six file types, each with different loading behavior. Ordered from "always on" t
 
 | Layer                 | File(s)                                              | When It Loads                                         | Purpose                                                                  |
 | --------------------- | ---------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------ |
-| **Repo instructions** | `.github/copilot-instructions.md` **or** `AGENTS.md` | Every interaction                                     | Repo-wide rules and conventions                                          |
+| **Repo instructions** | `AGENTS.md`                                          | Every interaction                                     | Repo-wide rules and conventions                                          |
 | **Path instructions** | `.github/instructions/*.instructions.md`             | When editing files matching `applyTo` glob            | Layer- or language-specific conventions                                  |
 | **Agents**            | `.github/agents/*.agent.md`                          | When the agent is invoked                             | Specialized persona with procedures, boundaries, and tool restrictions   |
 | **Skills**            | `.github/skills/*/SKILL.md` (+ sibling files)        | When task matches skill description, or `/skill-name` | On-demand knowledge packages with optional scripts, examples, references |
@@ -37,7 +37,7 @@ You type /feature (prompt)
     → agent reads api.instructions.md (path instruction, auto-loaded)
     → agent activates tdd-cycle (skill, on-demand)
     → agent reads workflow-standards.md (doc, via read tool)
-    → all of this sits on top of copilot-instructions.md or AGENTS.md (always loaded)
+    → all of this sits on top of AGENTS.md (always loaded)
 ```
 
 ---
@@ -46,15 +46,9 @@ You type /feature (prompt)
 
 **Time to set up: 15 minutes. Immediate payoff.**
 
-### Two choices for repo-wide instructions
+### Repo-wide instructions: `AGENTS.md`
 
-As of late 2025, Copilot supports two formats for always-on repo-wide instructions:
-
-**Option A — `.github/copilot-instructions.md`**
-The original Copilot-specific format. Always loaded.
-
-**Option B — `AGENTS.md`** (recommended if you use multiple AI tools)
-An [open standard](https://agents.md) supported by Copilot, Claude Code, Cursor, Windsurf, Gemini CLI, and others. Stored at the repo root (and optionally nested). Enable in VS Code with:
+This scaffold uses `AGENTS.md` at the repo root as the canonical repo-wide instructions file. `AGENTS.md` is an [open standard](https://agents.md) supported by Copilot, Claude Code, Cursor, Codex, Aider, Gemini CLI, Windsurf, and ~20 other tools. Enabled in VS Code with:
 
 ```jsonc
 {
@@ -63,7 +57,11 @@ An [open standard](https://agents.md) supported by Copilot, Claude Code, Cursor,
 }
 ```
 
-Both formats are discovered. The recommended pattern is **AGENTS.md for cross-tool common content, `.github/copilot-instructions.md` for Copilot-specific additions** (or use one and skip the other).
+**Trade-offs to know:**
+
+- **Copilot Code Review** (the GitHub PR-review bot) reads `.github/copilot-instructions.md` and `.github/instructions/*.instructions.md`, but **not** `AGENTS.md`. If your team relies on Copilot Code Review for repo-wide rules, either: keep a copy at `.github/copilot-instructions.md` (sync manually), or move repo-wide rules into a path-scoped `*.instructions.md` with `applyTo: "**"`.
+- **`/init`** still generates `.github/copilot-instructions.md`, not `AGENTS.md`. The scaffold's pattern: run `/init`, move the generated content into `AGENTS.md`, delete the generated file.
+- **`.github/instructions/`, `.github/agents/`, `.github/prompts/`, `.github/skills/`** are Copilot-specific surfaces. Cross-tool teammates (Claude Code, Cursor, etc.) read `AGENTS.md` but do not auto-load those folders. Keep the highest-leverage rules in `AGENTS.md`.
 
 ### Content template
 
@@ -87,7 +85,7 @@ Brief description, tech stack (1–2 sentences each), monorepo structure.
 
 ### Key principles
 
-- Keep it under ~100 lines. It loads on every interaction.
+- Keep it under two pages. It loads on every interaction.
 - Only include things Copilot can't infer from the code itself.
 - Focus on non-obvious conventions and architectural decisions.
 - Link to deep docs rather than inlining them.
@@ -113,9 +111,9 @@ Multiple globs can be comma-separated: `applyTo: "packages/api/**,packages/share
 
 These load automatically when Copilot edits matching files. No manual referencing.
 
-### Monorepo parent-folder discovery (new in March 2026)
+### Monorepo parent-folder discovery
 
-VS Code now discovers instructions, agents, skills, and hooks from parent folders up to the repository root. This means a package-level `.github/` folder in `packages/api/.github/` will be picked up when working in that package, in addition to the root `.github/`. Enable with:
+VS Code discovers instructions, agents, skills, and hooks from parent folders up to the repository root. This means a package-level `.github/` folder in `packages/api/.github/` will be picked up when working in that package, in addition to the root `.github/`. Enable with:
 
 ```jsonc
 { "chat.useCustomizationsInParentRepositories": true }
@@ -125,10 +123,10 @@ VS Code now discovers instructions, agents, skills, and hooks from parent folder
 
 | Scope                                                   | Use                                                                     |
 | ------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Applies to every file in the repo                       | Repo instructions (`copilot-instructions.md` or `AGENTS.md`)            |
+| Applies to every file in the repo                       | Repo instructions (`AGENTS.md`)                                         |
 | Applies to a specific directory, layer, or file pattern | Path instruction with `applyTo`                                         |
 | Applies across _all_ your projects                      | User-level: `~/.copilot/instructions/`                                  |
-| Applies across an entire org                            | GitHub org-level instructions (Business/Enterprise GA since early 2026) |
+| Applies across an entire org                            | GitHub org-level instructions (Business/Enterprise)                     |
 
 ---
 
@@ -228,7 +226,7 @@ You **never modify code**.
 | **Never** (boundaries) | Explicit rules — what the agent must not do                                                 |
 | **Documents**          | Plain-text paths for lazy-load. The agent reads these via the `read` tool only when needed. |
 
-**Note on the Documents section:** Use plain-text paths (not Markdown links) when you want the agent to load them _on demand_. Markdown links can trigger eager loading via `chat.includeReferencedInstructions`. Prefer plain text if lean context matters.
+**Note on the Documents section:** This scaffold uses plain-text paths (not Markdown links) by convention. The agent reads them on demand via the `read` tool, never up-front, which keeps the agent's always-on context small. Plain-text paths also visually distinguish agent Documents sections from skill bodies (which intentionally use Markdown links for progressive disclosure). VS Code does not currently follow Markdown links inside `.agent.md` files automatically — this convention is defensive against possible future behavior and aids visual scanning.
 
 ### Tools array — controls what the agent can do
 
@@ -240,11 +238,11 @@ You **never modify code**.
 | `execute` / `runCommands` | Run terminal commands                              |
 | `todo`                    | Maintain a task checklist                          |
 | `agent`                   | Invoke sub-agents                                  |
-| `find_symbol`             | Language-aware symbol navigation (new, LSP-backed) |
+| `find_symbol`             | Language-aware symbol navigation (LSP-backed)      |
 
 A read-only agent uses `["read", "search"]`. An implementation agent needs `["edit", "execute", "read", "search", "todo"]`. Tool names can differ slightly between VS Code and Copilot CLI — verify in the target surface.
 
-### Agent-scoped hooks (new, preview)
+### Agent-scoped hooks (preview)
 
 Attach pre/post-processing logic to a specific agent via its frontmatter instead of a global hooks folder. Enable with:
 
@@ -268,7 +266,7 @@ hooks:
 - Keep agents lean — behavior and references, not inlined knowledge.
 - Documents section is a checklist of what to consult, not what to memorize.
 - One agent, one responsibility — no "do everything" agents.
-- Subagents are flat in Copilot — a subagent cannot invoke another subagent. Orchestrators must call all specialists directly.
+- This scaffold prefers **flat orchestration** as a default — orchestrators call all specialists directly. Nested subagents are available (`chat.subagents.allowInvocationsFromSubagents`, enabled here) up to a depth cap of 5, but there is **no cycle detection** and token cost compounds with depth. Reach for nesting only when a specialist genuinely needs its own specialists.
 
 ---
 
@@ -312,6 +310,7 @@ disable-model-invocation: false
 | `argument-hint`            | —       | Placeholder text shown when invoked as a slash command                            |
 | `user-invocable`           | `true`  | When `false`, hides the skill from the `/` menu                                   |
 | `disable-model-invocation` | `false` | When `true`, skill requires manual `/` invocation (no auto-activation)            |
+| `context`                  | `inline`| Experimental. `inline` loads SKILL.md into the parent chat; `fork` runs the skill in an isolated subagent context. Use `fork` to keep large skills from polluting the parent transcript. |
 
 > `infer` is deprecated. Use `disable-model-invocation` instead.
 
@@ -382,7 +381,7 @@ Prompt (/feature)
 
 ### Key design decisions
 
-- **Flat architecture.** The orchestrator calls every specialist directly. Subagents cannot invoke subagents in Copilot — this is a platform constraint, but it also simplifies debugging.
+- **Flat architecture (default).** The orchestrator calls every specialist directly. This is the scaffold's preferred shape — easier to debug, easier to reason about, and observability is straightforward (every call shows up in the orchestrator's transcript). Nested subagents are technically supported (`chat.subagents.allowInvocationsFromSubagents`, enabled here; depth cap = 5; no cycle detection); use them only when a specialist legitimately needs its own helpers.
 - **Human gates.** Mandatory approval checkpoints. Without these, autonomous orchestration is risky.
 - **Validation gates.** Automated checks (compile, test, lint) between phases. A layer must pass its gate before the next phase starts.
 - **Post-agent verification.** After every subagent call, the orchestrator checks `git diff` to confirm work was actually done. Catches silent failures.
@@ -391,7 +390,7 @@ Prompt (/feature)
 
 ## Agent Permissions and Execution Modes
 
-As of VS Code v1.111+, each session has a permission level:
+Each session has a permission level:
 
 | Level                     | Behavior                                                               |
 | ------------------------- | ---------------------------------------------------------------------- |
@@ -432,23 +431,33 @@ Drop these into `.vscode/settings.json` to enable the customization features con
   // Instructions
   "chat.useAgentsMdFile": true,
   "chat.useNestedAgentsMdFiles": true,
+  "chat.useClaudeMdFile": true,
   "chat.includeApplyingInstructions": true,
-  "chat.includeReferencedInstructions": true,
+  // Default (false). When true, VS Code follows Markdown links inside
+  // .instructions.md / copilot-instructions.md and eagerly loads the targets
+  // recursively. Off here for predictable context size. (Does NOT affect
+  // .agent.md or SKILL.md — those use separate code paths.)
+  "chat.includeReferencedInstructions": false,
 
   // Monorepo discovery (parent folders up to repo root)
   "chat.useCustomizationsInParentRepositories": true,
 
-  // Agents / skills
-  "chat.customAgentInSubagent.enabled": true,
+  // Skills
+  "chat.useAgentSkills": true,
+  "chat.agentSkillsLocations": { ".github/skills": true },
+
+  // Agents / subagents
   "chat.useCustomAgentHooks": true,
+  // Allow subagents to invoke subagents. Depth cap = 5; no cycle detection.
+  "chat.subagents.allowInvocationsFromSubagents": true,
 
   // Terminal auto-approve (use cautiously)
   "chat.tools.terminal.enableAutoApprove": false,
-  "chat.tools.terminal.autoApprove": [],
+  "chat.tools.terminal.autoApprove": []
 }
 ```
 
-Review each flag — some are preview features. Enable them deliberately.
+Review each flag — some are preview features. Enable them deliberately. See `.vscode/settings.json` in this scaffold for the same set with full inline commentary.
 
 ---
 
@@ -456,7 +465,7 @@ Review each flag — some are preview features. Enable them deliberately.
 
 | Week  | What to do                                                                              | Expected outcome                          |
 | ----- | --------------------------------------------------------------------------------------- | ----------------------------------------- |
-| 1     | Create `copilot-instructions.md` (or `AGENTS.md`) with project overview and conventions | Copilot stops suggesting wrong patterns   |
+| 1     | Fill in `AGENTS.md` with project overview and conventions                               | AI assistants stop suggesting wrong patterns |
 | 1     | Create 1–2 path-specific instruction files for your main directories                    | Layer-specific suggestions improve        |
 | 2     | Create 2–3 prompt files for tasks you repeat daily                                      | Common workflows become one slash command |
 | 2     | Try `/init` and review what it generates                                                | Baseline you can refine                   |
@@ -464,22 +473,6 @@ Review each flag — some are preview features. Enable them deliberately.
 | 3     | Create a skill for your most complex repeatable process                                 | Detailed knowledge loads only when needed |
 | 4+    | Connect agents via prompts, add review loops                                            | Semi-automated workflows                  |
 | Later | Orchestration with human gates; consider Autopilot for tight loops                      | Full lifecycle automation                 |
-
----
-
-## What Changed in Early 2026 (for readers upgrading)
-
-- **AGENTS.md** is a first-class option alongside `copilot-instructions.md` and is an [open standard](https://agents.md) across many AI tools.
-- **Monorepo parent-folder discovery** (March 2026) — customizations in any ancestor directory up to the repo root are discovered.
-- **Custom agents are GA** (`.agent.md` files, March 2026) on both VS Code and Visual Studio.
-- **Agent-scoped hooks** (preview) — attach pre/post logic to a specific agent via frontmatter.
-- **Skill frontmatter** — `user-invocable`, `disable-model-invocation`, and `argument-hint` replace the older `infer` field.
-- **Chat Customizations editor** (preview) — unified UI for managing customizations and marketplaces.
-- **Agent Permissions / Autopilot** (preview) — per-session permission level including fully autonomous mode.
-- **Configurable thinking effort** — reasoning depth selectable from the model picker.
-- **`/troubleshoot` skill** — built-in diagnostics for chat behavior.
-- **`#codebase` is now fully semantic** with a unified auto-managed index.
-- **Organization-level instructions** went GA for Business/Enterprise.
 
 ---
 

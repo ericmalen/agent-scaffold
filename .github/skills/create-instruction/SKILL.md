@@ -22,8 +22,8 @@ conventions — narrow glob, scoped content, no duplication with repo-wide rules
    comma-separated globs if multiple paths share the same rules
    (`"src/api/**,src/server/**"`).
 3. **Check for duplication.** Ask: does this rule apply to almost every file in
-   the repo? If yes, it belongs in `.github/copilot-instructions.md`, not here.
-   Ask the user to reconsider the scope before generating the file.
+   the repo? If yes, it belongs in `AGENTS.md`, not here. Ask the user to
+   reconsider the scope before generating the file.
 4. **Check for bloat.** Path instructions load automatically for every file in
    the glob — long ones inflate context on every edit. If the content is more
    than ~50 lines of conventions, consider: (a) breaking out detailed

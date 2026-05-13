@@ -10,11 +10,15 @@ For the underlying Copilot features these conventions sit on top of, see
 Context relevance beats context volume.
 
 - **Agent `## Documents` sections use plain-text paths** — not Markdown links.
-  Plain text forces the agent to open docs on demand via the `read` tool.
-  Markdown links can trigger eager loading via `chat.includeReferencedInstructions`.
+  The agent reads them on demand via the `read` tool, never up-front. This
+  keeps the agent's always-on context small.
 - **Skill `SKILL.md` bodies link sibling files with Markdown links** — that is
   the intended path for progressive disclosure. The router (SKILL.md) stays
   lean; detail loads only when referenced.
+- The two styles are deliberately different so the link form signals which
+  loading model is at play. (VS Code does not currently follow Markdown links
+  inside `.agent.md` files automatically — the convention is defensive against
+  possible future behavior and aids visual scanning.)
 
 ## Single source of truth
 
@@ -32,9 +36,8 @@ No "do everything" assets. If a file is doing two jobs, split it.
 
 ## Minimal always-on content
 
-Keep `.github/copilot-instructions.md` under 100 lines. It loads on every
-interaction — inflation degrades quality for every task, not just the ones that
-need the content.
+Keep `AGENTS.md` under two pages. It loads on every interaction — inflation
+degrades quality for every task, not just the ones that need the content.
 
 ## Minimal tool arrays
 

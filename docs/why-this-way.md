@@ -57,12 +57,23 @@ The meta-skills provide the templates (paste-ready, stub content). The
 explaining the non-obvious choices. Together they cover both modes — "I just
 need a starting point" and "I want to see a real one."
 
-## Why flat orchestration
+## Why flat orchestration (by default)
 
-Copilot subagents cannot invoke other subagents. This is a platform constraint,
-but it's also a design advantage: a flat topology is easier to debug, easier to
-reason about, and harder to accidentally make recursive.
+Copilot supports nested subagents up to a depth cap of 5
+(`chat.subagents.allowInvocationsFromSubagents`, enabled in this scaffold).
+There is no cycle detection — recursive chains hit the depth cap and stop
+silently — and token cost compounds with depth.
 
-The scaffold does not ship an orchestration layer in v1. When you add one, the
-expectation is that one orchestrator calls every specialist directly. Review
-loops and human gates go in the orchestrator, not between specialists.
+The scaffold prefers a **flat topology** as the default: one orchestrator
+calls every specialist directly. Reasons:
+
+- Easier to debug — every call appears in the orchestrator's transcript.
+- Easier to reason about — no implicit depth.
+- Cheaper — no compounding subagent invocations.
+- Harder to accidentally make recursive — flat agents can't chain into a
+  five-deep loop.
+
+The scaffold does not ship an orchestration layer in v1. When you add one,
+review loops and human gates go in the orchestrator, not between specialists.
+Nesting is available when a specialist legitimately needs its own helpers —
+treat it as a deliberate choice, not the default.

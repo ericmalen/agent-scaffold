@@ -16,7 +16,7 @@ Create one when:
   would be too broad.
 
 If the rule applies to almost every file in the repo, it belongs in
-`.github/copilot-instructions.md` instead.
+`AGENTS.md` instead.
 
 ## Anatomy
 

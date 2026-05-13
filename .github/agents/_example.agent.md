@@ -14,7 +14,7 @@ Never modifies files.
 ## Procedures
 
 1. Read all changed files listed by the user.
-2. Check each against the conventions in `copilot-instructions.md` and any applicable path instructions.
+2. Check each against the conventions in `AGENTS.md` and any applicable path instructions.
 3. Return a verdict: PASS or NEEDS_FIX, with specific findings and file:line references.
 
 ## Never
@@ -25,9 +25,11 @@ Never modifies files.
 
 ## Documents
 
-<!-- Plain-text paths — loaded on demand via the read tool, not eagerly.
-     Do NOT use Markdown links here; they can trigger eager loading. -->
+<!-- Project convention: plain-text paths. The agent reads them on demand via
+     the `read` tool, not up-front. Keeps the agent's always-on context small
+     and visually distinguishes agent Documents sections from skill bodies
+     (which use Markdown links). See docs/conventions.md for rationale. -->
 
-.github/copilot-instructions.md
+AGENTS.md
 .github/instructions/_example.instructions.md
 docs/conventions.md

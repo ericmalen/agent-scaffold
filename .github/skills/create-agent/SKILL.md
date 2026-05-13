@@ -33,9 +33,11 @@ minimal tools, explicit boundaries, lazy-load `## Documents` section.
 5. Fill `## Procedures` with numbered steps the agent follows.
 6. Fill `## Never` with explicit boundaries. A read-only agent's Never list
    should always include "modify any file."
-7. Fill `## Documents` with **plain-text paths** (not Markdown links). Plain
-   text forces on-demand loading via the `read` tool; Markdown links can
-   trigger eager loading.
+7. Fill `## Documents` with **plain-text paths** (not Markdown links). This is
+   a project convention: the agent reads documents on demand via the `read`
+   tool, never up-front. Plain-text paths also visually distinguish agent
+   Documents sections from skill bodies (which use Markdown links for
+   progressive disclosure).
 8. **Read the generated file back to the user** — especially the role
    statement, tools array, and boundaries. These are the three fields a small
    mistake damages most.
@@ -53,9 +55,11 @@ minimal tools, explicit boundaries, lazy-load `## Documents` section.
 
 ## Flat orchestration reminder
 
-Copilot subagents cannot invoke other subagents. If this agent is part of an
-orchestrated workflow, the orchestrator must call it directly — don't design
-multi-level subagent chains.
+The scaffold prefers flat orchestration: orchestrators call every specialist
+directly. Nesting is technically supported (depth cap 5, no cycle detection,
+compounding token cost) but should be a deliberate choice. If this agent is
+part of an orchestrated workflow, default to having the orchestrator call it
+directly rather than chaining it under another specialist.
 
 ## References
 

@@ -31,17 +31,20 @@ for full detail on the anatomy and the `tools` array.
 
 ## Lazy-load convention (project-specific)
 
-The `## Documents` section **must use plain-text paths, not Markdown links**.
+The `## Documents` section **uses plain-text paths, not Markdown links**.
 
-Plain text forces the agent to load docs on demand via the `read` tool.
-Markdown links can trigger eager loading via the
-`chat.includeReferencedInstructions` setting. Keep context lean — use plain
-text.
+The agent reads them on demand via the `read` tool, never up-front. This keeps
+the agent's always-on context small. Plain-text paths also visually distinguish
+agent `## Documents` sections from skill bodies (which intentionally use
+Markdown links for progressive disclosure).
 
-## Flat orchestration
+## Flat orchestration (preferred default)
 
-Copilot subagents cannot invoke other subagents. If you build an orchestrator,
-it must call every specialist directly. See
+The scaffold prefers flat orchestration: orchestrators call every specialist
+directly. Nested subagents are enabled here
+(`chat.subagents.allowInvocationsFromSubagents`) up to a depth cap of 5, with
+no cycle detection and compounding token cost — reach for nesting only when
+a specialist genuinely needs its own helpers. See
 [`docs/why-this-way.md`](../../docs/why-this-way.md) for the rationale.
 
 ## Good example

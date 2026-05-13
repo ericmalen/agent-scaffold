@@ -1,26 +1,37 @@
 {
   // ===== Instructions =====
-  // This scaffold ships .github/copilot-instructions.md as the repo-wide
-  // instructions file. The two AGENTS.md flags below leave Copilot able to
-  // also discover an AGENTS.md if one is added later; remove if not wanted.
+  // AGENTS.md at the repo root is the canonical repo-wide instructions file.
+  // Copilot, Claude Code, Cursor, Codex, Aider, Gemini CLI, and others all
+  // read it. CLAUDE.md is also discovered for cross-tool teammates.
   "chat.useAgentsMdFile": true,
   "chat.useNestedAgentsMdFiles": true,
-  // Load path-scoped instructions whose applyTo glob matches the active file.
+  "chat.useClaudeMdFile": true,
+  // Auto-attach .github/instructions/*.instructions.md whose applyTo glob
+  // matches the active file.
   "chat.includeApplyingInstructions": true,
-  // Follow Markdown links in instructions (eager-load). Agent ## Documents
-  // sections use plain-text paths specifically to bypass this.
-  "chat.includeReferencedInstructions": true,
+  // VS Code default (false). When true, VS Code follows Markdown links inside
+  // .instructions.md / copilot-instructions.md and eagerly loads the targets
+  // recursively. Off here for predictable context size. (Note: this setting
+  // does NOT affect .agent.md or SKILL.md files — those use separate code
+  // paths.)
+  "chat.includeReferencedInstructions": false,
 
   // ===== Monorepo discovery =====
   // Discover customizations from parent folders up to the repo root so that a
   // package-level .github/ is picked up in addition to the root .github/.
   "chat.useCustomizationsInParentRepositories": true,
 
-  // ===== Agents / skills =====
-  // Allow custom agents to be invoked as subagents from other agents.
-  "chat.customAgentInSubagent.enabled": true,
+  // ===== Skills =====
+  "chat.useAgentSkills": true,
+  "chat.agentSkillsLocations": { ".github/skills": true },
+
+  // ===== Agents / subagents =====
   // Enable pre/postRun hooks defined in a specific agent's frontmatter.
   "chat.useCustomAgentHooks": true,
+  // Allow subagents to invoke subagents. Depth capped at 5 by VS Code; no
+  // cycle detection. This scaffold still prefers flat orchestration as a
+  // default — nesting is available for legitimate compositional cases.
+  "chat.subagents.allowInvocationsFromSubagents": true,
 
   // ===== Terminal auto-approve (use cautiously) =====
   // Explicitly disabled so users opt in consciously. Leave the allow-list
