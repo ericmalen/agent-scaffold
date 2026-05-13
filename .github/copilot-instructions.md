@@ -1,7 +1,13 @@
 # Project Name
 
 <!-- TODO: Replace with your project's name and a one-paragraph overview.
-     What is the project? What's the tech stack? What's the folder layout? -->
+     What is the project? What's the tech stack? What's the folder layout?
+
+     Shortcut: run /init in Copilot Chat to auto-generate a starting point
+     tailored to your codebase. Then trim, reorder, and fill gaps. Keep the
+     whole file under ~100 lines — it loads on every interaction. -->
+
+<!-- Note for template users: replace every `<!-- TODO: ... -->` block (including this one) before committing. -->
 
 ## Overview
 

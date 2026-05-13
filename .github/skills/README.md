@@ -46,6 +46,21 @@ to memorize them.
 
 Type `/create-skill` in chat to walk through creating your first skill.
 
+### Note on slash-command names
+
+VS Code ships built-in `/create-skill`, `/create-agent`, `/create-prompt`, and
+`/create-instruction` commands that do broadly similar things (see
+[`built-in-reference.md`](../../docs/built-in-reference.md)). The meta-skills
+in this folder share those names deliberately — the goal is to override the
+generic built-ins with versions that enforce this scaffold's conventions.
+
+If `/create-skill` isn't producing conformant output, it likely means the
+built-in fired instead of the scaffold's version. Confirm via **Chat: Open
+Diagnostics** (Command Palette) that the meta-skill loaded. If you prefer the
+built-ins, rename these meta-skills (e.g., `scaffold-skill`) or delete them;
+if you prefer the scaffold's versions, ensure this folder is discoverable
+(it is by default in a repo that contains `.github/skills/`).
+
 ## A worked example: `git-conventions`
 
 Alongside the meta-skills, this scaffold ships one real skill as a reference

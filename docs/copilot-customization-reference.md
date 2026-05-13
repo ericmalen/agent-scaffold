@@ -282,7 +282,7 @@ Create `.github/skills/skill-name/SKILL.md`:
 ---
 name: tdd-workflow
 description: "TDD execution pattern. Activates when writing tests or implementing features."
-hint: "[feature name]"
+argument-hint: "[feature name]"
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -309,7 +309,7 @@ disable-model-invocation: false
 | -------------------------- | ------- | --------------------------------------------------------------------------------- |
 | `name`                     | —       | Skill identifier (no namespace prefixes)                                          |
 | `description`              | —       | Max 1024 chars. Both _what it does_ and _when to use it_. Drives auto-activation. |
-| `hint`                     | —       | Placeholder text shown when invoked as a slash command                            |
+| `argument-hint`            | —       | Placeholder text shown when invoked as a slash command                            |
 | `user-invocable`           | `true`  | When `false`, hides the skill from the `/` menu                                   |
 | `disable-model-invocation` | `false` | When `true`, skill requires manual `/` invocation (no auto-activation)            |
 
@@ -473,7 +473,7 @@ Review each flag — some are preview features. Enable them deliberately.
 - **Monorepo parent-folder discovery** (March 2026) — customizations in any ancestor directory up to the repo root are discovered.
 - **Custom agents are GA** (`.agent.md` files, March 2026) on both VS Code and Visual Studio.
 - **Agent-scoped hooks** (preview) — attach pre/post logic to a specific agent via frontmatter.
-- **Skill frontmatter** — `user-invocable`, `disable-model-invocation`, and `hint` replace the older `infer` field.
+- **Skill frontmatter** — `user-invocable`, `disable-model-invocation`, and `argument-hint` replace the older `infer` field.
 - **Chat Customizations editor** (preview) — unified UI for managing customizations and marketplaces.
 - **Agent Permissions / Autopilot** (preview) — per-session permission level including fully autonomous mode.
 - **Configurable thinking effort** — reasoning depth selectable from the model picker.
