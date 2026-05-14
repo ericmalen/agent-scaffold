@@ -61,7 +61,7 @@ tools understand (`name`, `description`, `argument-hint`, `user-invocable`,
 so they're safe to add.
 
 `user-invocable` skills appear as `/name` in both tools — this is the
-**cross-tool slash-command mechanism**. Run `/create-skill` to scaffold one.
+**cross-tool slash-command mechanism**. Run `/scaffold-skill` to scaffold one.
 
 ## Agents — `.claude/agents/`
 
@@ -70,7 +70,7 @@ frontmatter with `name`, `description`, and a comma-separated `tools` list using
 Claude tool names (`Read, Grep, Glob, Bash, Edit, Write`). Claude Code reads this
 natively; Copilot detects the same files and maps the tool names to its own.
 Claude-only fields (`model`, `permissionMode`, …) are safe — Copilot ignores
-them. Run `/create-agent` to scaffold one.
+them. Run `/scaffold-agent` to scaffold one.
 
 ## Prompts — Copilot-only
 
@@ -93,7 +93,7 @@ write a `user-invocable` skill instead.
 ## Nested scoping
 
 Copilot reads nested `AGENTS.md` files; Claude Code reads nested `CLAUDE.md`
-files (not nested `AGENTS.md`). So `/create-nested-agents-md` drops **both** in
+files (not nested `AGENTS.md`). So `/scaffold-nested-agents-md` drops **both** in
 the target directory: a nested `AGENTS.md` with the scoped rules, and a sibling
 `CLAUDE.md` containing `@AGENTS.md` — mirroring the root-level pairing.
 

@@ -1,6 +1,6 @@
-# Example: Walking through `create-skill`
+# Example: Walking through `scaffold-skill`
 
-A short narrative showing what `create-skill` does end-to-end.
+A short narrative showing what `scaffold-skill` does end-to-end.
 
 ## The request
 

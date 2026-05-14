@@ -1,5 +1,5 @@
 ---
-name: create-skill
+name: scaffold-skill
 description: "Walks the user through creating a new Agent Skill that conforms to this project's conventions — proper frontmatter, the single-file vs. multi-file decision, and the progressive-disclosure pattern. Use whenever the user wants to create, scaffold, add, set up, or write a new skill, even when they describe it as a 'custom command,' 'saved workflow,' or 'knowledge package' rather than using the word 'skill.' Also use when extracting a reusable skill from a chat the user just had."
 argument-hint: "[skill purpose in one sentence]"
 ---
@@ -74,10 +74,8 @@ Stick to the fields both Claude Code and Copilot understand — see the
 - `name` — kebab-case, no namespace prefix, matches folder name.
 - `description` — ≤1024 chars; includes what AND when.
 - `argument-hint` — placeholder shown when invoked as a slash command.
-- `user-invocable` — defaults to `true`; include only when setting `false` to
-  hide from the `/` menu.
-- `disable-model-invocation` — defaults to `false`; include only when setting
-  `true` to require manual `/` invocation.
+- See [Frontmatter fields](../README.md#frontmatter-fields) for all fields and
+  their defaults — including `user-invocable` and `disable-model-invocation`.
 
 ## Conventions checklist
 

@@ -132,7 +132,7 @@ Conventions specific to this package. Repo-wide rules live in the root AGENTS.md
 
 A nested `AGENTS.md` has no frontmatter and no glob — scope is by *location*, the file lives where it applies. It is the cross-tool open standard, discovered by Copilot, Claude Code, Cursor, Codex, Aider, and Gemini CLI alike.
 
-> **Tradeoff:** the alternative — `.github/instructions/*.instructions.md` with an `applyTo` glob — is Copilot-specific but is the mechanism GitHub.com's Copilot code review and cloud coding agent read most reliably. This scaffold prefers nested `AGENTS.md` for editor and cross-tool coverage; if you depend on those server-side surfaces, you can keep `.github/instructions/` files as well — the two mechanisms coexist.
+> **Tradeoff:** the alternative — `.github/instructions/*.instructions.md` with an `applyTo` glob — is Copilot-specific but is the mechanism GitHub.com's Copilot code review and cloud coding agent read most reliably. This scaffold prefers nested `AGENTS.md` for editor and cross-tool coverage and does **not** ship `.github/instructions/` by default; if you depend on those server-side surfaces, add `.github/instructions/` files alongside the nested `AGENTS.md` — the two mechanisms coexist.
 
 ### Monorepo parent-folder discovery
 
@@ -445,10 +445,10 @@ Autopilot is powerful for scripted orchestrations but unsuitable for exploratory
 | Command               | What it does                                                                                                        |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `/init`               | Auto-generate repo-wide instructions for your project                                                               |
-| `/create-nested-agents-md` | Generate a nested `AGENTS.md` to scope conventions to a subdirectory                                           |
-| `/create-prompt`      | Generate a prompt file from a description                                                                           |
-| `/create-skill`       | Generate a skill from a description                                                                                 |
-| `/create-agent`       | Generate an agent file from a description                                                                           |
+| `/scaffold-nested-agents-md` | Generate a nested `AGENTS.md` to scope conventions to a subdirectory (this scaffold's meta-skill)          |
+| `/create-prompt`      | Generate a prompt file from a description (VS Code built-in)                                                        |
+| `/scaffold-skill`     | Generate a skill from a description (this scaffold's meta-skill; VS Code also has a built-in `/create-skill`)       |
+| `/scaffold-agent`     | Generate an agent file from a description (this scaffold's meta-skill; VS Code also has a built-in `/create-agent`) |
 | `/skills`             | Open the Configure Skills menu                                                                                      |
 | `/compact`            | Compress conversation history to free context space                                                                 |
 | `/troubleshoot`       | Diagnose why instructions, skills, or agents didn't behave as expected; accepts `#session` to analyze past sessions |

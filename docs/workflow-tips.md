@@ -116,14 +116,14 @@ conventions.
 
 ## Using the meta-skills in this scaffold
 
-- **Start with `/create-skill`, `/create-agent`,
-  `/create-nested-agents-md`.** The meta-skills encode the conventions
+- **Start with `/scaffold-skill`, `/scaffold-agent`,
+  `/scaffold-nested-agents-md`.** The meta-skills encode the conventions
   operationally; using them gives you a correct starting point.
 - **Review what the meta-skill produces before committing.** Meta-skills are
   a starting point, not a rubber stamp. Tweak frontmatter descriptions and
   trim where needed.
 - **Extract from conversations.** After a productive chat session,
-  `/create-skill` can extract a reusable skill from what you just did. Often
+  `/scaffold-skill` can extract a reusable skill from what you just did. Often
   better than starting from scratch.
 
 ---

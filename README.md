@@ -5,7 +5,7 @@
 A scaffold for adding AI-coding customization to internal repos, wired for
 **both GitHub Copilot and Claude Code** from one set of files. Ships the folder
 structure, conventions, annotated `_example` files, and three meta-skills
-(`create-skill`, `create-agent`, `create-nested-agents-md`) that scaffold new
+(`scaffold-skill`, `scaffold-agent`, `scaffold-nested-agents-md`) that scaffold new
 assets to match the conventions.
 
 It is a scaffold, not a distribution — no stack-specific or domain-specific
@@ -33,10 +33,10 @@ first time.
 1. Clone this repo or click **Use this template** on GitHub. (Alternatively:
    copy `.claude/`, `.github/`, `.vscode/`, `AGENTS.md`, and `CLAUDE.md` into an
    existing repo.)
-2. Fill in the TODO sections of [`AGENTS.md`](./AGENTS.md). Leave `CLAUDE.md` —
-   it just imports `AGENTS.md`.
+2. Fill in the TODO sections of [`AGENTS.md`](./AGENTS.md). Leave `CLAUDE.md`
+   unless you have Claude-specific notes — it imports `AGENTS.md`.
 3. Open the repo in VS Code (Copilot extension) or Claude Code.
-4. Try `/create-skill` to walk through creating your first skill.
+4. Try `/scaffold-skill` to walk through creating your first skill.
 5. Read [`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md) and
    [`docs/conventions.md`](./docs/conventions.md) when ready to go deeper.
 
@@ -48,19 +48,25 @@ CLAUDE.md                       — imports AGENTS.md for Claude Code
 .vscode/settings.json           — Copilot editor feature flags
 .claude/
   settings.json                 — permissions/hooks (Claude Code only)
-  agents/                       — custom agents + example-reviewer
+  agents/
+    README.md                   — agent conventions + field reference
+    example-reviewer.md         — annotated example agent
   skills/
     README.md
-    create-skill/               — meta-skill: scaffold a new skill
-    create-agent/               — meta-skill: scaffold a new agent
-    create-nested-agents-md/    — meta-skill: scaffold a nested AGENTS.md
+    scaffold-skill/             — meta-skill: scaffold a new skill
+    scaffold-agent/             — meta-skill: scaffold a new agent
+    scaffold-nested-agents-md/  — meta-skill: scaffold a nested AGENTS.md
     git-conventions/            — a finished skill, as a reference
 .github/
-  prompts/                      — Copilot-only slash-command prompts (optional)
+  prompts/
+    README.md                   — Copilot-only prompt file guide
+    _example.prompt.md          — annotated example prompt
 docs/
   cross-tool-setup.md                  — how Copilot + Claude Code share this repo
   copilot-customization-reference.md   — authoritative Copilot reference
   conventions.md                       — this scaffold's conventions
+  built-in-reference.md                — what ships out of the box with VS Code
+  workflow-tips.md                     — working effectively with this system
   why-this-way.md                      — design rationale (optional reading)
 ```
 
