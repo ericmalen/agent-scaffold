@@ -1,7 +1,7 @@
 ---
-name: "TODO-agent-name"
+name: TODO-agent-name
 description: "TODO: What this agent does and what it never does."
-tools: ["read", "search"] # TODO: adjust based on needs
+tools: Read, Grep, Glob # TODO: comma-separated Claude tool names; adjust to needs
 ---
 
 # TODO Agent Name
@@ -21,6 +21,6 @@ TODO: One-line role statement.
 ## Documents
 
 <!-- Project convention: plain-text paths. The agent reads them on demand via
-     the `read` tool. See docs/conventions.md for rationale. -->
+     the Read tool. See docs/conventions.md for rationale. -->
 
 TODO/path/to/relevant/doc.md

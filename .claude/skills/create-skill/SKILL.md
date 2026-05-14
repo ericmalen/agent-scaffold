@@ -35,14 +35,14 @@ respected.
 6. In the `SKILL.md` body, link sibling files with Markdown links
    (`[label](./references/file.md)`). This is the lazy-load path for skills.
    (Agents use plain-text paths — skills use Markdown links. Same goal, opposite
-   mechanics, because Copilot treats them differently.)
+   mechanics, by project convention.)
 7. Keep the `SKILL.md` body under ~200 lines. If it's longer, it probably needs
    decomposition into sibling files.
 8. **Read the generated file back to the user** and confirm the description
    captures the trigger phrasings they mentioned. Offer to tweak before saving.
-9. Tell the user how to verify the skill loaded: type `/skill-name` in chat,
-   or open **Chat: Open Diagnostics** from the Command Palette to see whether
-   it appears in the loaded-skills list.
+9. Tell the user how to verify the skill loaded: type `/skill-name` in chat.
+   The skill lives in `.claude/skills/`, which both Claude Code and Copilot read
+   automatically (Copilot users can also confirm via **Chat: Open Diagnostics**).
 
 ## Writing a good description
 
@@ -68,17 +68,16 @@ land between 200 and 500.
 
 ## Frontmatter rules
 
-- [`name`](../../../docs/copilot-customization-reference.md#level-4-agent-skills) —
-  kebab-case, no namespace prefix, matches folder name.
-- [`description`](../../../docs/copilot-customization-reference.md#level-4-agent-skills) —
-  ≤1024 chars; includes what AND when.
-- [`argument-hint`](../../../docs/copilot-customization-reference.md#level-4-agent-skills) —
-  placeholder shown when invoked as a slash command.
-- [`user-invocable`](../../../docs/copilot-customization-reference.md#level-4-agent-skills) —
-  defaults to `true`; include only when setting `false` to hide from the `/` menu.
-- [`disable-model-invocation`](../../../docs/copilot-customization-reference.md#level-4-agent-skills) —
-  defaults to `false`; include only when setting `true` to require manual `/`
-  invocation.
+Stick to the fields both Claude Code and Copilot understand — see the
+[skill frontmatter reference](../README.md#frontmatter-fields).
+
+- `name` — kebab-case, no namespace prefix, matches folder name.
+- `description` — ≤1024 chars; includes what AND when.
+- `argument-hint` — placeholder shown when invoked as a slash command.
+- `user-invocable` — defaults to `true`; include only when setting `false` to
+  hide from the `/` menu.
+- `disable-model-invocation` — defaults to `false`; include only when setting
+  `true` to require manual `/` invocation.
 
 ## Conventions checklist
 
@@ -98,4 +97,5 @@ for a full single-file walkthrough.
 
 ## References
 
-- [Agent Skills reference](../../../docs/copilot-customization-reference.md#level-4-agent-skills)
+- [Skills in this scaffold](../README.md)
+- [Cross-tool setup](../../../docs/cross-tool-setup.md)

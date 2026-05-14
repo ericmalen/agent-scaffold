@@ -1,32 +1,34 @@
 {
   // ===== Instructions =====
   // AGENTS.md at the repo root is the canonical repo-wide instructions file.
-  // Copilot, Claude Code, Cursor, Codex, Aider, Gemini CLI, and others all
-  // read it. CLAUDE.md is also discovered for cross-tool teammates.
+  // Copilot, Cursor, Codex, Aider, Gemini CLI, and others read it directly.
+  // Claude Code reads CLAUDE.md, which imports AGENTS.md via `@AGENTS.md`.
   "chat.useAgentsMdFile": true,
+  // Nested AGENTS.md files in subdirectories scope conventions to one subtree.
+  // They load automatically when Copilot works in that directory, on top of
+  // the root AGENTS.md, and are discovered by every AGENTS.md-aware tool.
   "chat.useNestedAgentsMdFiles": true,
-  "chat.useClaudeMdFile": true,
-  // Auto-attach .github/instructions/*.instructions.md whose applyTo glob
-  // matches the active file.
-  "chat.includeApplyingInstructions": true,
-  // VS Code default (false). When true, VS Code follows Markdown links inside
-  // .instructions.md / copilot-instructions.md and eagerly loads the targets
-  // recursively. Off here for predictable context size. (Note: this setting
-  // does NOT affect .agent.md or SKILL.md files — those use separate code
-  // paths.)
-  "chat.includeReferencedInstructions": false,
+  // CLAUDE.md only imports AGENTS.md — Copilot already reads AGENTS.md natively,
+  // so leave this off to avoid loading the same content twice.
+  "chat.useClaudeMdFile": false,
 
   // ===== Monorepo discovery =====
   // Discover customizations from parent folders up to the repo root so that a
-  // package-level .github/ is picked up in addition to the root .github/.
+  // package-level .claude/ or .github/ is picked up in addition to the root.
   "chat.useCustomizationsInParentRepositories": true,
 
   // ===== Skills =====
+  // Skills live in .claude/skills/, one of Copilot's default search paths
+  // (alongside .github/skills/ and the tool-agnostic .agents/skills/) — so no
+  // chat.agentSkillsLocations override is needed. Claude Code reads the same
+  // folder. One copy, both tools.
   "chat.useAgentSkills": true,
-  "chat.agentSkillsLocations": { ".github/skills": true },
 
   // ===== Agents / subagents =====
-  // Enable pre/postRun hooks defined in a specific agent's frontmatter.
+  // Custom agents live in .claude/agents/ (Claude sub-agent format). Copilot
+  // detects them there and maps Claude tool names automatically.
+  // Enable lifecycle hooks (SessionStart, PostToolUse, Stop, …) defined in a
+  // specific agent's frontmatter.
   "chat.useCustomAgentHooks": true,
   // Allow subagents to invoke subagents. Depth capped at 5 by VS Code; no
   // cycle detection. This scaffold still prefers flat orchestration as a

@@ -2,8 +2,6 @@
 name: git-conventions
 description: "Applies Conventional Commits to commit messages, plus team-derived conventions for PR titles, PR descriptions, and branch names. Activate when writing a commit, preparing a pull request, or creating a new branch. Note: Conventional Commits is the official spec for commit messages only; the PR and branch conventions here are common team extensions derived from its type vocabulary, not part of the spec itself."
 argument-hint: "[commit | pr | branch]"
-user-invocable: true
-disable-model-invocation: false
 ---
 
 # Git Conventions

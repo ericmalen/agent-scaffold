@@ -14,11 +14,21 @@ would require subtraction before addition in any other project.
 A scaffold inverts that. You start with the structure and conventions, then add
 your own content. No deleting before building.
 
+## Why a shared `.claude/` home
+
+This repo targets both GitHub Copilot and Claude Code. One directory is read
+natively by both for agents and skills: `.claude/`. Copilot's default search
+paths include `.claude/skills/` and `.claude/agents/`; Claude Code reads nothing
+under `.github/`. So agents and skills live in `.claude/` — one copy, both
+tools, no symlinks, no drift. (`.claude/settings.json` is the exception: Claude
+Code only — Copilot uses `.vscode/settings.json`.) `.github/` keeps only the
+Copilot-only `prompts/` surface. See [`cross-tool-setup.md`](./cross-tool-setup.md).
+
 ## Why meta-skills
 
-The headline feature of this scaffold is **skills-as-tooling**. Four meta-skills
-— `create-skill`, `create-agent`, `create-prompt`, `create-instruction` — walk
-you through producing new assets that conform to the conventions.
+The headline feature of this scaffold is **skills-as-tooling**. Three meta-skills
+— `create-skill`, `create-agent`, `create-nested-agents-md` — walk you through
+producing new assets that conform to the conventions.
 
 Prose teaches conventions slowly. Tooling teaches them the first time you use
 them. Typing `/create-skill` and being asked the three questions the skill
@@ -27,8 +37,8 @@ already conformant.
 
 ## Why lazy-load by default
 
-Context relevance beats context volume. Copilot quality degrades when the model
-is fed references that don't apply to the current task.
+Context relevance beats context volume. Model quality degrades when it is fed
+references that don't apply to the current task.
 
 - Agent `## Documents` sections use plain-text paths so the agent opens docs on
   demand instead of every time it loads.
@@ -59,10 +69,9 @@ need a starting point" and "I want to see a real one."
 
 ## Why flat orchestration (by default)
 
-Copilot supports nested subagents up to a depth cap of 5
-(`chat.subagents.allowInvocationsFromSubagents`, enabled in this scaffold).
-There is no cycle detection — recursive chains hit the depth cap and stop
-silently — and token cost compounds with depth.
+Both Copilot and Claude Code support nested subagents (a subagent invoking
+subagents). Token cost compounds with depth, and recursive chains are easy to
+introduce by accident and hard to debug.
 
 The scaffold prefers a **flat topology** as the default: one orchestrator
 calls every specialist directly. Reasons:

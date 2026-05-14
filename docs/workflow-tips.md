@@ -107,8 +107,8 @@ conventions.
 
 - **Use the built-in Plan agent for planning**, not your custom ones. Reserve
   custom agents for task-specific personas.
-- **Keep the tool array minimal.** Every tool granted is a way the agent can
-  go off-script. See the tool tiers in [`conventions.md`](./conventions.md#minimal-tool-arrays).
+- **Keep the tool list minimal.** Every tool granted is a way the agent can
+  go off-script. See the tool tiers in [`conventions.md`](./conventions.md#minimal-tool-lists).
 - **Handoffs outperform megathinking agents.** A Plan → Implement → Review
   chain outperforms a single "do everything" agent.
 
@@ -116,8 +116,8 @@ conventions.
 
 ## Using the meta-skills in this scaffold
 
-- **Start with `/create-skill`, `/create-agent`, `/create-prompt`,
-  `/create-instruction`.** The meta-skills encode the conventions
+- **Start with `/create-skill`, `/create-agent`,
+  `/create-nested-agents-md`.** The meta-skills encode the conventions
   operationally; using them gives you a correct starting point.
 - **Review what the meta-skill produces before committing.** Meta-skills are
   a starting point, not a rubber stamp. Tweak frontmatter descriptions and

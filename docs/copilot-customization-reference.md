@@ -4,6 +4,12 @@ A practical reference for customizing GitHub Copilot in a repository: what the c
 
 Start at Level 1 and progress as needs grow. Every level delivers value on its own.
 
+> **Dual-tool note:** this repo is wired for both Copilot and Claude Code.
+> Shared agents and skills live in `.claude/agents/` and `.claude/skills/` —
+> Copilot reads those natively, alongside its own `.github/` paths. This doc is
+> the deep reference for Copilot's customization system; for the cross-tool
+> layout and what each tool reads, see [`cross-tool-setup.md`](./cross-tool-setup.md).
+
 ---
 
 ## Core Mental Model
@@ -22,19 +28,19 @@ Six file types, each with different loading behavior. Ordered from "always on" t
 
 | Layer                 | File(s)                                              | When It Loads                                         | Purpose                                                                  |
 | --------------------- | ---------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------ |
-| **Repo instructions** | `AGENTS.md`                                          | Every interaction                                     | Repo-wide rules and conventions                                          |
-| **Path instructions** | `.github/instructions/*.instructions.md`             | When editing files matching `applyTo` glob            | Layer- or language-specific conventions                                  |
-| **Agents**            | `.github/agents/*.agent.md`                          | When the agent is invoked                             | Specialized persona with procedures, boundaries, and tool restrictions   |
-| **Skills**            | `.github/skills/*/SKILL.md` (+ sibling files)        | When task matches skill description, or `/skill-name` | On-demand knowledge packages with optional scripts, examples, references |
-| **Prompts**           | `.github/prompts/*.prompt.md`                        | When user types `/command`                            | Reusable entry points that route to agents with user input               |
-| **Hooks**             | `.github/hooks/*` (or inline in agent frontmatter)   | Lifecycle events (session start, prompt submit, etc.) | Automated shell commands                                                 |
+| **Repo instructions** | `AGENTS.md` (+ `CLAUDE.md` imports it)               | Every interaction                                     | Repo-wide rules and conventions                                          |
+| **Path instructions** | `AGENTS.md` (nested, in subdirectories)              | When working anywhere in that subtree                 | Layer- or directory-specific conventions                                 |
+| **Agents**            | `.claude/agents/*.md`                                | When the agent is invoked                             | Specialized persona with procedures, boundaries, and tool restrictions   |
+| **Skills**            | `.claude/skills/*/SKILL.md` (+ sibling files)        | When task matches skill description, or `/skill-name` | On-demand knowledge packages with optional scripts, examples, references |
+| **Prompts** (Copilot-only) | `.github/prompts/*.prompt.md`                   | When user types `/command`                            | Reusable entry points that route to agents with user input               |
+| **Hooks**             | Agent frontmatter `hooks:` (Copilot); `.claude/settings.json` (Claude Code only) | Lifecycle events (session start, prompt submit, etc.) | Automated shell commands                                                 |
 
 ### How the layers compose
 
 ```
 You type /feature (prompt)
   → routes to Feature Orchestrator (agent)
-    → agent reads api.instructions.md (path instruction, auto-loaded)
+    → agent reads packages/api/AGENTS.md (nested AGENTS.md, auto-loaded in that subtree)
     → agent activates tdd-cycle (skill, on-demand)
     → agent reads workflow-standards.md (doc, via read tool)
     → all of this sits on top of AGENTS.md (always loaded)
@@ -57,11 +63,14 @@ This scaffold uses `AGENTS.md` at the repo root as the canonical repo-wide instr
 }
 ```
 
+`chat.useNestedAgentsMdFiles` extends discovery to **nested** `AGENTS.md` files placed inside subdirectories — the mechanism for path-scoped instructions. See [Path-specific instructions](#path-specific-instructions) below.
+
 **Trade-offs to know:**
 
-- **Copilot Code Review** (the GitHub PR-review bot) reads `.github/copilot-instructions.md` and `.github/instructions/*.instructions.md`, but **not** `AGENTS.md`. If your team relies on Copilot Code Review for repo-wide rules, either: keep a copy at `.github/copilot-instructions.md` (sync manually), or move repo-wide rules into a path-scoped `*.instructions.md` with `applyTo: "**"`.
+- **Claude Code reads `CLAUDE.md`, not `AGENTS.md`.** This repo ships a `CLAUDE.md` that imports `AGENTS.md` via `@AGENTS.md`, so both tools share one source of truth. Edit `AGENTS.md`; leave `CLAUDE.md` alone. See [`cross-tool-setup.md`](./cross-tool-setup.md).
 - **`/init`** still generates `.github/copilot-instructions.md`, not `AGENTS.md`. The scaffold's pattern: run `/init`, move the generated content into `AGENTS.md`, delete the generated file.
-- **`.github/instructions/`, `.github/agents/`, `.github/prompts/`, `.github/skills/`** are Copilot-specific surfaces. Cross-tool teammates (Claude Code, Cursor, etc.) read `AGENTS.md` but do not auto-load those folders. Keep the highest-leverage rules in `AGENTS.md`.
+- **`.github/prompts/`** is the one Copilot-specific asset surface (prompts have no Claude equivalent). Agents and skills live in `.claude/`, which both tools read.
+- **GitHub.com surfaces** — Copilot code review and the cloud coding agent reliably read `.github/copilot-instructions.md` and `.github/instructions/*.instructions.md` (the latter supports `applyTo` globs and `excludeAgent`). Their support for `AGENTS.md` — especially _nested_ `AGENTS.md` — is newer and less uniform. If your team depends on those server-side surfaces, keep a root `.github/copilot-instructions.md` alongside `AGENTS.md`.
 
 ### Content template
 
@@ -93,23 +102,37 @@ Brief description, tech stack (1–2 sentences each), monorepo structure.
 
 ### Path-specific instructions
 
-Create `.github/instructions/` and add files scoped by glob:
+When a convention applies to one directory or layer rather than the whole repo, scope it with a **nested `AGENTS.md`** — place an `AGENTS.md` file inside the subdirectory it applies to. With `chat.useNestedAgentsMdFiles: true` (enabled in this scaffold), Copilot loads it automatically when working anywhere in that subtree, on top of the root `AGENTS.md`.
+
+```
+repo/
+├── AGENTS.md                    # repo-wide
+└── packages/
+    └── api/
+        └── AGENTS.md            # adds API-layer conventions for packages/api/**
+```
+
+Example `packages/api/AGENTS.md`:
 
 ```markdown
----
-applyTo: "packages/api/**"
----
+# API Package
 
-# API Conventions
+Conventions specific to this package. Repo-wide rules live in the root AGENTS.md.
+
+## Conventions
 
 - Layered architecture: controller → service → repository
 - Zod validation middleware on all routes
-- Bilingual mapping in service layer, not controllers
+- Bilingual mapping in the service layer, not controllers
+
+## Do Not
+
+- Never access the database directly from a controller
 ```
 
-Multiple globs can be comma-separated: `applyTo: "packages/api/**,packages/shared/**"`.
+A nested `AGENTS.md` has no frontmatter and no glob — scope is by *location*, the file lives where it applies. It is the cross-tool open standard, discovered by Copilot, Claude Code, Cursor, Codex, Aider, and Gemini CLI alike.
 
-These load automatically when Copilot edits matching files. No manual referencing.
+> **Tradeoff:** the alternative — `.github/instructions/*.instructions.md` with an `applyTo` glob — is Copilot-specific but is the mechanism GitHub.com's Copilot code review and cloud coding agent read most reliably. This scaffold prefers nested `AGENTS.md` for editor and cross-tool coverage; if you depend on those server-side surfaces, you can keep `.github/instructions/` files as well — the two mechanisms coexist.
 
 ### Monorepo parent-folder discovery
 
@@ -119,12 +142,14 @@ VS Code discovers instructions, agents, skills, and hooks from parent folders up
 { "chat.useCustomizationsInParentRepositories": true }
 ```
 
+This works alongside nested `AGENTS.md` discovery — a package can carry both its own `AGENTS.md` and a package-level `.github/` for agents, prompts, or skills.
+
 ### When to use what
 
 | Scope                                                   | Use                                                                     |
 | ------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Applies to every file in the repo                       | Repo instructions (`AGENTS.md`)                                         |
-| Applies to a specific directory, layer, or file pattern | Path instruction with `applyTo`                                         |
+| Applies to every file in the repo                       | Repo instructions (root `AGENTS.md`)                                    |
+| Applies to a specific directory or layer                | **Nested `AGENTS.md`** in that directory                                |
 | Applies across _all_ your projects                      | User-level: `~/.copilot/instructions/`                                  |
 | Applies across an entire org                            | GitHub org-level instructions (Business/Enterprise)                     |
 
@@ -133,6 +158,10 @@ VS Code discovers instructions, agents, skills, and hooks from parent folders up
 ## Level 2: Prompt Files
 
 **Time to set up: 10 minutes per prompt. Saves time on repetitive tasks.**
+
+> Prompt files are in public preview — the frontmatter schema may still shift.
+> They are also a **Copilot-only** surface — Claude Code has no equivalent. For
+> a cross-tool `/command`, write a `user-invocable` skill instead (Level 4).
 
 Create `.github/prompts/` and add `.prompt.md` files for tasks you repeat:
 
@@ -185,13 +214,14 @@ When a prompt routes to an agent, the agent's `model` and `tools` take precedenc
 
 **Time to set up: 30 minutes per agent. Essential for specialized workflows.**
 
-Create `.github/agents/` and add `.agent.md` files:
+Create `.claude/agents/` and add `.md` files in the Claude sub-agent format —
+Claude Code reads them natively, and Copilot detects them there too:
 
 ```markdown
 ---
-name: "Code Reviewer"
-description: "Read-only code review against project standards."
-tools: ["read", "search"]
+name: code-reviewer
+description: Read-only code review against project standards. Never modifies code.
+tools: Read, Grep, Glob
 ---
 
 # Code Reviewer
@@ -212,52 +242,60 @@ You **never modify code**.
 
 ## Documents
 
-- `.github/instructions/api.instructions.md` — consult for API conventions
-- `docs/coding-standards.md` — consult for general standards
+packages/api/AGENTS.md
+docs/coding-standards.md
 ```
 
 ### Agent file anatomy
 
 | Section                | Purpose                                                                                     |
 | ---------------------- | ------------------------------------------------------------------------------------------- |
-| **Frontmatter**        | `name`, `description`, `tools` array, optional `model` and hooks                            |
+| **Frontmatter**        | `name`, `description`, `tools` list; optional Claude-only fields (`model`, `permissionMode`, `hooks`) |
 | **Role statement**     | One line: what this agent does and what it never does                                       |
 | **Procedures**         | Numbered checklist the agent follows                                                        |
 | **Never** (boundaries) | Explicit rules — what the agent must not do                                                 |
-| **Documents**          | Plain-text paths for lazy-load. The agent reads these via the `read` tool only when needed. |
+| **Documents**          | Plain-text paths for lazy-load. The agent reads these via the Read tool only when needed.   |
 
-**Note on the Documents section:** This scaffold uses plain-text paths (not Markdown links) by convention. The agent reads them on demand via the `read` tool, never up-front, which keeps the agent's always-on context small. Plain-text paths also visually distinguish agent Documents sections from skill bodies (which intentionally use Markdown links for progressive disclosure). VS Code does not currently follow Markdown links inside `.agent.md` files automatically — this convention is defensive against possible future behavior and aids visual scanning.
+**Note on the Documents section:** This scaffold uses plain-text paths (not Markdown links) by convention. The agent reads them on demand via the Read tool, never up-front, which keeps the agent's always-on context small. Plain-text paths also visually distinguish agent Documents sections from skill bodies (which intentionally use Markdown links for progressive disclosure).
 
-### Tools array — controls what the agent can do
+### Tools list — controls what the agent can do
 
-| Tool                      | Capability                                         |
-| ------------------------- | -------------------------------------------------- |
-| `read`                    | Read files                                         |
-| `search`                  | Search codebase                                    |
-| `edit` / `editFiles`      | Modify files                                       |
-| `execute` / `runCommands` | Run terminal commands                              |
-| `todo`                    | Maintain a task checklist                          |
-| `agent`                   | Invoke sub-agents                                  |
-| `find_symbol`             | Language-aware symbol navigation (LSP-backed)      |
+Use **Claude tool names** in the comma-separated `tools` list; Copilot maps them
+to its own tools automatically.
 
-A read-only agent uses `["read", "search"]`. An implementation agent needs `["edit", "execute", "read", "search", "todo"]`. Tool names can differ slightly between VS Code and Copilot CLI — verify in the target surface.
+| Tool                    | Capability                          |
+| ----------------------- | ----------------------------------- |
+| `Read`                  | Read files                          |
+| `Grep`                  | Search file contents                |
+| `Glob`                  | Find files by pattern               |
+| `Edit` / `Write`        | Modify / create files               |
+| `Bash`                  | Run terminal commands               |
+
+A read-only agent uses `Read, Grep, Glob`. An implementation agent adds `Edit,
+Write, Bash`. Omitting `tools` grants all tools. See
+[`.claude/agents/README.md`](../.claude/agents/README.md) for the full convention.
 
 ### Agent-scoped hooks (preview)
 
-Attach pre/post-processing logic to a specific agent via its frontmatter instead of a global hooks folder. Enable with:
+Attach lifecycle automation to a specific agent via its frontmatter instead of a global `.github/hooks/` folder. Enable with:
 
 ```jsonc
 { "chat.useCustomAgentHooks": true }
 ```
 
-Then in the agent's frontmatter:
+Then in the agent's frontmatter, map lifecycle events to command hooks. Event names are PascalCase — `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `PreCompact`, `SubagentStart`, `SubagentStop`, `Stop`:
 
 ```yaml
 ---
 name: api-engineer
 hooks:
-  preRun: "npm run typecheck"
-  postRun: "npm run lint"
+  PostToolUse:
+    - type: command
+      command: "npm run lint"
+      timeout: 30
+  Stop:
+    - type: command
+      command: "npm run typecheck"
 ---
 ```
 
@@ -274,7 +312,7 @@ hooks:
 
 **Time to set up: 20 minutes per skill. Best for reusable knowledge packages.**
 
-Create `.github/skills/skill-name/SKILL.md`:
+Create `.claude/skills/skill-name/SKILL.md` (both Copilot and Claude Code read this folder):
 
 ```markdown
 ---
@@ -325,7 +363,7 @@ You can install many skills without bloating context. Only the relevant one load
 ### Multi-file skill structure
 
 ```
-.github/skills/my-skill/
+.claude/skills/my-skill/
 ├── SKILL.md              # Core instructions (keep lean — the router)
 ├── references/           # Detailed docs loaded on demand
 │   ├── api-reference.md
@@ -407,7 +445,7 @@ Autopilot is powerful for scripted orchestrations but unsuitable for exploratory
 | Command               | What it does                                                                                                        |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `/init`               | Auto-generate repo-wide instructions for your project                                                               |
-| `/create-instruction` | Generate a targeted instruction file from a description                                                             |
+| `/create-nested-agents-md` | Generate a nested `AGENTS.md` to scope conventions to a subdirectory                                           |
 | `/create-prompt`      | Generate a prompt file from a description                                                                           |
 | `/create-skill`       | Generate a skill from a description                                                                                 |
 | `/create-agent`       | Generate an agent file from a description                                                                           |
@@ -430,21 +468,17 @@ Drop these into `.vscode/settings.json` to enable the customization features con
 {
   // Instructions
   "chat.useAgentsMdFile": true,
+  // Nested AGENTS.md in subdirs — scopes conventions to a subtree (cross-tool).
   "chat.useNestedAgentsMdFiles": true,
-  "chat.useClaudeMdFile": true,
-  "chat.includeApplyingInstructions": true,
-  // Default (false). When true, VS Code follows Markdown links inside
-  // .instructions.md / copilot-instructions.md and eagerly loads the targets
-  // recursively. Off here for predictable context size. (Does NOT affect
-  // .agent.md or SKILL.md — those use separate code paths.)
-  "chat.includeReferencedInstructions": false,
+  // Off: CLAUDE.md only imports AGENTS.md, which Copilot already reads.
+  "chat.useClaudeMdFile": false,
 
   // Monorepo discovery (parent folders up to repo root)
   "chat.useCustomizationsInParentRepositories": true,
 
-  // Skills
+  // Skills — .claude/skills/ is in Copilot's default search path, so no
+  // chat.agentSkillsLocations override is needed.
   "chat.useAgentSkills": true,
-  "chat.agentSkillsLocations": { ".github/skills": true },
 
   // Agents / subagents
   "chat.useCustomAgentHooks": true,
@@ -466,7 +500,7 @@ Review each flag — some are preview features. Enable them deliberately. See `.
 | Week  | What to do                                                                              | Expected outcome                          |
 | ----- | --------------------------------------------------------------------------------------- | ----------------------------------------- |
 | 1     | Fill in `AGENTS.md` with project overview and conventions                               | AI assistants stop suggesting wrong patterns |
-| 1     | Create 1–2 path-specific instruction files for your main directories                    | Layer-specific suggestions improve        |
+| 1     | Add a nested `AGENTS.md` to your 1–2 main subdirectories for layer-specific conventions  | Layer-specific suggestions improve        |
 | 2     | Create 2–3 prompt files for tasks you repeat daily                                      | Common workflows become one slash command |
 | 2     | Try `/init` and review what it generates                                                | Baseline you can refine                   |
 | 3     | Create your first agent for a specific role (reviewer, implementer)                     | Specialized behavior for specific tasks   |

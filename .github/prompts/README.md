@@ -1,17 +1,21 @@
-# Prompts
+# Prompts (Copilot-only)
+
+## Status
+
+Prompt files are a **GitHub Copilot–only** surface. Claude Code has no
+equivalent — its `agent:` routing, `${input:…}` variables, and `.prompt.md`
+format don't port.
+
+**For a cross-tool `/command`, write a `user-invocable` skill instead** — both
+Claude Code and Copilot expose those in the `/` menu. Run `/create-skill` to
+scaffold one. This folder is kept only as an optional extra for teams that are
+Copilot-only and want prompt-specific features (agent routing, editor-context
+variables).
 
 ## Purpose
 
-Saved entry-point commands. Typing `/name` in chat runs the prompt with the
-current editor context (active file, selection) and optional user input.
-
-## When to create a prompt
-
-Create one when:
-
-- You describe a task the same way repeatedly.
-- A task should route to a specific agent with minimal ceremony.
-- You want a slash command as the friction-free entry point to a workflow.
+Saved entry-point commands. Typing `/name` in Copilot Chat runs the prompt with
+the current editor context (active file, selection) and optional user input.
 
 ## Anatomy
 
@@ -36,15 +40,11 @@ Use `${input:name:placeholder}` to ask the user at invocation time.
 File-context variables (`${file}`, `${fileBasename}`, `${fileDirname}`,
 `${selection}`) pull from the active editor.
 
-See the
-[full variable list](../../docs/copilot-customization-reference.md#level-2-prompt-files)
-in the reference doc.
-
 ## Good example
 
 See [`_example.prompt.md`](./_example.prompt.md) for an annotated prompt that
-routes to the `example-reviewer` agent and uses both a file-context variable
-and a user-input variable.
+routes to the `example-reviewer` agent (in `.claude/agents/`) and uses both a
+file-context variable and a user-input variable.
 
 ## Filename convention
 

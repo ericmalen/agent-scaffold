@@ -19,7 +19,6 @@ CLI, some in both.
 | Command                                | What it does                                                                                                         | Where                  |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | `/init`                                | Generate a repo-wide `.github/copilot-instructions.md` tailored to the codebase. This scaffold uses `AGENTS.md` instead — move the generated content into `AGENTS.md` and delete the generated file. | VS Code, Visual Studio |
-| `/create-instruction`                  | Generate a path-specific `.instructions.md` file                                                                     | VS Code                |
 | `/create-prompt`                       | Generate a `.prompt.md` file from a description                                                                      | VS Code                |
 | `/create-skill`                        | Generate a skill folder with `SKILL.md`                                                                              | VS Code                |
 | `/create-agent`                        | Generate a `.agent.md` file                                                                                          | VS Code                |
@@ -36,46 +35,47 @@ CLI, some in both.
 | `/new`                                 | Scaffold a new project                                                                                               | VS Code                |
 
 User-defined slash commands (from `.github/prompts/*.prompt.md`) and
-user-invocable skills appear in the same `/` menu.
+user-invocable skills (from `.claude/skills/`) appear in the same `/` menu.
 
 ---
 
 ## Built-in agents
 
-The agents that ship with Copilot. Custom agents from `.github/agents/` appear
+The agents that ship with Copilot. Custom agents from `.claude/agents/` appear
 in the same picker.
 
 | Agent           | What it does                                                                             |
 | --------------- | ---------------------------------------------------------------------------------------- |
 | Agent (default) | General-purpose agent with full tool access                                              |
 | Ask             | Q&A without code edits — read-only by design                                             |
-| Plan            | Produces an implementation plan; saves to session memory (`/memories/session/plan.md`)   |
-| Edit            | Multi-file inline edits (availability varies by VS Code version)                         |
+| Plan            | Produces an implementation plan and saves it to session memory                           |
+| ~~Edit~~        | Deprecated — use Agent mode for multi-file edits                                         |
 
 ---
 
 ## Built-in tools
 
 Tools available to agents. These are the values you put in the `tools:` array
-of a custom agent's frontmatter. Authoritative list as of VS Code 1.115 —
-confirm against the [Custom Agents docs](https://code.visualstudio.com/docs/copilot/customization/custom-agents)
+of a custom agent's frontmatter. Tools use a `category/tool` namespace; the
+bare parent name (e.g. `search`) grants the whole category. VS Code releases
+weekly and the list evolves — confirm against the
+[Custom Agents docs](https://code.visualstudio.com/docs/copilot/customization/custom-agents)
 if a tool doesn't resolve.
 
-| Tool                         | Purpose                                           |
-| ---------------------------- | ------------------------------------------------- |
-| `read`                       | Read files                                        |
-| `search` / `search/codebase` | Semantic codebase search (uses `#codebase` index) |
-| `search/changes`             | Changes since last commit                         |
-| `search/usages`              | Find references to a symbol                       |
-| `edit` / `editFiles`         | Modify files                                      |
-| `execute` / `runCommands`    | Run terminal commands                             |
-| `runTasks`                   | Run VS Code tasks                                 |
-| `todo`                       | Maintain an agent task list                       |
-| `agent`                      | Invoke subagents                                  |
-| `find_symbol`                | Language-aware symbol navigation (LSP-backed)     |
-| `read/problems`              | Read diagnostics from the Problems panel          |
-| `githubRepo`                 | Cross-repo GitHub code search                     |
-| `fetch` / `web`              | Fetch web content                                 |
+| Tool                                | Purpose                                           |
+| ----------------------------------- | ------------------------------------------------- |
+| `read` / `read/readFile`            | Read files                                        |
+| `search` / `search/codebase`        | Semantic codebase search (uses `#codebase` index) |
+| `search/changes`                    | Changes since last commit                         |
+| `search/usages`                     | Find references to a symbol                       |
+| `edit` / `edit/editFiles`           | Modify files                                      |
+| `execute` / `execute/runInTerminal` | Run terminal commands                             |
+| `execute/createAndRunTask`          | Create and run a VS Code task                     |
+| `todos`                             | Maintain an agent task list                       |
+| `agent` / `agent/runSubagent`       | Invoke subagents                                  |
+| `read/problems`                     | Read diagnostics from the Problems panel          |
+| `githubRepo`                        | Cross-repo GitHub code search                     |
+| `web` / `web/fetch`                 | Fetch web content                                 |
 
 Copilot enforces a 128-tool-per-request cap. Large tool sets are auto-managed
 via `github.copilot.chat.virtualTools.threshold`.
@@ -109,7 +109,7 @@ appear in the same `@` menu.
 | `@github`    | GitHub-specific queries (issues, PRs, repos)                             |
 | `@terminal`  | Terminal-focused help                                                    |
 | `@vscode`    | VS Code feature help                                                     |
-| `@workspace` | Workspace-scoped queries (deprecated in newer versions; see `#codebase`) |
+| `@workspace` | Workspace-scoped queries (largely superseded by `#codebase` in agent mode) |
 
 ---
 

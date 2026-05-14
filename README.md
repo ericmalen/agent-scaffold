@@ -2,59 +2,75 @@
 
 ## What this is
 
-A scaffold for adding GitHub Copilot to internal repos. Ships the folder
-structure, conventions, annotated `_example` files, and four meta-skills
-(`create-skill`, `create-agent`, `create-prompt`, `create-instruction`) that
-scaffold new assets to match the conventions.
+A scaffold for adding AI-coding customization to internal repos, wired for
+**both GitHub Copilot and Claude Code** from one set of files. Ships the folder
+structure, conventions, annotated `_example` files, and three meta-skills
+(`create-skill`, `create-agent`, `create-nested-agents-md`) that scaffold new
+assets to match the conventions.
 
 It is a scaffold, not a distribution — no stack-specific or domain-specific
 content. You add those on top.
 
-This scaffold uses `AGENTS.md` at the repo root as its canonical repo-wide
-instructions file. It's the cross-tool standard read by Copilot, Claude Code,
-Cursor, Codex, Aider, Gemini CLI, and others. See the reference doc for the
-trade-offs (notably: Copilot Code Review reads `.github/copilot-instructions.md`
-but not `AGENTS.md`).
+Shared agents and skills live in `.claude/agents/` and `.claude/skills/` — both
+tools read those folders natively. `AGENTS.md` at the repo root is the canonical
+instructions file;
+`CLAUDE.md` imports it so Claude Code reads the same content. See
+[`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md) for how the dual-tool
+wiring works.
+
+> Note: GitHub.com's Copilot code review and cloud coding agent read
+> `.github/copilot-instructions.md` and `.github/instructions/` most reliably.
+> If your team leans on those, keep a root `.github/copilot-instructions.md`
+> alongside `AGENTS.md` — see [`docs/copilot-customization-reference.md`](./docs/copilot-customization-reference.md).
 
 ## Who it's for
 
-Developers setting up GitHub Copilot in a project for the first time.
+Developers setting up GitHub Copilot and/or Claude Code in a project for the
+first time.
 
 ## Quick start
 
 1. Clone this repo or click **Use this template** on GitHub. (Alternatively:
-   copy `.github/` and `.vscode/` into an existing repo.)
-2. Fill in the TODO sections of [`AGENTS.md`](./AGENTS.md).
-3. Open the repo in VS Code with the Copilot extension installed.
+   copy `.claude/`, `.github/`, `.vscode/`, `AGENTS.md`, and `CLAUDE.md` into an
+   existing repo.)
+2. Fill in the TODO sections of [`AGENTS.md`](./AGENTS.md). Leave `CLAUDE.md` —
+   it just imports `AGENTS.md`.
+3. Open the repo in VS Code (Copilot extension) or Claude Code.
 4. Try `/create-skill` to walk through creating your first skill.
-5. Read [`docs/conventions.md`](./docs/conventions.md) when ready to go deeper.
+5. Read [`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md) and
+   [`docs/conventions.md`](./docs/conventions.md) when ready to go deeper.
 
 ## What's inside
 
 ```
 AGENTS.md                       — repo-wide instructions (TODO placeholder)
-.vscode/settings.json           — pre-enabled Copilot feature flags
-.github/
-  instructions/                 — path-scoped instructions + _example
-  agents/                       — custom agents + _example
-  prompts/                      — saved slash-command prompts + _example
+CLAUDE.md                       — imports AGENTS.md for Claude Code
+.vscode/settings.json           — Copilot editor feature flags
+.claude/
+  settings.json                 — permissions/hooks (Claude Code only)
+  agents/                       — custom agents + example-reviewer
   skills/
     README.md
     create-skill/               — meta-skill: scaffold a new skill
     create-agent/               — meta-skill: scaffold a new agent
-    create-prompt/              — meta-skill: scaffold a new prompt
-    create-instruction/         — meta-skill: scaffold a new instruction
+    create-nested-agents-md/    — meta-skill: scaffold a nested AGENTS.md
+    git-conventions/            — a finished skill, as a reference
+.github/
+  prompts/                      — Copilot-only slash-command prompts (optional)
 docs/
+  cross-tool-setup.md                  — how Copilot + Claude Code share this repo
   copilot-customization-reference.md   — authoritative Copilot reference
   conventions.md                       — this scaffold's conventions
   why-this-way.md                      — design rationale (optional reading)
 ```
 
-Each asset-type folder has a `README.md` explaining the pattern and an
-`_example.*.md` file showing what "good" looks like.
+Each asset-type folder has a `README.md` explaining the pattern and an example
+file showing what "good" looks like.
 
 ## Next steps
 
+- [`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md) — how one set of
+  files serves both tools.
 - [`docs/conventions.md`](./docs/conventions.md) — the do's and don'ts.
 - [`docs/copilot-customization-reference.md`](./docs/copilot-customization-reference.md)
   — authoritative reference for Copilot concepts.

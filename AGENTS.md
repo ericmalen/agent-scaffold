@@ -38,12 +38,15 @@ TODO: 2–4 sentence summary.
 
 ## More Context
 
-For layer-specific rules see `.github/instructions/`.
-For on-demand knowledge see `.github/skills/`.
-For specialized roles see `.github/agents/`.
+For layer-specific rules, add a nested `AGENTS.md` (+ sibling `CLAUDE.md`) in
+the relevant subdirectory.
+For on-demand knowledge see `.claude/skills/`.
+For specialized roles see `.claude/agents/`.
 
-> **Cross-tool note:** `.github/instructions/`, `.github/agents/`,
-> `.github/prompts/`, and `.github/skills/` are Copilot-specific surfaces.
-> Other AGENTS.md-aware tools (Claude Code, Cursor, Codex, Aider, Gemini CLI)
-> read this file but do not auto-load those folders. If your team uses
-> multiple AI tools, keep the highest-leverage rules in this file.
+> **Cross-tool note:** this repo is wired for both GitHub Copilot and Claude
+> Code. Shared agents and skills live in `.claude/agents/` and `.claude/skills/`
+> — both tools read those folders natively. `AGENTS.md` is the canonical
+> instructions file; `CLAUDE.md` imports it (`@AGENTS.md`) so Claude Code reads
+> the same content. The Copilot-only `.github/prompts/` surface is the main
+> exception. See
+> [`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md).

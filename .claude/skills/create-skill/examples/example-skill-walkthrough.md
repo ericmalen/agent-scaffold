@@ -29,15 +29,13 @@ A few inline examples fit comfortably in ~200 lines. Single-file is correct.
 
 ## The generated skill
 
-File: `.github/skills/commit-message-format/SKILL.md`
+File: `.claude/skills/commit-message-format/SKILL.md`
 
 ```markdown
 ---
 name: commit-message-format
 description: "Enforces the project's commit message format (type(scope): subject, optional body and footer). Activate when the user is preparing a commit, drafting a commit message, or asking to review a commit message."
 argument-hint: "[describe the change]"
-user-invocable: true
-disable-model-invocation: false
 ---
 
 # Commit Message Format
@@ -50,7 +48,7 @@ disable-model-invocation: false
 
 ## Workflow
 
-1. Read the staged diff (via the `read` tool if available).
+1. Read the staged diff (via the file-read tool if available).
 2. Infer `type` (feat / fix / refactor / docs / test / chore).
 3. Infer `scope` from the changed paths.
 4. Compose a subject line ≤72 chars, imperative mood, no trailing period.

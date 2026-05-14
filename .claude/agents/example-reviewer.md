@@ -1,7 +1,7 @@
 ---
-name: "example-reviewer"
-description: "Read-only reviewer that checks code against project conventions. Never modifies files."
-tools: ["read", "search"]
+name: example-reviewer
+description: Read-only reviewer that checks code against project conventions. Never modifies files.
+tools: Read, Grep, Glob
 ---
 
 # Example Reviewer
@@ -14,7 +14,7 @@ Never modifies files.
 ## Procedures
 
 1. Read all changed files listed by the user.
-2. Check each against the conventions in `AGENTS.md` and any applicable path instructions.
+2. Check each against the conventions in `AGENTS.md` and any applicable nested `AGENTS.md`.
 3. Return a verdict: PASS or NEEDS_FIX, with specific findings and file:line references.
 
 ## Never
@@ -26,10 +26,9 @@ Never modifies files.
 ## Documents
 
 <!-- Project convention: plain-text paths. The agent reads them on demand via
-     the `read` tool, not up-front. Keeps the agent's always-on context small
+     the Read tool, not up-front. Keeps the agent's always-on context small
      and visually distinguishes agent Documents sections from skill bodies
      (which use Markdown links). See docs/conventions.md for rationale. -->
 
 AGENTS.md
-.github/instructions/_example.instructions.md
 docs/conventions.md
