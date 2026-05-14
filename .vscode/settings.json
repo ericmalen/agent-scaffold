@@ -35,6 +35,15 @@
   // default — nesting is available for legitimate compositional cases.
   "chat.subagents.allowInvocationsFromSubagents": true,
 
+  // ===== File nesting =====
+  // Collapse CLAUDE.md under AGENTS.md in the explorer — they're a cross-tool
+  // pair (same content, different entry point per tool) and don't need to be
+  // visually separate.
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "AGENTS.md": "CLAUDE.md"
+  },
+
   // ===== Terminal auto-approve (use cautiously) =====
   // Explicitly disabled so users opt in consciously. Leave the allow-list
   // empty until specific commands are reviewed and added.

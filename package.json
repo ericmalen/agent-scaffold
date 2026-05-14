@@ -1,0 +1,15 @@
+{
+  "name": "agent-scaffold",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "agent-scaffold": "bin/scaffold.mjs"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "node --test test/fsutil.test.mjs test/diff.test.mjs test/brownfield.test.mjs test/manifest.test.mjs test/registry.test.mjs"
+  }
+}

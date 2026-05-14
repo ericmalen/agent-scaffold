@@ -8,8 +8,7 @@ structure, conventions, annotated `_example` files, and three meta-skills
 (`scaffold-skill`, `scaffold-agent`, `scaffold-nested-agents-md`) that scaffold new
 assets to match the conventions.
 
-It is a scaffold, not a distribution — no stack-specific or domain-specific
-content. You add those on top.
+No stack-specific or domain-specific content — you add those on top.
 
 Shared agents and skills live in `.claude/agents/` and `.claude/skills/` — both
 tools read those folders natively. `AGENTS.md` at the repo root is the canonical
@@ -30,14 +29,41 @@ first time.
 
 ## Quick start
 
-1. Clone this repo or click **Use this template** on GitHub. (Alternatively:
-   copy `.claude/`, `.github/`, `.vscode/`, `AGENTS.md`, and `CLAUDE.md` into an
-   existing repo.)
-2. Fill in the TODO sections of [`AGENTS.md`](./AGENTS.md). Leave `CLAUDE.md`
+### Via CLI (recommended)
+
+Clone this repo once to a shared tools location, then run `init` from any
+project you want to scaffold:
+
+```sh
+git clone <this-repo-url> ~/tools/agent-scaffold
+cd /path/to/my-project
+node ~/tools/agent-scaffold/bin/scaffold.mjs init --skills git-conventions --yes
+```
+
+The CLI detects whether you have existing AI resources (**brownfield**) or a
+fresh repo (**greenfield**) and handles both correctly. Re-running with
+`update` brings in changes without overwriting your edits.
+
+```sh
+# See what's installed and whether anything has drifted
+node ~/tools/agent-scaffold/bin/scaffold.mjs status
+
+# Pull latest scaffold version (asks before overwriting locally modified files)
+node ~/tools/agent-scaffold/bin/scaffold.mjs update
+```
+
+### Manual (alternative)
+
+Copy `.claude/`, `.github/`, `.vscode/`, `AGENTS.md`, and `CLAUDE.md` into an
+existing repo by hand.
+
+### After installing
+
+1. Fill in the TODO sections of [`AGENTS.md`](./AGENTS.md). Leave `CLAUDE.md`
    unless you have Claude-specific notes — it imports `AGENTS.md`.
-3. Open the repo in VS Code (Copilot extension) or Claude Code.
-4. Try `/scaffold-skill` to walk through creating your first skill.
-5. Read [`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md) and
+2. Open the repo in VS Code (Copilot extension) or Claude Code.
+3. Try `/scaffold-skill` to walk through creating your first skill.
+4. Read [`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md) and
    [`docs/conventions.md`](./docs/conventions.md) when ready to go deeper.
 
 ## What's inside

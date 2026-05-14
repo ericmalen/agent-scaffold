@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "manifestName": ".ai-scaffold.json",
+  "source": {
+    "repo": "https://dev.azure.com/{org}/{project}/_git/agent-scaffold"
+  },
+  "base": {
+    "files": [
+      "AGENTS.md",
+      "CLAUDE.md",
+      ".claude/settings.json",
+      ".vscode/settings.json",
+      ".claude/agents/README.md",
+      ".claude/skills/README.md",
+      ".github/prompts/README.md",
+      ".github/prompts/_example.prompt.md",
+      "docs/cross-tool-setup.md",
+      "docs/migration.md"
+    ],
+    "skills": [
+      "scaffold-agent",
+      "scaffold-skill",
+      "scaffold-nested-agents-md"
+    ]
+  },
+  "skills": {
+    "git-conventions": {
+      "path": ".claude/skills/git-conventions",
+      "description": "Conventional Commits + team PR/branch conventions."
+    }
+  },
+  "agents": {
+    "example-reviewer": {
+      "path": ".claude/agents/example-reviewer.md",
+      "description": "Annotated example read-only reviewer agent."
+    }
+  },
+  "wiringFiles": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".claude/settings.json",
+    ".vscode/settings.json"
+  ],
+  "brownfieldScanPaths": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".claude/",
+    ".github/copilot-instructions.md",
+    ".github/instructions/",
+    ".github/prompts/",
+    ".github/chatmodes/"
+  ],
+  "vscodeAiKeys": [
+    "chat.useAgentsMdFile",
+    "chat.useNestedAgentsMdFiles",
+    "chat.useClaudeMdFile",
+    "chat.useCustomizationsInParentRepositories",
+    "chat.useAgentSkills",
+    "chat.useCustomAgentHooks",
+    "chat.subagents.allowInvocationsFromSubagents"
+  ]
+}
