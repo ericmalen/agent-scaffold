@@ -66,3 +66,60 @@ test('loadRegistry — throws on unknown schemaVersion', () => {
   writeFileSync(join(dir, 'scaffold.config.json'), JSON.stringify({ schemaVersion: 99 }));
   assert.throws(() => loadRegistry(dir), /schemaVersion/);
 });
+
+test('loadRegistry — baseAgents includes scaffold-migrator', () => {
+  const registry = loadRegistry(scaffoldRoot);
+  assert.ok(Array.isArray(registry.baseAgents()));
+  assert.ok(registry.baseAgents().includes('scaffold-migrator'));
+});
+
+test('loadRegistry — base agent resolves to an existing file via agents{}', () => {
+  const registry = loadRegistry(scaffoldRoot);
+  const info = registry.getAgentInfo('scaffold-migrator');
+  assert.ok(info);
+  assert.ok(typeof info.path === 'string' && info.path.length > 0);
+});
+
+test('loadRegistry — scaffold-migrate is a base skill', () => {
+  const registry = loadRegistry(scaffoldRoot);
+  assert.ok(registry.baseSkills().includes('scaffold-migrate'));
+});
+
+test('loadRegistry — optInAgents excludes base agents', () => {
+  const registry = loadRegistry(scaffoldRoot);
+  const ids = registry.optInAgents().map(a => a.id);
+  assert.ok(!ids.includes('scaffold-migrator'));
+  assert.ok(ids.includes('example-reviewer'));
+});
+
+test('loadRegistry — throws on base agent with no agents{} entry', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'scaffold-reg3-'));
+  writeFileSync(join(dir, 'scaffold.config.json'), JSON.stringify({
+    schemaVersion: 1,
+    manifestName: '.ai-scaffold.json',
+    source: { repo: 'x' },
+    base: { files: [], skills: [], agents: ['ghost'] },
+    skills: {},
+    agents: {},
+    wiringFiles: [],
+    brownfieldScanPaths: [],
+    vscodeAiKeys: [],
+  }));
+  assert.throws(() => loadRegistry(dir), /ghost/);
+});
+
+test('loadRegistry — throws on base agent path not found', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'scaffold-reg4-'));
+  writeFileSync(join(dir, 'scaffold.config.json'), JSON.stringify({
+    schemaVersion: 1,
+    manifestName: '.ai-scaffold.json',
+    source: { repo: 'x' },
+    base: { files: [], skills: [], agents: ['ghost'] },
+    skills: {},
+    agents: { ghost: { path: 'MISSING-agent.md', description: 'x' } },
+    wiringFiles: [],
+    brownfieldScanPaths: [],
+    vscodeAiKeys: [],
+  }));
+  assert.throws(() => loadRegistry(dir), /MISSING-agent\.md/);
+});

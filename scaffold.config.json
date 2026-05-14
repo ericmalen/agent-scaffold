@@ -20,7 +20,11 @@
     "skills": [
       "scaffold-agent",
       "scaffold-skill",
-      "scaffold-nested-agents-md"
+      "scaffold-nested-agents-md",
+      "scaffold-migrate"
+    ],
+    "agents": [
+      "scaffold-migrator"
     ]
   },
   "skills": {
@@ -33,6 +37,10 @@
     "example-reviewer": {
       "path": ".claude/agents/example-reviewer.md",
       "description": "Annotated example read-only reviewer agent."
+    },
+    "scaffold-migrator": {
+      "path": ".claude/agents/scaffold-migrator.md",
+      "description": "Resolves brownfield migration debt — semantically merges .scaffold sidecars and updates the manifest."
     }
   },
   "wiringFiles": [

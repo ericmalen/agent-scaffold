@@ -48,7 +48,15 @@ Once you have manually merged a file, remove its entry from
 `pendingIntegration` in `.ai-scaffold.json`. When the array is empty,
 `agent-scaffold status` will no longer show the integration warning.
 
-## Automated migration (v1.1)
+## Automated migration (recommended)
 
-A `scaffold-migrator` agent will be available in a future release to perform
-the semantic merge steps above with guided review in your IDE.
+You don't have to do any of the above by hand. The `scaffold-migrator` agent
+ships with every install and performs the semantic merges for you, with
+approval-gated review at each step.
+
+Run `/scaffold-migrate` (or invoke `@scaffold-migrator`) in Claude Code or
+Copilot. It walks `pendingIntegration` and `preexistingUnmanaged` from
+`.ai-scaffold.json`, proposes each merge as a concrete before/after, applies it
+on your approval, deletes resolved sidecars, and updates the manifest
+bookkeeping. The manual steps above remain available if you prefer to merge by
+hand.
