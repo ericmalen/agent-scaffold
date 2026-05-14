@@ -1,4 +1,4 @@
-# copilot-scaffold
+# agent-scaffold
 
 ## What this is
 
