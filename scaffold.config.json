@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "manifestName": ".ai-scaffold.json",
   "source": {
-    "repo": "https://dev.azure.com/{org}/{project}/_git/agent-scaffold"
+    "repo": "https://dev.azure.com/ericmalen/ado-repo-tests/_git/ado-repo-tests"
   },
   "base": {
     "files": [
