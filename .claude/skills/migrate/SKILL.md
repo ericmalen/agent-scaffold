@@ -16,6 +16,18 @@ attention in `.claude/ai-kit.json`. This skill resolves that debt.
 
 ## Workflow
 
+0. **Resolve the ai-kit clone path.** Every subsequent step shells out to
+   `node <ai-kit-root>/bin/ai-kit.mjs …`, so `<ai-kit-root>` must be a real
+   absolute path before you continue:
+   1. Read `.claude/ai-kit.json` from the consumer repo and take
+      `source.localPath`.
+   2. Verify `<source.localPath>/bin/ai-kit.mjs` exists.
+   3. If the field is missing/null or the file is not on disk, use
+      `AskUserQuestion` to ask for the absolute path to the local ai-kit
+      clone, then re-verify `<path>/bin/ai-kit.mjs`. Do not guess or fall
+      back to `cwd`.
+   4. Use the resolved value for `<ai-kit-root>` in every command below.
+
 1. **Preflight.** Run:
    ```
    node <ai-kit-root>/bin/ai-kit.mjs migrate --phase preflight

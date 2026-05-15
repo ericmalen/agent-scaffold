@@ -665,7 +665,9 @@ test('work-units.enumerate — emits github-skill-route grouped by skill name', 
   assert.equal(unit.files.length, 2);
   assert.ok(unit.files.some(f => f.dst === '.claude/skills/misc/foo/SKILL.md'));
   assert.ok(unit.files.some(f => f.dst === '.claude/skills/misc/foo/references/notes.md'));
-  assert.equal(unit.deletions.length, 2);
+  // Deletions: 2 source files + the leaf .github/skills/foo dir so apply-exec rmdirs it.
+  assert.equal(unit.deletions.length, 3);
+  assert.ok(unit.deletions.includes('.github/skills/foo'), 'leaf dir included for rmdir');
 });
 
 test('work-units.enumerate — emits github-agent-route for each agent file', () => {
@@ -769,6 +771,189 @@ test('e2e — github-skill-route + github-agent-route stage + apply', () => {
     'skill removed from preexistingUnmanaged');
   assert.ok(!final.preexistingUnmanaged.includes('.github/agents/bar.agent.md'),
     'agent removed from preexistingUnmanaged');
+});
+
+// ── github-tree-cleanup + dir deletions ───────────────────────────────────────
+
+test('work-units.enumerate — appends leaf .github/skills/<name> dir to skill route deletions', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/skills/foo'), { recursive: true });
+  writeFileSync(join(dir, '.github/skills/foo/SKILL.md'),
+    '---\nname: foo\ndescription: Does things when invoked\n---\n# Foo\n');
+
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(m, '.github/skills/foo/SKILL.md');
+
+  const units = enumerate(m, dir);
+  const unit = units.find(u => u.id === 'github-skill-foo');
+  assert.ok(unit.deletions.includes('.github/skills/foo'), 'leaf dir in deletions');
+});
+
+test('work-units.enumerate — emits github-tree-cleanup unit with parent dirs + prompts sweep', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/agents'), { recursive: true });
+  mkdirSync(join(dir, '.github/skills/foo'), { recursive: true });
+  mkdirSync(join(dir, '.github/prompts'), { recursive: true });
+  writeFileSync(join(dir, '.github/agents/bar.agent.md'),
+    '---\nname: bar\ndescription: Y\n---\n# Bar\n');
+  writeFileSync(join(dir, '.github/skills/foo/SKILL.md'),
+    '---\nname: foo\ndescription: X\n---\n# Foo\n');
+  writeFileSync(join(dir, '.github/prompts/hello.prompt.md'),
+    '---\nname: hello\n---\n# Hello\n');
+
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(m, '.github/agents/bar.agent.md');
+  addPreexistingUnmanaged(m, '.github/skills/foo/SKILL.md');
+  addPreexistingUnmanaged(m, '.github/prompts/hello.prompt.md');
+
+  const units = enumerate(m, dir);
+  const cleanup = units.find(u => u.id === 'github-tree-cleanup');
+  assert.ok(cleanup, 'cleanup unit emitted');
+  assert.equal(cleanup.type, 'github-tree-cleanup');
+  // Prompt file deleted + all three parent dirs (in apply-after-leaves order)
+  assert.ok(cleanup.deletions.includes('.github/prompts/hello.prompt.md'), 'prompt file deleted');
+  assert.ok(cleanup.deletions.includes('.github/agents'), '.github/agents queued for rmdir');
+  assert.ok(cleanup.deletions.includes('.github/skills'), '.github/skills queued for rmdir');
+  assert.ok(cleanup.deletions.includes('.github/prompts'), '.github/prompts queued for rmdir');
+});
+
+test('work-units.enumerate — no cleanup unit when no .github/ AI-config exists', () => {
+  const dir = tmp();
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+
+  const units = enumerate(m, dir);
+  assert.ok(!units.some(u => u.id === 'github-tree-cleanup'), 'no cleanup when nothing to clean');
+});
+
+test('e2e — github-skill-route apply removes leaf .github/skills/<name> dir', () => {
+  const registry = loadRegistry(getScaffoldRoot(import.meta.url));
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/skills/foo'), { recursive: true });
+  mkdirSync(join(dir, '.claude'), { recursive: true });
+  writeFileSync(join(dir, '.github/skills/foo/SKILL.md'),
+    '---\nname: foo\ndescription: Does X when invoked\n---\n# Foo\n');
+
+  const manifest = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(manifest, '.github/skills/foo/SKILL.md');
+  writeFileSync(join(dir, '.claude/ai-kit.json'), JSON.stringify(manifest, null, 2));
+
+  const units = enumerate(manifest, dir);
+
+  clearStaging(dir);
+  const stageResults = [];
+  const snapshots = new Map();
+  for (const u of units) {
+    const res = stageGithubRoute(u, dir);
+    stageResults.push({ unit: u, ...res });
+    writeStaging(dir, res.stagingFiles);
+    for (const s of res.premiseSnapshots) snapshots.set(s.file, s);
+  }
+  buildAndWrite(dir, { units, stageResults, premiseSnapshots: [...snapshots.values()] });
+
+  const freshManifest = JSON.parse(readFileSync(join(dir, '.claude/ai-kit.json'), 'utf8'));
+  applyMigration(dir, freshManifest, registry);
+
+  assert.ok(existsSync(join(dir, '.claude/skills/misc/foo/SKILL.md')), 'skill moved');
+  assert.ok(!existsSync(join(dir, '.github/skills/foo')), 'leaf .github/skills/foo dir gone');
+  assert.ok(!existsSync(join(dir, '.github/skills')), '.github/skills parent dir gone');
+});
+
+test('e2e — apply-exec skips rmdir on non-empty .github/agents (stray README.md)', () => {
+  const registry = loadRegistry(getScaffoldRoot(import.meta.url));
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/agents'), { recursive: true });
+  mkdirSync(join(dir, '.claude'), { recursive: true });
+  writeFileSync(join(dir, '.github/agents/bar.agent.md'),
+    '---\nname: bar\ndescription: Y\n---\n# Bar\n');
+  // Stray non-routeable sibling
+  writeFileSync(join(dir, '.github/agents/README.md'), '# Agents folder\n');
+
+  const manifest = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(manifest, '.github/agents/bar.agent.md');
+  addPreexistingUnmanaged(manifest, '.github/agents/README.md');
+  writeFileSync(join(dir, '.claude/ai-kit.json'), JSON.stringify(manifest, null, 2));
+
+  const units = enumerate(manifest, dir);
+
+  clearStaging(dir);
+  const stageResults = [];
+  const snapshots = new Map();
+  for (const u of units) {
+    const res = stageGithubRoute(u, dir);
+    stageResults.push({ unit: u, ...res });
+    writeStaging(dir, res.stagingFiles);
+    for (const s of res.premiseSnapshots) snapshots.set(s.file, s);
+  }
+  buildAndWrite(dir, { units, stageResults, premiseSnapshots: [...snapshots.values()] });
+
+  const freshManifest = JSON.parse(readFileSync(join(dir, '.claude/ai-kit.json'), 'utf8'));
+  applyMigration(dir, freshManifest, registry);
+
+  assert.ok(existsSync(join(dir, '.claude/agents/bar.agent.md')), 'agent moved');
+  assert.ok(!existsSync(join(dir, '.github/agents/bar.agent.md')), 'github agent deleted');
+  // Stray README.md survives; .github/agents/ stays because it's not empty
+  assert.ok(existsSync(join(dir, '.github/agents/README.md')), 'stray README untouched');
+  assert.ok(existsSync(join(dir, '.github/agents')), 'non-empty .github/agents not rmdir\'d');
+});
+
+// ── normalize-agent: model field coercion ─────────────────────────────────────
+
+test('normalizeAgentFrontmatter — coerces model array to first canonical slug', async () => {
+  const { normalizeAgentFrontmatter } = await import('../lib/migrate/normalize-agent.mjs');
+  const input = '---\nname: API Agent\nmodel: ["Claude Sonnet 4.6", "Claude Opus 4.6"]\n---\n# Body\n';
+  const out = normalizeAgentFrontmatter(input);
+  assert.ok(out.includes('model: sonnet'), `expected sonnet, got: ${out}`);
+  assert.ok(!out.includes('['), 'array bracket gone');
+});
+
+test('normalizeAgentFrontmatter — coerces verbose scalar to slug', async () => {
+  const { normalizeAgentFrontmatter } = await import('../lib/migrate/normalize-agent.mjs');
+  const out = normalizeAgentFrontmatter('---\nmodel: Claude Opus 4.7\n---\nbody\n');
+  assert.ok(out.includes('model: opus'));
+});
+
+test('normalizeAgentFrontmatter — unknown value falls back to inherit', async () => {
+  const { normalizeAgentFrontmatter } = await import('../lib/migrate/normalize-agent.mjs');
+  const out = normalizeAgentFrontmatter('---\nmodel: gpt-5\n---\nbody\n');
+  assert.ok(out.includes('model: inherit'));
+});
+
+test('normalizeAgentFrontmatter — canonical scalar untouched', async () => {
+  const { normalizeAgentFrontmatter } = await import('../lib/migrate/normalize-agent.mjs');
+  const input = '---\nmodel: sonnet\n---\nbody\n';
+  assert.equal(normalizeAgentFrontmatter(input), input);
+});
+
+test('normalizeAgentFrontmatter — file with no model field unchanged', async () => {
+  const { normalizeAgentFrontmatter } = await import('../lib/migrate/normalize-agent.mjs');
+  const input = '---\nname: foo\ndescription: X\n---\nbody\n';
+  assert.equal(normalizeAgentFrontmatter(input), input);
+});
+
+test('github-route — stages agent with normalized model from array', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/agents'), { recursive: true });
+  writeFileSync(join(dir, '.github/agents/api.agent.md'),
+    '---\nname: "API Agent"\nmodel: ["Claude Sonnet 4.6", "Claude Opus 4.6"]\n---\n# Body\n');
+
+  const unit = {
+    id: 'github-agent-api', type: 'github-agent-route', agentName: 'api',
+    source: '.github/agents/api.agent.md', target: '.claude/agents/api.agent.md',
+    files: [{ src: '.github/agents/api.agent.md', dst: '.claude/agents/api.agent.md' }],
+    hasCollision: false,
+    deletions: ['.github/agents/api.agent.md'],
+    manifestDelta: [],
+  };
+
+  const { stagingFiles } = stageGithubRoute(unit, dir);
+  assert.equal(stagingFiles.length, 1);
+  assert.ok(stagingFiles[0].content.includes('model: sonnet'), 'model coerced to sonnet');
+  assert.ok(!stagingFiles[0].content.includes('Claude Sonnet 4.6'), 'verbose name removed');
 });
 
 test('work-units.enumerate — flags collision when target already exists, skips deletions', () => {

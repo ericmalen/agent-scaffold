@@ -141,6 +141,51 @@ in the plan under "Manual action required". Include the key+value from
 
 ---
 
+### `agent-missing-never-section`
+
+**Procedure:**
+1. Read the full agent file at `finding.file`.
+2. Draft 3–6 `Never` bullets from these signals:
+   - Frontmatter `tools:` — call out anything the agent must not use (e.g.
+     no Bash → "Run Bash"; Read-only tools → "Modify or delete files").
+   - Body procedures — the inverse of any "first get approval, then …"
+     step becomes a Never (e.g. "Apply edits before approval").
+   - Cross-cutting ai-kit invariants when relevant: "Modify
+     `.claude/ai-kit.json`", "Auto-install opt-in skills", "Resolve
+     `pendingIntegration` entries (that's `migrate`'s job)".
+3. In the plan, list the full draft block under the agent's file so the
+   user approves or edits before apply. Do NOT classify as manual.
+
+---
+
+### `agent-description-missing-when`
+
+**Procedure:**
+1. Read the existing `description:` from frontmatter and the agent's first
+   body paragraph (role statement).
+2. Draft a single trailing sentence of the form
+   "Invoke when the user says '<trigger phrase>' or asks to <task>." Pull
+   trigger phrases from the role statement (verbs + objects), not from
+   thin air.
+3. In the plan, show the before and after `description:` value. The user
+   can edit the trigger phrasing before approval. Do NOT classify as manual.
+
+---
+
+### `skill-body-uses-plaintext-sibling-paths`
+
+**Procedure:**
+1. The detector already ignores matches inside fenced code blocks — every
+   finding is prose.
+2. For each plaintext path at `finding.line`, propose a Markdown-link
+   replacement: `./references/foo.md` → `[foo](./references/foo.md)`. Use
+   the file's basename (without extension) as the link label unless the
+   surrounding sentence already names the file.
+3. In the plan, list each replacement as `line N: ./path → [label](./path)`.
+   Apply on approval.
+
+---
+
 ### `audit-report-committed`
 
 **Procedure (deterministic):**

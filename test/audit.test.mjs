@@ -833,6 +833,36 @@ test('audit — orphan registration checks skipped in consumer repo (no ai-kit.c
   assert.ok(!ids.includes('skill-not-registered'), `Orphan check should be skipped, got: ${ids}`);
 });
 
+test('audit — stale-github-dir fired for empty .github/agents', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  mkdirSync(join(dir, '.github', 'agents'), { recursive: true });
+  const report = await audit({ _consumerRoot: dir });
+  const finding = report.findings.find(f => f.id === 'stale-github-dir');
+  assert.ok(finding, `expected stale-github-dir, got: ${report.findings.map(f => f.id)}`);
+  assert.equal(finding.severity, 'warning');
+  assert.equal(finding.file, '.github/agents');
+});
+
+test('audit — stale-github-dir fired for non-empty .github/skills with stray sibling', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  mkdirSync(join(dir, '.github', 'skills'), { recursive: true });
+  writeFileSync(join(dir, '.github', 'skills', 'README.md'), '# stray\n');
+  const report = await audit({ _consumerRoot: dir });
+  const finding = report.findings.find(f => f.id === 'stale-github-dir' && f.file === '.github/skills');
+  assert.ok(finding, 'finding emitted for non-empty .github/skills');
+  assert.ok(finding.message.includes('1 item'), `message mentions count, got: ${finding.message}`);
+});
+
+test('audit — stale-github-dir not fired when no .github/ AI-config dirs exist', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  const report = await audit({ _consumerRoot: dir });
+  assert.ok(!report.findings.some(f => f.id === 'stale-github-dir'),
+    'no finding when .github/ AI-config dirs absent');
+});
+
 test('audit — agent-weak-description not fired for ai-kit-distributed agent', async () => {
   const dir = tmp();
   const agentRelPath = '.claude/agents/my-kit-agent.md';

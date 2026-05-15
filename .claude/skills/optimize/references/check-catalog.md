@@ -113,9 +113,10 @@ line, relative to the consumer repo root.
 **Triggers:** No `## Never` heading found.  
 **Convention:** Every agent must have an explicit `## Never` section listing
 prohibited actions. This is a safety boundary, not optional.  
-**Fix class:** manual  
-**Canonical fix:** Add a `## Never` section enumerating what this agent must
-not do (apply edits before approval, modify the manifest, etc.).
+**Fix class:** semantic  
+**Canonical fix:** Draft a `## Never` block from the agent's body, tools, and
+description (e.g. "Apply edits before approval", "Modify `.claude/ai-kit.json`",
+plus tool-scope constraints). Present the draft in the batch plan for approval.
 
 ---
 
@@ -154,8 +155,10 @@ phrasings and a "do not use for" clause.
 **Triggers:** Description does not contain the word "when".  
 **Convention:** Agent descriptions should state when to invoke the agent so
 AI tools activate it on the right trigger.  
-**Fix class:** manual  
-**Canonical fix:** Add a "when" clause, e.g. "Invoke when the user says…".  
+**Fix class:** semantic  
+**Canonical fix:** Draft an "Invoke when …" clause from the existing description
+and the agent's role statement, append to `description:` in frontmatter, and
+present in the batch plan for approval.  
 **Note:** Skipped for ai-kit-distributed agents (see `agent-weak-description`).
 
 ---
@@ -216,12 +219,15 @@ clause.
 ---
 
 ### `skill-body-uses-plaintext-sibling-paths`
-**Triggers:** SKILL.md body contains relative paths starting with `./` or `../`.  
-**Convention:** Relative paths in skill bodies may not resolve correctly when
-the skill is invoked from a different working directory.  
-**Fix class:** manual  
-**Canonical fix:** Use paths relative to the consumer repo root, or use
-Markdown links with absolute repo-root-relative paths.
+**Triggers:** SKILL.md body contains relative paths starting with `./` or `../`
+**outside fenced code blocks** (shell examples inside ``` are ignored).  
+**Convention:** Relative paths in skill prose may not resolve when the skill
+is invoked from a different working directory.  
+**Fix class:** semantic  
+**Canonical fix:** Convert each plaintext path to a Markdown link with a
+repo-root-relative target (e.g. `./references/foo.md` →
+`[foo](./references/foo.md)` or a path from the consumer root). Present the
+exact replacements in the batch plan for approval.
 
 ---
 
@@ -464,6 +470,23 @@ or `.claude/ai-kit-audit-report.json`.
 **Convention:** The audit report is auto-generated and should not be committed.  
 **Fix class:** deterministic  
 **Canonical fix:** Add `.claude/ai-kit-audit-report.json` to `.gitignore`.
+
+---
+
+### `stale-github-dir`
+**Severity:** warning  
+**Triggers:** `.github/agents/`, `.github/skills/`, or `.github/prompts/`
+exists in the consumer repo. ai-kit migrate moves AI-config from these dirs
+into `.claude/` and should remove them. A surviving dir means migrate skipped
+content (collision, non-approval) or a stray sibling file (e.g. `README.md`)
+blocked the parent rmdir.  
+**Convention:** AI-config lives under `.claude/`; `.github/` is for Copilot
+and CI tooling only. See [conventions.md](../../../../docs/conventions.md).  
+**Fix class:** deterministic  
+**Canonical fix:** If the dir is empty, `rmdir` it. If it contains stray
+files, list them to the user — auto-delete only if they are unambiguously dead
+scaffolding (e.g. `.github/agents/README.md` that just describes the moved
+content). Never delete content the user might still want.
 
 ---
 
