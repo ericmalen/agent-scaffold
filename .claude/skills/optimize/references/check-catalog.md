@@ -35,12 +35,14 @@ files, etc.).
 ---
 
 ### `agents-md-unfilled-todo`
+**Severity:** info  
 **Triggers:** A `<!-- TODO: ... -->` comment found in the file.  
 **Convention:** The ai-kit template ships with placeholder TODOs; they must be
 replaced before the file is useful.  
-**Fix class:** manual  
-**Canonical fix:** Replace each `<!-- TODO: ... -->` block with real project
-content.
+**Fix class:** none  
+**Canonical fix:** Tell the user which sections need content. Do not remove or
+modify the TODO placeholders — they are helpful guidance until the user replaces
+them. The optimizer must not touch this file for this finding.
 
 ---
 

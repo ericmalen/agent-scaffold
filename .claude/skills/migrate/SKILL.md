@@ -70,7 +70,9 @@ never content; apply just moves staging files into place. The full `SCOPE` /
    sidecars, the staging directory, and the plan file. Apply regenerates no
    content — the staging files are authoritative.
 5. When done, run `ai-kit status` to confirm the integration warning
-   cleared.
+   cleared. The migrator automatically runs `ai-kit audit` as its final step
+   and reports any convention violations. If findings are shown, run `/optimize`
+   to fix them.
 
 If the apply call's outcome is ever uncertain (interrupted, ambiguous result),
 just invoke `migrator` again — with the plan file still present it

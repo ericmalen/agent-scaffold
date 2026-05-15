@@ -67,7 +67,7 @@ try {
     status(flags);
   } else if (command === 'audit') {
     const report = await audit(flags);
-    process.exit(report.summary.error > 0 ? 1 : 0);
+    process.exit(report.summary.error > 0 || report.summary.warning > 0 ? 1 : 0);
   } else {
     log.error(`Unknown command: "${command}". Run with --help for usage.`);
     process.exit(1);

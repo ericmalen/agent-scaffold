@@ -107,10 +107,18 @@ planning or applying.
     - Apply the `## Manifest changes` to `.claude/ai-kit.json` exactly as written.
     - `rm` everything in `## Deletions` — resolved sidecars and folded files,
       then the `.ai-kit-staging/` directory, then the plan file.
-15. Print a final summary: every file moved into place, created, or deleted, and
-    the resulting state of both manifest arrays. Suggest `ai-kit status`
-    to confirm. If the migration produced a large merged `AGENTS.md` or may
-    have introduced redundancy, also suggest running `/optimize`.
+15. Run `ai-kit audit` via Bash. Capture the full stdout/stderr and exit code.
+16. Print a final summary: every file moved into place, created, or deleted, and
+    the resulting state of both manifest arrays. Suggest `ai-kit status` to confirm.
+    Then report audit results — always show the audit output (truncated to ~20 lines
+    if long; tell the user to run `ai-kit audit` for the full report):
+    - **Exit 0:** Migration complete — no warnings or errors. Any `[info]` lines in
+      the output are informational only and require no immediate action.
+    - **Exit 1 (warnings/errors):** Show the truncated output. Append: "Run
+      `/optimize` to fix these automatically, or `node bin/ai-kit.mjs audit` for
+      the full report."
+    - **Unexpected error (audit command itself failed):** Show the error output.
+      Suggest re-running `ai-kit audit` manually. Do not swallow.
 
 ## Never
 
@@ -143,9 +151,9 @@ planning or applying.
 - Use Bash for anything other than: in apply mode, moving staging files into
   place and `rm` of confirmed-resolved sidecars / folded instruction files / the
   `.ai-kit-staging/` directory / `.ai-kit-migration-plan.md`;
-  `ai-kit status`; or `ai-kit init --skills <name>` for an opt-in
-  skill the user approved. (Scoped plan mode uses no Bash — it writes staging
-  files with the Write tool.)
+  `ai-kit status`; `ai-kit audit`; or `ai-kit init --skills <name>` for an
+  opt-in skill the user approved. (Scoped plan mode uses no Bash — it writes
+  staging files with the Write tool.)
 - Re-run `ai-kit init` or `update` in a way that would re-sidecar files.
 
 ## Documents

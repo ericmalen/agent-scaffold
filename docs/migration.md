@@ -72,6 +72,6 @@ on your approval, deletes resolved sidecars, and updates the manifest
 bookkeeping. The manual steps above remain available if you prefer to merge by
 hand.
 
-After migration completes, run `/optimize` to catch any convention violations
-that the merge may have introduced (e.g., a root AGENTS.md that grew too long,
-or content duplicated across AGENTS.md and a skill).
+After migration completes, the migrator automatically runs `ai-kit audit` and
+reports any convention violations it finds. If findings are shown, run
+`/optimize` to fix them automatically.
