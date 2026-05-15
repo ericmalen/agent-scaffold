@@ -74,7 +74,7 @@ generic built-ins.
 
 Alongside the meta-skills, ai-kit ships one real skill as a reference
 for what a finished skill looks like. Read
-[`git-conventions/SKILL.md`](./git-conventions/SKILL.md) to see the multi-file
+[`git/git-conventions/SKILL.md`](./git/git-conventions/SKILL.md) to see the multi-file
 pattern in practice — a lean router with sibling references and examples,
 frontmatter with both _what_ and _when_ in the description, and a
 quick-reference block so common cases don't require following any links. The
@@ -83,6 +83,13 @@ skill bundles the
 (commit messages only) with team-derived extensions for PR titles, PR
 descriptions, and branch names — a useful pattern when codifying a cluster of
 related conventions under one skill.
+
+## Folder layout
+
+Opt-in skills may live at any depth — registered via the `path` field in
+`ai-kit.config.json`. ai-kit ships its own opt-ins grouped by category
+(`terraform/`, `kubernetes/`, `git/`, `frontend/`, ...). Base skills
+(`base.skills`) must stay at `.claude/skills/{name}/SKILL.md` — one level only.
 
 ## Adding skills
 

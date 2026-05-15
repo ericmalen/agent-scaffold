@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, mkdirSync } from 'node:fs';
 import { loadRegistry } from '../lib/registry.mjs';
 
 const aiKitRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -106,6 +106,52 @@ test('loadRegistry — throws on base agent with no agents{} entry', () => {
     vscodeAiKeys: [],
   }));
   assert.throws(() => loadRegistry(dir), /ghost/);
+});
+
+test('loadRegistry — opt-in skill at nested path resolves', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ai-kit-reg-nested-'));
+  mkdirSync(join(dir, '.claude', 'skills', 'terraform', 'refactor-module'), { recursive: true });
+  writeFileSync(join(dir, '.claude', 'skills', 'terraform', 'refactor-module', 'SKILL.md'), '---\nname: refactor-module\ndescription: x\n---\n');
+  writeFileSync(join(dir, 'ai-kit.config.json'), JSON.stringify({
+    schemaVersion: 1,
+    manifestName: '.claude/ai-kit.json',
+    source: { repo: 'x' },
+    base: { files: [], skills: [] },
+    skills: {
+      'refactor-module': {
+        path: '.claude/skills/terraform/refactor-module',
+        description: 'nested skill',
+      },
+    },
+    agents: {},
+    wiringFiles: [],
+    brownfieldScanPaths: [],
+    vscodeAiKeys: [],
+  }));
+  const registry = loadRegistry(dir);
+  const skills = registry.optInSkills();
+  assert.equal(skills.length, 1);
+  assert.equal(skills[0].id, 'refactor-module');
+  assert.equal(skills[0].path, '.claude/skills/terraform/refactor-module');
+  assert.equal(registry.hasSkill('refactor-module'), true);
+});
+
+test('loadRegistry — throws when nested opt-in skill path is missing on disk', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ai-kit-reg-nested-missing-'));
+  writeFileSync(join(dir, 'ai-kit.config.json'), JSON.stringify({
+    schemaVersion: 1,
+    manifestName: '.claude/ai-kit.json',
+    source: { repo: 'x' },
+    base: { files: [], skills: [] },
+    skills: {
+      'ghost': { path: '.claude/skills/category/ghost', description: 'x' },
+    },
+    agents: {},
+    wiringFiles: [],
+    brownfieldScanPaths: [],
+    vscodeAiKeys: [],
+  }));
+  assert.throws(() => loadRegistry(dir), /\.claude\/skills\/category\/ghost/);
 });
 
 test('loadRegistry — throws on base agent path not found', () => {

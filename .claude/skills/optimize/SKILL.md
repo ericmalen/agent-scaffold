@@ -46,6 +46,14 @@ and explicit safety boundaries.
    siblings, removes redundant prose, etc.
 5. **Confirm.** Re-runs `ai-kit audit` and prints the final summary.
 
+## Skill folder layout
+
+Opt-in skills may live at any depth under `.claude/skills/` — the registry
+`path` field is authoritative, e.g. `.claude/skills/terraform/refactor-module`.
+Base skills (`base.skills` in `ai-kit.config.json`) must stay at
+`.claude/skills/{name}/SKILL.md` (one level). Audit and install both honor the
+registered `path`, so grouping opt-in skills by category is safe.
+
 ## References
 
 - [Check catalog](./references/check-catalog.md) — every check ID, what it

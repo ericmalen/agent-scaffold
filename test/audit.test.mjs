@@ -704,6 +704,66 @@ test('audit — agent-grants-all-tools falls back to manual when no Procedures s
 
 // ── Wave 4: orphan registration (skipped outside scaffold repo) ───────────────
 
+test('checkCrossFile — nested opt-in skill registered by full path produces no orphan finding', async () => {
+  const { checkCrossFile } = await import('../lib/audit/checks/cross-file.mjs');
+  const dir = tmp();
+  mkdirSync(join(dir, '.claude', 'skills', 'terraform', 'refactor-module'), { recursive: true });
+  writeFileSync(
+    join(dir, '.claude', 'skills', 'terraform', 'refactor-module', 'SKILL.md'),
+    '---\nname: refactor-module\ndescription: x\n---\n',
+  );
+  const fakeRegistry = {
+    baseSkills: () => [],
+    optInSkills: () => [{ id: 'refactor-module', path: '.claude/skills/terraform/refactor-module' }],
+    baseAgents: () => [],
+    optInAgents: () => [],
+  };
+  const findings = checkCrossFile({ pendingIntegration: [] }, dir, [], { aiKitRoot: dir, registry: fakeRegistry });
+  const orphans = findings.filter(f => f.id === 'skill-not-registered');
+  assert.equal(orphans.length, 0, `Expected 0 orphans for registered nested skill, got: ${JSON.stringify(orphans)}`);
+});
+
+test('checkCrossFile — nested skill missing from registry fires orphan with nested file path', async () => {
+  const { checkCrossFile } = await import('../lib/audit/checks/cross-file.mjs');
+  const dir = tmp();
+  mkdirSync(join(dir, '.claude', 'skills', 'terraform', 'ghost-skill'), { recursive: true });
+  writeFileSync(
+    join(dir, '.claude', 'skills', 'terraform', 'ghost-skill', 'SKILL.md'),
+    '---\nname: ghost-skill\ndescription: x\n---\n',
+  );
+  const fakeRegistry = {
+    baseSkills: () => [],
+    optInSkills: () => [],
+    baseAgents: () => [],
+    optInAgents: () => [],
+  };
+  const findings = checkCrossFile({ pendingIntegration: [] }, dir, [], { aiKitRoot: dir, registry: fakeRegistry });
+  const orphans = findings.filter(f => f.id === 'skill-not-registered');
+  assert.equal(orphans.length, 1, `Expected exactly 1 orphan for nested unregistered skill, got: ${JSON.stringify(orphans)}`);
+  assert.equal(orphans[0].file, '.claude/skills/terraform/ghost-skill/SKILL.md');
+  assert.match(orphans[0].message, /ghost-skill/);
+  assert.match(orphans[0].message, /terraform\/ghost-skill/);
+});
+
+test('checkCrossFile — flat base skill registered does not fire orphan', async () => {
+  const { checkCrossFile } = await import('../lib/audit/checks/cross-file.mjs');
+  const dir = tmp();
+  mkdirSync(join(dir, '.claude', 'skills', 'migrate'), { recursive: true });
+  writeFileSync(
+    join(dir, '.claude', 'skills', 'migrate', 'SKILL.md'),
+    '---\nname: migrate\ndescription: x\n---\n',
+  );
+  const fakeRegistry = {
+    baseSkills: () => ['migrate'],
+    optInSkills: () => [],
+    baseAgents: () => [],
+    optInAgents: () => [],
+  };
+  const findings = checkCrossFile({ pendingIntegration: [] }, dir, [], { aiKitRoot: dir, registry: fakeRegistry });
+  const orphans = findings.filter(f => f.id === 'skill-not-registered');
+  assert.equal(orphans.length, 0, `Expected 0 orphans for registered base skill, got: ${JSON.stringify(orphans)}`);
+});
+
 test('audit — orphan registration checks skipped in consumer repo (no ai-kit.config.json)', async () => {
   const dir = tmp();
   writeManifest(dir);

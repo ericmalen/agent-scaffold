@@ -482,12 +482,16 @@ pattern for that surface.
 
 ### `skill-not-registered`
 **Severity:** info  
-**Triggers:** (Scaffold repo only) A skill exists in `.claude/skills/` but is
-not in `ai-kit.config.json` under `base.skills` or `skills:`.  
-**Convention:** Unregistered skills are not shipped by the CLI.  
+**Triggers:** (Scaffold repo only) A `SKILL.md` exists under `.claude/skills/`
+at a folder path not matching any registered base or opt-in skill.  
+**Convention:** Unregistered skills are not shipped by the CLI. Opt-in skills
+are matched by their full registered `path` (so nested layouts like
+`.claude/skills/terraform/refactor-module` are first-class); base skills are
+matched by name at `.claude/skills/{name}`.  
 **Fix class:** manual  
 **Canonical fix:** Add the skill to `ai-kit.config.json` under `base.skills`
-(if bundled) or `skills:` (if opt-in).
+(flat-only, bundled) or `skills:` (opt-in, may be nested — set `path` to the
+actual folder).
 
 ---
 

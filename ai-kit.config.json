@@ -14,6 +14,7 @@
       ".claude/skills/README.md",
       ".github/prompts/README.md",
       ".github/prompts/_example.prompt.md",
+      ".github/instructions/azure-devops-pipelines.instructions.md",
       "docs/cross-tool-setup.md",
       "docs/migration.md",
       "docs/optimization.md"
@@ -32,8 +33,224 @@
   },
   "skills": {
     "git-conventions": {
-      "path": ".claude/skills/git-conventions",
+      "path": ".claude/skills/git/git-conventions",
       "description": "Conventional Commits + team PR/branch conventions."
+    },
+    "agent-development": {
+      "path": ".claude/skills/anthropic/agent-development",
+      "description": "Anthropic guidance for creating Claude Code subagents — frontmatter, system prompts, triggering, tool boundaries."
+    },
+    "agent-introspection-debugging": {
+      "path": ".claude/skills/agentic/agent-introspection-debugging",
+      "description": "Structured self-debugging workflow for AI agent failures: capture, diagnose, contain recovery, write introspection report."
+    },
+    "agentic-eval": {
+      "path": ".claude/skills/agentic/agentic-eval",
+      "description": "Patterns for evaluating and improving AI agent outputs: self-critique loops, evaluator-optimizer pipelines, rubric/LLM-as-judge evaluation."
+    },
+    "api-design-affaan": {
+      "path": ".claude/skills/backend/api-design-affaan",
+      "description": "REST API design patterns: resource naming, status codes, pagination, filtering, error responses, versioning, rate limiting."
+    },
+    "azure-devops-cli": {
+      "path": ".claude/skills/devops/azure-devops-cli",
+      "description": "Manage Azure DevOps via az CLI — projects, repos, pipelines, builds, PRs, work items, artifacts, service endpoints."
+    },
+    "backend-code-review": {
+      "path": ".claude/skills/code-review/backend-code-review",
+      "description": "Review backend code (Python under src/backend/) for quality, security, maintainability against checklist rules."
+    },
+    "backend-patterns-affaan": {
+      "path": ".claude/skills/backend/backend-patterns-affaan",
+      "description": "Backend architecture patterns, API design, database optimization for Node.js/Express/Next.js API routes."
+    },
+    "browse": {
+      "path": ".claude/skills/misc/browse",
+      "description": "gstack headless browser CLI for QA: navigate, interact, screenshot, diff, responsive checks (~100ms/cmd)."
+    },
+    "bundled-gcp": {
+      "path": ".claude/skills/devops/bundled-gcp",
+      "description": "Google Cloud Platform expert: gcloud CLI, GKE, Cloud Run, IAM, managed services."
+    },
+    "critique": {
+      "path": ".claude/skills/code-review/critique",
+      "description": "Audit and fix repo scripts and GitHub Actions workflows for robustness and security; outputs APPROVED/REJECTED."
+    },
+    "deep-research": {
+      "path": ".claude/skills/agentic/deep-research",
+      "description": "Multi-source deep research via firecrawl + exa MCPs — synthesizes findings, delivers cited reports."
+    },
+    "deno-fmt": {
+      "path": ".claude/skills/devops/deno-fmt",
+      "description": "Run Deno repo formatter (./x fmt) before committing or opening a PR."
+    },
+    "design-orchestration": {
+      "path": ".claude/skills/agentic/design-orchestration",
+      "description": "Orchestrates design workflows by routing work through brainstorming, multi-agent review, and execution readiness in the correct order."
+    },
+    "devops-docker-management": {
+      "path": ".claude/skills/devops/devops-docker-management",
+      "description": "Manage Docker containers/images/volumes/networks/Compose — lifecycle ops, debugging, cleanup, Dockerfile optimization."
+    },
+    "diagnose": {
+      "path": ".claude/skills/tdd/diagnose",
+      "description": "Disciplined diagnosis loop for hard bugs/perf regressions: reproduce → minimise → hypothesise → instrument → fix → regression-test."
+    },
+    "doc-coauthoring": {
+      "path": ".claude/skills/anthropic/doc-coauthoring",
+      "description": "Anthropic structured workflow for co-authoring docs, proposals, technical specs, decision docs."
+    },
+    "docx": {
+      "path": ".claude/skills/anthropic/docx",
+      "description": "Anthropic skill for creating, reading, editing, and manipulating Word .docx documents."
+    },
+    "email-drafter": {
+      "path": ".claude/skills/misc/email-drafter",
+      "description": "Professional business email composition — replies, drafts, follow-ups."
+    },
+    "frontend-code-review": {
+      "path": ".claude/skills/code-review/frontend-code-review",
+      "description": "Review frontend (.tsx/.ts/.js) files against urgency-tagged checklist for quality, performance, business logic."
+    },
+    "frontend-design": {
+      "path": ".claude/skills/anthropic/frontend-design",
+      "description": "Anthropic skill: create distinctive, production-grade frontend interfaces avoiding generic AI aesthetics."
+    },
+    "frontend-patterns-affaan": {
+      "path": ".claude/skills/frontend/frontend-patterns-affaan",
+      "description": "Frontend patterns for React, Next.js — state management, performance, UI best practices."
+    },
+    "frontend-testing-dify": {
+      "path": ".claude/skills/frontend/frontend-testing-dify",
+      "description": "Vitest + React Testing Library test generation for Dify frontend (incremental workflow, AAA, semantic queries)."
+    },
+    "github-issue-creator": {
+      "path": ".claude/skills/git/github-issue-creator",
+      "description": "Create GitHub issues from .github/ISSUE_TEMPLATE/ via gh issue create --body-file."
+    },
+    "hook-development": {
+      "path": ".claude/skills/anthropic/hook-development",
+      "description": "Anthropic guidance for creating Claude Code plugin hooks — PreToolUse, PostToolUse, Stop, prompt-based hooks API."
+    },
+    "i18n-lobehub": {
+      "path": ".claude/skills/frontend/i18n-lobehub",
+      "description": "LobeHub i18n with react-i18next — namespace + flat-key conventions, zh-CN/en-US JSON workflow."
+    },
+    "iac-engineer": {
+      "path": ".claude/skills/devops/iac-engineer",
+      "description": "Infrastructure as Code with Terraform, Kubernetes, cloud platforms — CI/CD, observability, DevSecOps."
+    },
+    "improve-codebase-architecture": {
+      "path": ".claude/skills/architecture/improve-codebase-architecture",
+      "description": "Surface architectural friction; propose deepening refactors for testability and AI-navigability."
+    },
+    "k8s-manifest-generator": {
+      "path": ".claude/skills/kubernetes/k8s-manifest-generator",
+      "description": "Production-ready K8s manifests: Deployments, Services, ConfigMaps, Secrets, PVCs."
+    },
+    "k8s-security-policies": {
+      "path": ".claude/skills/kubernetes/k8s-security-policies",
+      "description": "Implement NetworkPolicy, PodSecurityPolicy, RBAC, Pod Security Standards."
+    },
+    "kubernetes-architect": {
+      "path": ".claude/skills/kubernetes/kubernetes-architect",
+      "description": "Cloud-native K8s infra, advanced GitOps (ArgoCD/Flux), enterprise container orchestration."
+    },
+    "kubernetes-deployment": {
+      "path": ".claude/skills/kubernetes/kubernetes-deployment",
+      "description": "K8s deployment workflow: container orchestration, Helm charts, service mesh, production K8s configs."
+    },
+    "mcp-builder": {
+      "path": ".claude/skills/anthropic/mcp-builder",
+      "description": "Anthropic guide for high-quality MCP servers in Python (FastMCP) or Node/TypeScript (MCP SDK)."
+    },
+    "note-taking-obsidian": {
+      "path": ".claude/skills/misc/note-taking-obsidian",
+      "description": "Read, search, create, and edit Obsidian vault notes (filesystem-first)."
+    },
+    "pdf": {
+      "path": ".claude/skills/anthropic/pdf",
+      "description": "Anthropic skill: read/extract/merge/split/rotate/watermark/encrypt PDFs, fill forms, OCR scanned PDFs."
+    },
+    "pptx": {
+      "path": ".claude/skills/anthropic/pptx",
+      "description": "Anthropic skill for any .pptx work — create, parse, edit, combine slide decks; templates, layouts, speaker notes."
+    },
+    "pr-creator": {
+      "path": ".claude/skills/git/pr-creator",
+      "description": "Create GitHub PRs following repo template with branch safety, preflight checks, conventional-commit titles."
+    },
+    "pr-review": {
+      "path": ".claude/skills/git/pr-review",
+      "description": "Review a PR for correctness, security, code quality, testing — AutoGPT-derived."
+    },
+    "prompt-engineer": {
+      "path": ".claude/skills/agentic/prompt-engineer",
+      "description": "World-class prompt engineering for LLM optimization, prompt patterns, structured outputs, RAG, agentic system design."
+    },
+    "refactor-module": {
+      "path": ".claude/skills/terraform/refactor-module",
+      "description": "Transform monolithic Terraform configs into reusable modules following HashiCorp's design principles."
+    },
+    "review-duplication": {
+      "path": ".claude/skills/git/review-duplication",
+      "description": "Code review workflow to detect duplicated logic and missed reuse opportunities via sub-agent investigation."
+    },
+    "security-review-affaan": {
+      "path": ".claude/skills/code-review/security-review-affaan",
+      "description": "Security checklist for auth, input handling, secrets, payments, sensitive features."
+    },
+    "skill-creator": {
+      "path": ".claude/skills/anthropic/skill-creator",
+      "description": "Anthropic skill: create, modify, eval, and benchmark skills; optimize descriptions for triggering accuracy."
+    },
+    "tailwind-css-rules": {
+      "path": ".claude/skills/frontend/tailwind-css-rules",
+      "description": "Tailwind CSS v4.1+ rules: deprecated utilities, gap vs space, opacity modifiers, gradients, dark mode, container queries."
+    },
+    "tdd-hermes": {
+      "path": ".claude/skills/tdd/tdd-hermes",
+      "description": "Hermes-flavored TDD: enforce RED-GREEN-REFACTOR, tests before code (obra/superpowers adaptation)."
+    },
+    "tdd-mattpocock": {
+      "path": ".claude/skills/tdd/tdd-mattpocock",
+      "description": "Matt Pocock's TDD red-green-refactor with integration-style tests of public interfaces."
+    },
+    "tdd-workflow-affaan": {
+      "path": ".claude/skills/tdd/tdd-workflow-affaan",
+      "description": "TDD workflow enforcing 80%+ coverage with unit, integration, and E2E tests."
+    },
+    "team-builder": {
+      "path": ".claude/skills/agentic/team-builder",
+      "description": "Interactive agent picker for composing and dispatching parallel teams of personas across domains."
+    },
+    "terraform-search-import": {
+      "path": ".claude/skills/terraform/terraform-search-import",
+      "description": "Discover existing cloud resources via Terraform Search and bulk import them into Terraform management."
+    },
+    "terraform-style-guide": {
+      "path": ".claude/skills/terraform/terraform-style-guide",
+      "description": "Generate Terraform HCL following HashiCorp's official style conventions and best practices."
+    },
+    "terraform-test": {
+      "path": ".claude/skills/terraform/terraform-test",
+      "description": "Write and run Terraform tests (.tftest.hcl) — run blocks, assertions, mocks, providers."
+    },
+    "terrashark": {
+      "path": ".claude/skills/terraform/terrashark",
+      "description": "Prevent Terraform/OpenTofu hallucinations: identity churn, secret exposure, blast-radius, CI drift, compliance gaps."
+    },
+    "worktree": {
+      "path": ".claude/skills/git/worktree",
+      "description": "Set up a new git worktree: create, copy .env, install deps, generate Prisma client (AutoGPT)."
+    },
+    "write-api-reference": {
+      "path": ".claude/skills/frontend/write-api-reference",
+      "description": "Produce Next.js API reference .mdx pages with templates per category (function/component/convention/directive/config)."
+    },
+    "xlsx": {
+      "path": ".claude/skills/anthropic/xlsx",
+      "description": "Anthropic skill for any .xlsx/.xlsm/.csv/.tsv work — read, edit, create, format, chart, clean tabular data."
     }
   },
   "agents": {
