@@ -80,3 +80,9 @@ special filename, no frontmatter. See
 
 `.claude/agents/`, `.claude/skills/`, and `.github/prompts/` each have a single
 `README.md` that explains the pattern. Individual asset files stay lean.
+
+## Checking conformance
+
+Run `ai-kit audit` at any time to lint installed assets against these
+conventions. See [`docs/optimization.md`](./optimization.md) for what it
+checks and how to fix findings automatically with `/optimize`.

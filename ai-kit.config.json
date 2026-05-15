@@ -15,16 +15,19 @@
       ".github/prompts/README.md",
       ".github/prompts/_example.prompt.md",
       "docs/cross-tool-setup.md",
-      "docs/migration.md"
+      "docs/migration.md",
+      "docs/optimization.md"
     ],
     "skills": [
       "new-agent",
       "new-skill",
       "layer-agents",
-      "migrate"
+      "migrate",
+      "optimize"
     ],
     "agents": [
-      "migrator"
+      "migrator",
+      "optimizer"
     ]
   },
   "skills": {
@@ -40,7 +43,11 @@
     },
     "migrator": {
       "path": ".claude/agents/migrator.md",
-      "description": "Resolves brownfield migration debt — semantically merges .ai-kit sidecars and updates the manifest."
+      "description": "Resolves brownfield migration debt — semantically merges .ai-kit sidecars and updates the manifest. Invoke when finishing a brownfield migration."
+    },
+    "optimizer": {
+      "path": ".claude/agents/optimizer.md",
+      "description": "Audits installed AI assets for convention violations and applies a batch of fixes on single approval."
     }
   },
   "wiringFiles": [

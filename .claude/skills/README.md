@@ -45,6 +45,17 @@ to memorize them.
 
 Type `/new-skill` in chat to walk through creating your first skill.
 
+## Maintenance skills
+
+Two skills handle the ongoing lifecycle of installed assets:
+
+- [`migrate`](./migrate/SKILL.md) — finish a brownfield migration after
+  `ai-kit init` runs on a repo that already had AI config. Resolves
+  `.ai-kit` sidecars and `pendingIntegration` entries.
+- [`optimize`](./optimize/SKILL.md) — audit installed assets for convention
+  violations and fix them in one batch. Run `/optimize` any time assets have
+  drifted, grown too long, or need restructuring.
+
 > There is no `new-prompt` meta-skill. Copilot prompt files have no Claude
 > equivalent, so the cross-tool way to make a `/command` is a `user-invocable`
 > skill — which is what `new-skill` produces. `.github/prompts/` remains as

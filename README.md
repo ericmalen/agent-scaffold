@@ -8,6 +8,10 @@ structure, conventions, annotated `_example` files, and three meta-skills
 (`new-skill`, `new-agent`, `layer-agents`) that create new
 assets to match the conventions.
 
+Three lifecycle verbs cover the full journey: **CREATE** new conformant assets,
+**MIGRATE** brownfield repos with pre-existing AI config, and **OPTIMIZE** installed
+assets that have drifted from conventions.
+
 No stack-specific or domain-specific content — you add those on top.
 
 Shared agents and skills live in `.claude/agents/` and `.claude/skills/` — both
@@ -48,6 +52,9 @@ fresh repo (**greenfield**) and handles both correctly. Re-running with
 # See what's installed and whether anything has drifted
 node ~/tools/ai-kit/bin/ai-kit.mjs status
 
+# Lint installed AI assets for convention violations
+node ~/tools/ai-kit/bin/ai-kit.mjs audit
+
 # Pull latest ai-kit version (asks before overwriting locally modified files)
 node ~/tools/ai-kit/bin/ai-kit.mjs update
 ```
@@ -77,11 +84,15 @@ CLAUDE.md                       — imports AGENTS.md for Claude Code
   agents/
     README.md                   — agent conventions + field reference
     example-reviewer.md         — annotated example agent
-  skills/
+    migrator.md                 — resolves brownfield .ai-kit sidecars
+    optimizer.md                — audits and fixes convention violations
+  skills:
     README.md
     new-skill/             — meta-skill: create a new skill
     new-agent/             — meta-skill: create a new agent
     layer-agents/  — meta-skill: create a nested AGENTS.md
+    migrate/               — skill: finish a brownfield migration
+    optimize/              — skill: audit and fix convention violations
     git-conventions/            — a finished skill, as a reference
 .github/
   prompts/
@@ -94,6 +105,8 @@ docs/
   built-in-reference.md                — what ships out of the box with VS Code
   workflow-tips.md                     — working effectively with this system
   why-this-way.md                      — design rationale (optional reading)
+  migration.md                         — how brownfield migration works
+  optimization.md                      — how the audit + optimize verb works
 ```
 
 Each asset-type folder has a `README.md` explaining the pattern and an example

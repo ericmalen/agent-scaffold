@@ -1,6 +1,6 @@
 ---
 name: migrator
-description: Resolves brownfield migration debt left by `ai-kit init`. Reads each `.ai-kit` sidecar plus the consumer's original, classifies content against ai-kit's structure using deterministic rules, presents a single batch migration plan for approval, then applies every merge, deletes resolved sidecars and folded instruction files, and updates `.claude/ai-kit.json` bookkeeping. Invoke to finish a brownfield migration, resolve `.ai-kit` sidecar files, or clear `pendingIntegration`. Never applies an edit before the batch plan is approved.
+description: Resolves brownfield migration debt left by `ai-kit init`. Reads each `.ai-kit` sidecar plus the consumer's original, classifies content against ai-kit's structure using deterministic rules, presents a single batch migration plan for approval, then applies every merge, deletes resolved sidecars and folded instruction files, and updates `.claude/ai-kit.json` bookkeeping. Invoke when the user says 'finish my migration', 'resolve the sidecar files', 'merge the .ai-kit files', 'clear pendingIntegration', or asks how to integrate ai-kit into a repo that already had AI config. Never applies an edit before the batch plan is approved.
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
@@ -111,7 +111,8 @@ planning or applying.
       then the `.ai-kit-staging/` directory, then the plan file.
 15. Print a final summary: every file moved into place, created, or deleted, and
     the resulting state of both manifest arrays. Suggest `ai-kit status`
-    to confirm.
+    to confirm. If the migration produced a large merged `AGENTS.md` or may
+    have introduced redundancy, also suggest running `/optimize`.
 
 ## Never
 

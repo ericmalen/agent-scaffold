@@ -71,3 +71,7 @@ Copilot. It walks `pendingIntegration` and `preexistingUnmanaged` from
 on your approval, deletes resolved sidecars, and updates the manifest
 bookkeeping. The manual steps above remain available if you prefer to merge by
 hand.
+
+After migration completes, run `/optimize` to catch any convention violations
+that the merge may have introduced (e.g., a root AGENTS.md that grew too long,
+or content duplicated across AGENTS.md and a skill).
