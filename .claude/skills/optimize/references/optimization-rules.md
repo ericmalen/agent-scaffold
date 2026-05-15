@@ -45,7 +45,13 @@ pages almost always contains directory-scoped rules.
    `@AGENTS.md`)".
 5. On approval, write the nested files first, then remove the extracted
    content from the root. Never delete before writing.
-6. Cross-reference the `layer-agents` skill — the nested AGENTS.md format
+6. **Rewrite relative markdown links in the extracted block** so they resolve
+   from the new file's directory. A `[x](./scripts/foo.sh)` lifted from root
+   `AGENTS.md` into `src/api/AGENTS.md` must become
+   `[x](../../scripts/foo.sh)`. Absolute paths (`.claude/...`, `docs/...`) and
+   URLs are unchanged. Run `ai-kit audit` after to confirm the
+   `broken-reference` check stays clean.
+7. Cross-reference the `layer-agents` skill — the nested AGENTS.md format
    it produces is the target format here.
 
 ---
@@ -62,7 +68,12 @@ pages almost always contains directory-scoped rules.
    `references/topic.md`".
 6. Replace the extracted sections in SKILL.md with a `## References` or
    `## Examples` section containing Markdown links to the new files.
-7. Cross-reference the `skill-creator` skill for the canonical SKILL.md structure.
+7. **Rewrite relative markdown links in the extracted block** so they resolve
+   from the new file's directory. A `[x](./examples/x.md)` lifted from
+   `SKILL.md` into `references/topic.md` must become `[x](../examples/x.md)`.
+   Absolute paths (`.claude/...`, `docs/...`) and URLs are unchanged. Run
+   `ai-kit audit` after to confirm the `broken-reference` check stays clean.
+8. Cross-reference the `skill-creator` skill for the canonical SKILL.md structure.
 
 ---
 

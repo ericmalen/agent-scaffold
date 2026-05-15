@@ -464,6 +464,22 @@ or `.claude/ai-kit-audit-report.json`.
 
 ## Cross-file checks (additional)
 
+### `broken-reference`
+**Triggers:** A Markdown link target, reference-style definition, or bare
+path in an agent's `## Documents` section does not resolve to a file on disk
+(checked relative to the file, then relative to the consumer root).  
+**Convention:** Cross-file references must stay valid through file moves.
+Migrate's `markdown-fold` rewrites relative links automatically; optimize's
+section-extraction procedures must do the same. This check is the safety net
+for both pipelines plus any manual edits.  
+**Fix class:** manual  
+**Canonical fix:** Repoint the link at the file's new location (use
+`git log -- <old-path>` if the original target was renamed/deleted), or
+remove the reference if the target is gone for good. Auto-fixing is unsafe
+because the new path is not knowable from the audit alone.
+
+---
+
 ### `audit-report-committed`
 **Triggers:** `.claude/ai-kit-audit-report.json` exists on disk AND is not in
 `.gitignore`.  

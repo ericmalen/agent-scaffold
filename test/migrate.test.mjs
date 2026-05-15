@@ -244,6 +244,80 @@ test('markdown-fold — code blocks not split as H2', () => {
   assert.ok(out.includes('Real content here'), 'body after code block preserved');
 });
 
+test('markdown-fold — rewrites relative markdown links to stay valid after fold', () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'CLAUDE.md'), [
+    '# Project',
+    '',
+    '## Conventions',
+    '',
+    'See [helper](./scripts/foo.sh) and [docs](docs/intro.md).',
+    '',
+  ].join('\n') + '\n');
+  mkdirSync(join(dir, '.cursor', 'rules'), { recursive: true });
+  writeFileSync(join(dir, '.cursor', 'rules', 'backend.md'), [
+    '# Backend',
+    '',
+    '## Architecture',
+    '',
+    'See [neighbor](./neighbor.md).',
+    '',
+  ].join('\n') + '\n');
+  writeFileSync(join(dir, 'AGENTS.md'), [
+    '# Project',
+    '',
+    '## Overview',
+    '',
+    '## Architecture',
+    '',
+    '## Conventions',
+    '',
+    '## Do Not',
+    '',
+    '## More Context',
+    '',
+  ].join('\n') + '\n');
+
+  const unit = {
+    type: 'markdown-fold',
+    target: 'AGENTS.md',
+    shimInstall: null,
+    sources: [
+      {
+        path: 'CLAUDE.md',
+        h2Routing: [{
+          sourceHeading: '## Conventions',
+          targetHeading: '## Conventions',
+          demote: false,
+          keepOriginalHeading: false,
+        }],
+      },
+      {
+        path: '.cursor/rules/backend.md',
+        h2Routing: [{
+          sourceHeading: '## Architecture',
+          targetHeading: '## Architecture',
+          demote: false,
+          keepOriginalHeading: false,
+        }],
+      },
+    ],
+  };
+
+  const { stagingFiles } = stageMarkdownFold(unit, dir);
+  const out = stagingFiles.find(f => f.relPath === 'AGENTS.md').content;
+
+  // CLAUDE.md → AGENTS.md is a same-dir move; ./scripts/foo.sh stays.
+  assert.ok(out.includes('[helper](./scripts/foo.sh)'),
+    `same-dir relative link preserved; got: ${out}`);
+  // Absolute consumer-root path docs/intro.md is unchanged.
+  assert.ok(out.includes('[docs](docs/intro.md)'),
+    `absolute root path unchanged; got: ${out}`);
+  // .cursor/rules/backend.md → AGENTS.md: ./neighbor.md must rewrite.
+  assert.ok(out.includes('[neighbor](./.cursor/rules/neighbor.md)'),
+    `cross-dir relative link rewritten; got: ${out}`);
+});
+
 // ── json-merge disposition ───────────────────────────────────────────────────
 
 test('json-merge — aikit-wins-on-conflict: consumer keys preserved, ai-kit overwrites on conflict', () => {

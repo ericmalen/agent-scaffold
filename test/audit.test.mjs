@@ -863,6 +863,67 @@ test('audit — stale-github-dir not fired when no .github/ AI-config dirs exist
     'no finding when .github/ AI-config dirs absent');
 });
 
+test('audit — broken-reference flagged when SKILL.md links a missing sibling', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  const skillDir = join(dir, '.claude', 'skills', 'foo');
+  mkdirSync(skillDir, { recursive: true });
+  writeFileSync(join(skillDir, 'SKILL.md'),
+    '---\nname: foo\ndescription: A skill that uses foo to do bar when bazzing.\n---\n# Foo\n\nSee [missing](./references/gone.md).\n');
+  const report = await audit({ _consumerRoot: dir });
+  const broken = report.findings.filter(f => f.id === 'broken-reference');
+  assert.equal(broken.length, 1, `expected 1 broken-reference, got ${broken.length}`);
+  assert.equal(broken[0].severity, 'warning');
+  assert.match(broken[0].message, /references\/gone\.md/);
+});
+
+test('audit — broken-reference NOT flagged when link target exists', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  const skillDir = join(dir, '.claude', 'skills', 'foo');
+  mkdirSync(join(skillDir, 'references'), { recursive: true });
+  writeFileSync(join(skillDir, 'references', 'present.md'), 'content\n');
+  writeFileSync(join(skillDir, 'SKILL.md'),
+    '---\nname: foo\ndescription: A skill that uses foo to do bar when bazzing.\n---\n# Foo\n\nSee [present](./references/present.md).\n');
+  const report = await audit({ _consumerRoot: dir });
+  assert.equal(report.findings.filter(f => f.id === 'broken-reference').length, 0);
+});
+
+test('audit — broken-reference flags missing path in agent ## Documents section', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  const agentDir = join(dir, '.claude', 'agents');
+  mkdirSync(agentDir, { recursive: true });
+  writeFileSync(join(agentDir, 'a.md'),
+    '---\nname: a\ndescription: x\ntools: Read\n---\n# A\nrole.\n## Procedures\n1. step.\n## Never\n- never.\n## Documents\n.claude/skills/missing/references/x.md\n');
+  const report = await audit({ _consumerRoot: dir });
+  const broken = report.findings.filter(f => f.id === 'broken-reference');
+  assert.equal(broken.length, 1);
+  assert.match(broken[0].message, /missing\/references\/x\.md/);
+});
+
+test('audit — broken-reference ignores fenced code block content', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  const skillDir = join(dir, '.claude', 'skills', 'foo');
+  mkdirSync(skillDir, { recursive: true });
+  writeFileSync(join(skillDir, 'SKILL.md'),
+    '---\nname: foo\ndescription: A skill that uses foo to do bar when bazzing.\n---\n# Foo\n\n```\nSee [fake](./does-not-exist.md)\n```\n');
+  const report = await audit({ _consumerRoot: dir });
+  assert.equal(report.findings.filter(f => f.id === 'broken-reference').length, 0);
+});
+
+test('audit — broken-reference skips URLs and anchors', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  const skillDir = join(dir, '.claude', 'skills', 'foo');
+  mkdirSync(skillDir, { recursive: true });
+  writeFileSync(join(skillDir, 'SKILL.md'),
+    '---\nname: foo\ndescription: A skill that uses foo to do bar when bazzing.\n---\n# Foo\n\n[home](https://example.com) [top](#intro) [mail](mailto:x@y.z)\n');
+  const report = await audit({ _consumerRoot: dir });
+  assert.equal(report.findings.filter(f => f.id === 'broken-reference').length, 0);
+});
+
 test('audit — agent-weak-description not fired for ai-kit-distributed agent', async () => {
   const dir = tmp();
   const agentRelPath = '.claude/agents/my-kit-agent.md';
