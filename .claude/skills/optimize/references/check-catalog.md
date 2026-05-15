@@ -144,7 +144,8 @@ constraint.
 agent.  
 **Fix class:** manual  
 **Canonical fix:** Expand the `description:` frontmatter to include trigger
-phrasings and a "do not use for" clause.
+phrasings and a "do not use for" clause.  
+**Note:** Skipped for ai-kit-distributed agents (identified via `manifest.files[].installedAs` + `role: "agent"`).
 
 ---
 
@@ -153,7 +154,8 @@ phrasings and a "do not use for" clause.
 **Convention:** Agent descriptions should state when to invoke the agent so
 AI tools activate it on the right trigger.  
 **Fix class:** manual  
-**Canonical fix:** Add a "when" clause, e.g. "Invoke when the user says…".
+**Canonical fix:** Add a "when" clause, e.g. "Invoke when the user says…".  
+**Note:** Skipped for ai-kit-distributed agents (see `agent-weak-description`).
 
 ---
 
@@ -169,14 +171,14 @@ Usually rename the folder (moving files) to match the frontmatter name.
 
 ---
 
-### `skill-name-has-namespace-prefix`
-**Triggers:** Skill name starts with a common namespace prefix (e.g. `scaffold-`,
-`ai-`, `new-`, `layer-`).  
-**Convention:** Skill names should be short verbs or nouns, not namespaced.
-The containing `.claude/skills/` directory already provides the namespace.  
-**Fix class:** manual  
-**Canonical fix:** Rename to drop the prefix (e.g. `scaffold-migrate` →
-`migrate`). Update all invocation references.
+### `skill-name-has-namespace-separator`
+**Triggers:** `name:` in frontmatter contains `:` or `/`.  
+**Convention:** These characters are reserved for Claude Code plugin-namespaced
+skills (e.g. `code-review:code-review`). User-authored skills use only a simple
+kebab-case name that matches their folder (e.g. `migrate`, `git-conventions`).  
+**Fix class:** deterministic  
+**Canonical fix:** Remove the separator and everything before it. Rename the
+folder to match if needed.
 
 ---
 
@@ -207,7 +209,8 @@ the SKILL.md body to overview, workflow, and links to the sub-files.
 skill. A good description includes trigger phrasings and a "do not use for"
 clause.  
 **Fix class:** manual  
-**Canonical fix:** Expand the `description:` frontmatter.
+**Canonical fix:** Expand the `description:` frontmatter.  
+**Note:** Skipped for ai-kit-distributed skills (identified via `manifest.files[].installedAs` + `role: "skill"`).
 
 ---
 

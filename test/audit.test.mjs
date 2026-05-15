@@ -167,3 +167,93 @@ test('audit — README.md in agents dir is skipped', async () => {
   const agentFindings = report.findings.filter(f => f.file.includes('README.md'));
   assert.equal(agentFindings.length, 0);
 });
+
+// ── Item 4: skill-name-has-namespace-separator ────────────────────────────────
+
+test('audit — skill-name-has-namespace-separator fires on colon separator', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  mkdirSync(join(dir, '.claude', 'skills', 'code-review:code-review'), { recursive: true });
+  writeFileSync(join(dir, '.claude', 'skills', 'code-review:code-review', 'SKILL.md'),
+    '---\nname: code-review:code-review\ndescription: Reviews code when the user asks for a review\n---\n# Code Review\nContent.\n');
+  const report = await audit({ _consumerRoot: dir });
+  const ids = report.findings.map(f => f.id);
+  assert.ok(ids.includes('skill-name-has-namespace-separator'), `Expected finding, got: ${ids}`);
+  assert.equal(report.findings.find(f => f.id === 'skill-name-has-namespace-separator').severity, 'warning');
+});
+
+test('audit — skill-name-has-namespace-separator does not fire on plain kebab names', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  mkdirSync(join(dir, '.claude', 'skills', 'new-skill'), { recursive: true });
+  writeFileSync(join(dir, '.claude', 'skills', 'new-skill', 'SKILL.md'),
+    '---\nname: new-skill\ndescription: Creates new skills when the user requests one\n---\n# New Skill\nContent.\n');
+  const report = await audit({ _consumerRoot: dir });
+  const ids = report.findings.map(f => f.id);
+  assert.ok(!ids.includes('skill-name-has-namespace-separator'), `Should not fire, got: ${ids}`);
+});
+
+test('audit — skill-name-has-namespace-separator does not fire on scaffold-migrate style names', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  mkdirSync(join(dir, '.claude', 'skills', 'scaffold-migrate'), { recursive: true });
+  writeFileSync(join(dir, '.claude', 'skills', 'scaffold-migrate', 'SKILL.md'),
+    '---\nname: scaffold-migrate\ndescription: Migrates scaffold files when invoked\n---\n# Scaffold Migrate\nContent.\n');
+  const report = await audit({ _consumerRoot: dir });
+  const ids = report.findings.map(f => f.id);
+  assert.ok(!ids.includes('skill-name-has-namespace-separator'), `Should not fire, got: ${ids}`);
+});
+
+// ── Item 5: isAiKitOwnAsset exemption ────────────────────────────────────────
+
+test('audit — skill-weak-description not fired for ai-kit-distributed skill', async () => {
+  const dir = tmp();
+  const skillRelPath = '.claude/skills/my-kit-skill/SKILL.md';
+  writeManifest(dir, {
+    files: {
+      'src/my-kit-skill/SKILL.md': {
+        sourceHash: 'abc',
+        installedAs: skillRelPath,
+        role: 'skill',
+      },
+    },
+  });
+  mkdirSync(join(dir, '.claude', 'skills', 'my-kit-skill'), { recursive: true });
+  writeFileSync(join(dir, skillRelPath),
+    '---\nname: my-kit-skill\ndescription: Short\n---\n# My Kit Skill\nContent.\n');
+  const report = await audit({ _consumerRoot: dir });
+  const ids = report.findings.map(f => f.id);
+  assert.ok(!ids.includes('skill-weak-description'), `Should be exempt, got: ${ids}`);
+});
+
+test('audit — skill-weak-description fires for user-authored skill not in manifest', async () => {
+  const dir = tmp();
+  writeManifest(dir); // empty files map
+  mkdirSync(join(dir, '.claude', 'skills', 'my-skill'), { recursive: true });
+  writeFileSync(join(dir, '.claude', 'skills', 'my-skill', 'SKILL.md'),
+    '---\nname: my-skill\ndescription: Short\n---\n# My Skill\nContent.\n');
+  const report = await audit({ _consumerRoot: dir });
+  const ids = report.findings.map(f => f.id);
+  assert.ok(ids.includes('skill-weak-description'), `Expected finding, got: ${ids}`);
+});
+
+test('audit — agent-weak-description not fired for ai-kit-distributed agent', async () => {
+  const dir = tmp();
+  const agentRelPath = '.claude/agents/my-kit-agent.md';
+  writeManifest(dir, {
+    files: {
+      '.claude/agents/my-kit-agent.md': {
+        sourceHash: 'abc',
+        installedAs: agentRelPath,
+        role: 'agent',
+      },
+    },
+  });
+  mkdirSync(join(dir, '.claude', 'agents'), { recursive: true });
+  writeFileSync(join(dir, agentRelPath),
+    '---\nname: my-kit-agent\ndescription: Short desc\ntools: Read\n---\n# My Kit Agent\nDoes stuff.\n## Procedures\n1. Do it.\n## Never\n- Never break.\n');
+  const report = await audit({ _consumerRoot: dir });
+  const ids = report.findings.map(f => f.id);
+  assert.ok(!ids.includes('agent-weak-description'), `Should be exempt, got: ${ids}`);
+  assert.ok(!ids.includes('agent-description-missing-when'), `Should be exempt, got: ${ids}`);
+});

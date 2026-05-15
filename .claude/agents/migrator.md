@@ -4,9 +4,7 @@ description: Resolves brownfield migration debt left by `ai-kit init`. Reads eac
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
-# Scaffold Migrator
-
-<!-- Role statement: one line. What the agent does and what it never does. -->
+# Migrator
 
 Classifies brownfield AI-config files against ai-kit's structure, presents
 one batch migration plan, and on approval applies every merge and fixes

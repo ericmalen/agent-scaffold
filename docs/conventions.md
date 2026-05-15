@@ -66,7 +66,7 @@ inevitable. (Prompts are a Copilot-only surface — see `.github/prompts/README.
 The underscore prefix sorts teaching material first in file listings and
 visually separates it from real assets.
 
-To add a new skill or agent to the scaffold and have the CLI distribute it,
+To add a new skill or agent to ai-kit and have the CLI distribute it,
 see the "Adding skills" and "Adding agents" sections in
 [`.claude/skills/README.md`](../.claude/skills/README.md) and
 [`.claude/agents/README.md`](../.claude/agents/README.md).
