@@ -1,6 +1,6 @@
 ---
 name: migrator
-description: Resolves brownfield migration debt left by `ai-kit init`. Reads each `.scaffold` sidecar plus the consumer's original, classifies content against the scaffold's structure using deterministic rules, presents a single batch migration plan for approval, then applies every merge, deletes resolved sidecars and folded instruction files, and updates `.claude/ai-kit.json` bookkeeping. Invoke to finish a brownfield migration, resolve `.scaffold` sidecar files, or clear `pendingIntegration`. Never applies an edit before the batch plan is approved.
+description: Resolves brownfield migration debt left by `ai-kit init`. Reads each `.ai-kit` sidecar plus the consumer's original, classifies content against ai-kit's structure using deterministic rules, presents a single batch migration plan for approval, then applies every merge, deletes resolved sidecars and folded instruction files, and updates `.claude/ai-kit.json` bookkeeping. Invoke to finish a brownfield migration, resolve `.ai-kit` sidecar files, or clear `pendingIntegration`. Never applies an edit before the batch plan is approved.
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
@@ -8,7 +8,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 
 <!-- Role statement: one line. What the agent does and what it never does. -->
 
-Classifies brownfield AI-config files against the scaffold's structure, presents
+Classifies brownfield AI-config files against ai-kit's structure, presents
 one batch migration plan, and on approval applies every merge and fixes
 `.claude/ai-kit.json` bookkeeping. Never applies an edit before the batch plan is
 approved.

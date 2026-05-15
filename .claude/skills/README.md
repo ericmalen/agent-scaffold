@@ -35,17 +35,17 @@ If your `SKILL.md` body runs past ~200 lines, it probably needs decomposition.
 ## The meta-skills (start here)
 
 Three meta-skills live in this folder. They are **the primary onboarding tool**
-for this scaffold — they encode the conventions operationally so you don't have
+for ai-kit — they encode the conventions operationally so you don't have
 to memorize them.
 
-- [`new-skill`](./new-skill/SKILL.md) — scaffold a new skill.
-- [`new-agent`](./new-agent/SKILL.md) — scaffold a new agent.
-- [`layer-agents`](./layer-agents/SKILL.md) — scaffold
+- [`new-skill`](./new-skill/SKILL.md) — create a new skill.
+- [`new-agent`](./new-agent/SKILL.md) — create a new agent.
+- [`layer-agents`](./layer-agents/SKILL.md) — create
   a nested `AGENTS.md` to scope conventions to a subdirectory.
 
 Type `/new-skill` in chat to walk through creating your first skill.
 
-> There is no `scaffold-prompt` meta-skill. Copilot prompt files have no Claude
+> There is no `new-prompt` meta-skill. Copilot prompt files have no Claude
 > equivalent, so the cross-tool way to make a `/command` is a `user-invocable`
 > skill — which is what `new-skill` produces. `.github/prompts/` remains as
 > an optional Copilot-only extra.
@@ -54,14 +54,14 @@ Type `/new-skill` in chat to walk through creating your first skill.
 
 VS Code ships built-in `/create-skill`, `/create-agent`, `/create-prompt`,
 `/create-instruction`, and `/create-hook` commands. Those do generic versions of
-some of the same tasks. This scaffold's meta-skills use the `scaffold-` prefix
+some of the same tasks. ai-kit's meta-skills (`/new-skill`, `/new-agent`) are unambiguous — they don't collide with VS Code's built-in `/create-skill` and `/create-agent`
 to avoid any name collision — `/new-skill` and `/new-agent` are
-unambiguously this scaffold's convention-enforcing versions, not VS Code's
+unambiguously ai-kit's convention-enforcing versions, not VS Code's
 generic built-ins.
 
 ## A worked example: `git-conventions`
 
-Alongside the meta-skills, this scaffold ships one real skill as a reference
+Alongside the meta-skills, ai-kit ships one real skill as a reference
 for what a finished skill looks like. Read
 [`git-conventions/SKILL.md`](./git-conventions/SKILL.md) to see the multi-file
 pattern in practice — a lean router with sibling references and examples,

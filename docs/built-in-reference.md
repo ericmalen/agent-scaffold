@@ -18,7 +18,7 @@ CLI, some in both.
 
 | Command                                | What it does                                                                                                         | Where                  |
 | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `/init`                                | Generate a repo-wide `.github/copilot-instructions.md` tailored to the codebase. This scaffold uses `AGENTS.md` instead — move the generated content into `AGENTS.md` and delete the generated file. | VS Code, Visual Studio |
+| `/init`                                | Generate a repo-wide `.github/copilot-instructions.md` tailored to the codebase. ai-kit uses `AGENTS.md` instead — move the generated content into `AGENTS.md` and delete the generated file. | VS Code, Visual Studio |
 | `/create-prompt`                       | Generate a `.prompt.md` file from a description                                                                      | VS Code                |
 | `/create-skill`                        | Generate a skill folder with `SKILL.md`                                                                              | VS Code                |
 | `/create-agent`                        | Generate a `.agent.md` file                                                                                          | VS Code                |
@@ -37,9 +37,9 @@ CLI, some in both.
 User-defined slash commands (from `.github/prompts/*.prompt.md`) and
 user-invocable skills (from `.claude/skills/`) appear in the same `/` menu.
 
-> **Note:** This scaffold ships meta-skills named `/new-skill` and
+> **Note:** ai-kit ships meta-skills named `/new-skill` and
 > `/new-agent` — distinct from VS Code's built-in `/create-skill` and
-> `/create-agent` above. The scaffold's versions enforce this project's
+> `/create-agent` above. ai-kit's versions enforce this project's
 > conventions; VS Code's built-ins generate generic files.
 
 ---

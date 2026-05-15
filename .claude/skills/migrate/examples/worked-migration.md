@@ -16,10 +16,10 @@ git-conventions` ran. After `init`, `.claude/ai-kit.json` shows:
 
 ```jsonc
 "pendingIntegration": [
-  { "managedPath": "CLAUDE.md", "sidecarPath": "CLAUDE.md.scaffold",
+  { "managedPath": "CLAUDE.md", "sidecarPath": "CLAUDE.md.ai-kit",
     "reason": "consumer file already present" },
   { "managedPath": ".vscode/settings.json",
-    "sidecarPath": ".vscode/settings.json.scaffold",
+    "sidecarPath": ".vscode/settings.json.ai-kit",
     "reason": "consumer file already present" }
 ],
 "preexistingUnmanaged": [ ".claude/settings.local.json" ]
@@ -59,11 +59,11 @@ moves:
 premise-snapshots:
   - file: AGENTS.md   lines: 52   first: "# Project Name"   last: "the relevant subdirectory."
   - file: CLAUDE.md   lines: 593  first: "# CLAUDE.md"      last: "13. **Token security** — …"
-  - file: CLAUDE.md.scaffold   lines: 14   first: "@AGENTS.md"   last: "…load them natively…"
+  - file: CLAUDE.md.ai-kit   lines: 14   first: "@AGENTS.md"   last: "…load them natively…"
 manifest-delta:
   - remove pendingIntegration[CLAUDE.md]; flip files[CLAUDE.md]: installedAs->CLAUDE.md, drop sidecar
 deletions:
-  - CLAUDE.md.scaffold
+  - CLAUDE.md.ai-kit
 notes:
   - no git-conventions vocabulary in CLAUDE.md — no skill-overlap action
 ```
@@ -98,10 +98,10 @@ manifest edit.
 
 ### End state
 
-- `AGENTS.md` carries all the project rules; `CLAUDE.md` equals the scaffold's
-  `CLAUDE.md` exactly; `.vscode/settings.json` has every scaffold key merged in,
+- `AGENTS.md` carries all the project rules; `CLAUDE.md` equals ai-kit's
+  `CLAUDE.md` exactly; `.vscode/settings.json` has every ai-kit key merged in,
   consumer keys intact.
-- No `.scaffold` files, no `.ai-kit-staging/`, no plan file remain.
+- No `.ai-kit` files, no `.ai-kit-staging/`, no plan file remain.
 - `pendingIntegration` is empty; `.claude/settings.local.json` stays in
   `preexistingUnmanaged` (left as-is).
 - `ai-kit status` shows no integration warning — `AGENTS.md` and

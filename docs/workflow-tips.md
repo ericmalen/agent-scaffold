@@ -3,7 +3,7 @@
 Practices for getting the most out of a customized Copilot system. This is the
 opinionated companion to [`built-in-reference.md`](./built-in-reference.md):
 that doc describes what exists, this one recommends how to use it. Not a
-general prompt engineering guide — scoped to working with this scaffold's
+general prompt engineering guide — scoped to working with ai-kit's
 conventions.
 
 ---
@@ -114,7 +114,7 @@ conventions.
 
 ---
 
-## Using the meta-skills in this scaffold
+## Using the meta-skills in ai-kit
 
 - **Start with `/new-skill`, `/new-agent`,
   `/layer-agents`.** The meta-skills encode the conventions
@@ -134,4 +134,4 @@ conventions.
 - [VS Code Agent Planning](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode#_plan-and-iterate)
 - [`built-in-reference.md`](./built-in-reference.md) — what ships for free
 - [`copilot-customization-reference.md`](./copilot-customization-reference.md) — how to customize
-- [`conventions.md`](./conventions.md) — this scaffold's do-and-don't sheet
+- [`conventions.md`](./conventions.md) — ai-kit's do-and-don't sheet

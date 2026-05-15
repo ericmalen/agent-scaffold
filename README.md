@@ -2,10 +2,10 @@
 
 ## What this is
 
-A scaffold for adding AI-coding customization to internal repos, wired for
+ai-kit for adding AI-coding customization to internal repos, wired for
 **both GitHub Copilot and Claude Code** from one set of files. Ships the folder
 structure, conventions, annotated `_example` files, and three meta-skills
-(`new-skill`, `new-agent`, `layer-agents`) that scaffold new
+(`new-skill`, `new-agent`, `layer-agents`) that create new
 assets to match the conventions.
 
 No stack-specific or domain-specific content — you add those on top.
@@ -32,7 +32,7 @@ first time.
 ### Via CLI (recommended)
 
 Clone this repo once to a shared tools location, then run `init` from any
-project you want to scaffold:
+project you want to set up:
 
 ```sh
 git clone <this-repo-url> ~/tools/ai-kit
@@ -48,7 +48,7 @@ fresh repo (**greenfield**) and handles both correctly. Re-running with
 # See what's installed and whether anything has drifted
 node ~/tools/ai-kit/bin/ai-kit.mjs status
 
-# Pull latest scaffold version (asks before overwriting locally modified files)
+# Pull latest ai-kit version (asks before overwriting locally modified files)
 node ~/tools/ai-kit/bin/ai-kit.mjs update
 ```
 
@@ -79,9 +79,9 @@ CLAUDE.md                       — imports AGENTS.md for Claude Code
     example-reviewer.md         — annotated example agent
   skills/
     README.md
-    new-skill/             — meta-skill: scaffold a new skill
-    new-agent/             — meta-skill: scaffold a new agent
-    layer-agents/  — meta-skill: scaffold a nested AGENTS.md
+    new-skill/             — meta-skill: create a new skill
+    new-agent/             — meta-skill: create a new agent
+    layer-agents/  — meta-skill: create a nested AGENTS.md
     git-conventions/            — a finished skill, as a reference
 .github/
   prompts/
@@ -90,7 +90,7 @@ CLAUDE.md                       — imports AGENTS.md for Claude Code
 docs/
   cross-tool-setup.md                  — how Copilot + Claude Code share this repo
   copilot-customization-reference.md   — authoritative Copilot reference
-  conventions.md                       — this scaffold's conventions
+  conventions.md                       — ai-kit's conventions
   built-in-reference.md                — what ships out of the box with VS Code
   workflow-tips.md                     — working effectively with this system
   why-this-way.md                      — design rationale (optional reading)

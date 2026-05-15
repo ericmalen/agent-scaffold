@@ -1,6 +1,6 @@
 # Conventions
 
-The do-and-don't sheet for this scaffold. One page. Read once, then refer back.
+The do-and-don't sheet for ai-kit. One page. Read once, then refer back.
 
 This repo is wired for both GitHub Copilot and Claude Code — see
 [`cross-tool-setup.md`](./cross-tool-setup.md) for how one set of files serves

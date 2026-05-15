@@ -1,6 +1,6 @@
 ---
 name: new-agent
-description: "Walks the user through creating a new custom agent that conforms to this project's conventions — lean role statement, minimal tools list, explicit boundaries, lazy-load Documents section, Claude sub-agent format in .claude/agents/. Use whenever the user wants to create, scaffold, add, or set up a custom agent, specialized role, reviewer, implementer, or orchestrator — even when they describe it as a 'persona,' 'role,' or 'assistant' rather than using the word 'agent.'"
+description: "Walks the user through creating a new custom agent that conforms to this project's conventions — lean role statement, minimal tools list, explicit boundaries, lazy-load Documents section, Claude sub-agent format in .claude/agents/. Use whenever the user wants to create, create, add, or set up a custom agent, specialized role, reviewer, implementer, or orchestrator — even when they describe it as a 'persona,' 'role,' or 'assistant' rather than using the word 'agent.'"
 argument-hint: "[agent role in one sentence]"
 ---
 
@@ -57,7 +57,7 @@ and Copilot read.
 
 ## Flat orchestration reminder
 
-The scaffold prefers flat orchestration: orchestrators call every specialist
+ai-kit prefers flat orchestration: orchestrators call every specialist
 directly. Nesting is possible but compounds token cost and is harder to debug —
 it should be a deliberate choice. If this agent is part of an orchestrated
 workflow, default to having the orchestrator call it directly rather than
@@ -65,6 +65,6 @@ chaining it under another specialist.
 
 ## References
 
-- [Custom agents in this scaffold](../../agents/README.md)
+- [Custom agents in ai-kit](../../agents/README.md)
 - [Cross-tool setup](../../../docs/cross-tool-setup.md)
 - [Tool tiers in conventions](../../../docs/conventions.md#minimal-tool-lists)

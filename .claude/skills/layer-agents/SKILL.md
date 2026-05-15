@@ -1,6 +1,6 @@
 ---
 name: layer-agents
-description: "Walks the user through scoping conventions to a subdirectory by creating a nested AGENTS.md. First checks whether the rule actually belongs in the root AGENTS.md, then scaffolds a nested AGENTS.md in the target directory with correctly scoped content. Use whenever the user wants to create, scaffold, add, or set up layer-specific, directory-scoped, or language-scoped conventions. Also use when the user says 'Copilot keeps suggesting the wrong thing in this folder' — a nested AGENTS.md is usually the fix."
+description: "Walks the user through scoping conventions to a subdirectory by creating a nested AGENTS.md. First checks whether the rule actually belongs in the root AGENTS.md, then creates a nested AGENTS.md in the target directory with correctly scoped content. Use whenever the user wants to create, create, add, or set up layer-specific, directory-scoped, or language-scoped conventions. Also use when the user says 'Copilot keeps suggesting the wrong thing in this folder' — a nested AGENTS.md is usually the fix."
 argument-hint: "[subdirectory and purpose]"
 ---
 

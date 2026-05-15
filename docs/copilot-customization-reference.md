@@ -54,7 +54,7 @@ You type /feature (prompt)
 
 ### Repo-wide instructions: `AGENTS.md`
 
-This scaffold uses `AGENTS.md` at the repo root as the canonical repo-wide instructions file. `AGENTS.md` is an [open standard](https://agents.md) supported by Copilot, Claude Code, Cursor, Codex, Aider, Gemini CLI, Windsurf, and ~20 other tools. Enabled in VS Code with:
+ai-kit uses `AGENTS.md` at the repo root as the canonical repo-wide instructions file. `AGENTS.md` is an [open standard](https://agents.md) supported by Copilot, Claude Code, Cursor, Codex, Aider, Gemini CLI, Windsurf, and ~20 other tools. Enabled in VS Code with:
 
 ```jsonc
 {
@@ -68,7 +68,7 @@ This scaffold uses `AGENTS.md` at the repo root as the canonical repo-wide instr
 **Trade-offs to know:**
 
 - **Claude Code reads `CLAUDE.md`, not `AGENTS.md`.** This repo ships a `CLAUDE.md` that imports `AGENTS.md` via `@AGENTS.md`, so both tools share one source of truth. Edit `AGENTS.md`; leave `CLAUDE.md` alone. See [`cross-tool-setup.md`](./cross-tool-setup.md).
-- **`/init`** still generates `.github/copilot-instructions.md`, not `AGENTS.md`. The scaffold's pattern: run `/init`, move the generated content into `AGENTS.md`, delete the generated file.
+- **`/init`** still generates `.github/copilot-instructions.md`, not `AGENTS.md`. ai-kit's pattern: run `/init`, move the generated content into `AGENTS.md`, delete the generated file.
 - **`.github/prompts/`** is the one Copilot-specific asset surface (prompts have no Claude equivalent). Agents and skills live in `.claude/`, which both tools read.
 - **GitHub.com surfaces** — Copilot code review and the cloud coding agent reliably read `.github/copilot-instructions.md` and `.github/instructions/*.instructions.md` (the latter supports `applyTo` globs and `excludeAgent`). Their support for `AGENTS.md` — especially _nested_ `AGENTS.md` — is newer and less uniform. If your team depends on those server-side surfaces, keep a root `.github/copilot-instructions.md` alongside `AGENTS.md`.
 
@@ -102,7 +102,7 @@ Brief description, tech stack (1–2 sentences each), monorepo structure.
 
 ### Path-specific instructions
 
-When a convention applies to one directory or layer rather than the whole repo, scope it with a **nested `AGENTS.md`** — place an `AGENTS.md` file inside the subdirectory it applies to. With `chat.useNestedAgentsMdFiles: true` (enabled in this scaffold), Copilot loads it automatically when working anywhere in that subtree, on top of the root `AGENTS.md`.
+When a convention applies to one directory or layer rather than the whole repo, scope it with a **nested `AGENTS.md`** — place an `AGENTS.md` file inside the subdirectory it applies to. With `chat.useNestedAgentsMdFiles: true` (enabled in ai-kit), Copilot loads it automatically when working anywhere in that subtree, on top of the root `AGENTS.md`.
 
 ```
 repo/
@@ -132,7 +132,7 @@ Conventions specific to this package. Repo-wide rules live in the root AGENTS.md
 
 A nested `AGENTS.md` has no frontmatter and no glob — scope is by *location*, the file lives where it applies. It is the cross-tool open standard, discovered by Copilot, Claude Code, Cursor, Codex, Aider, and Gemini CLI alike.
 
-> **Tradeoff:** the alternative — `.github/instructions/*.instructions.md` with an `applyTo` glob — is Copilot-specific but is the mechanism GitHub.com's Copilot code review and cloud coding agent read most reliably. This scaffold prefers nested `AGENTS.md` for editor and cross-tool coverage and does **not** ship `.github/instructions/` by default; if you depend on those server-side surfaces, add `.github/instructions/` files alongside the nested `AGENTS.md` — the two mechanisms coexist.
+> **Tradeoff:** the alternative — `.github/instructions/*.instructions.md` with an `applyTo` glob — is Copilot-specific but is the mechanism GitHub.com's Copilot code review and cloud coding agent read most reliably. ai-kit prefers nested `AGENTS.md` for editor and cross-tool coverage and does **not** ship `.github/instructions/` by default; if you depend on those server-side surfaces, add `.github/instructions/` files alongside the nested `AGENTS.md` — the two mechanisms coexist.
 
 ### Monorepo parent-folder discovery
 
@@ -256,7 +256,7 @@ docs/coding-standards.md
 | **Never** (boundaries) | Explicit rules — what the agent must not do                                                 |
 | **Documents**          | Plain-text paths for lazy-load. The agent reads these via the Read tool only when needed.   |
 
-**Note on the Documents section:** This scaffold uses plain-text paths (not Markdown links) by convention. The agent reads them on demand via the Read tool, never up-front, which keeps the agent's always-on context small. Plain-text paths also visually distinguish agent Documents sections from skill bodies (which intentionally use Markdown links for progressive disclosure).
+**Note on the Documents section:** ai-kit uses plain-text paths (not Markdown links) by convention. The agent reads them on demand via the Read tool, never up-front, which keeps the agent's always-on context small. Plain-text paths also visually distinguish agent Documents sections from skill bodies (which intentionally use Markdown links for progressive disclosure).
 
 ### Tools list — controls what the agent can do
 
@@ -304,7 +304,7 @@ hooks:
 - Keep agents lean — behavior and references, not inlined knowledge.
 - Documents section is a checklist of what to consult, not what to memorize.
 - One agent, one responsibility — no "do everything" agents.
-- This scaffold prefers **flat orchestration** as a default — orchestrators call all specialists directly. Nested subagents are available (`chat.subagents.allowInvocationsFromSubagents`, enabled here) up to a depth cap of 5, but there is **no cycle detection** and token cost compounds with depth. Reach for nesting only when a specialist genuinely needs its own specialists.
+- ai-kit prefers **flat orchestration** as a default — orchestrators call all specialists directly. Nested subagents are available (`chat.subagents.allowInvocationsFromSubagents`, enabled here) up to a depth cap of 5, but there is **no cycle detection** and token cost compounds with depth. Reach for nesting only when a specialist genuinely needs its own specialists.
 
 ---
 
@@ -419,7 +419,7 @@ Prompt (/feature)
 
 ### Key design decisions
 
-- **Flat architecture (default).** The orchestrator calls every specialist directly. This is the scaffold's preferred shape — easier to debug, easier to reason about, and observability is straightforward (every call shows up in the orchestrator's transcript). Nested subagents are technically supported (`chat.subagents.allowInvocationsFromSubagents`, enabled here; depth cap = 5; no cycle detection); use them only when a specialist legitimately needs its own helpers.
+- **Flat architecture (default).** The orchestrator calls every specialist directly. This is ai-kit's preferred shape — easier to debug, easier to reason about, and observability is straightforward (every call shows up in the orchestrator's transcript). Nested subagents are technically supported (`chat.subagents.allowInvocationsFromSubagents`, enabled here; depth cap = 5; no cycle detection); use them only when a specialist legitimately needs its own helpers.
 - **Human gates.** Mandatory approval checkpoints. Without these, autonomous orchestration is risky.
 - **Validation gates.** Automated checks (compile, test, lint) between phases. A layer must pass its gate before the next phase starts.
 - **Post-agent verification.** After every subagent call, the orchestrator checks `git diff` to confirm work was actually done. Catches silent failures.
@@ -445,10 +445,10 @@ Autopilot is powerful for scripted orchestrations but unsuitable for exploratory
 | Command               | What it does                                                                                                        |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `/init`               | Auto-generate repo-wide instructions for your project                                                               |
-| `/layer-agents` | Generate a nested `AGENTS.md` to scope conventions to a subdirectory (this scaffold's meta-skill)          |
+| `/layer-agents` | Generate a nested `AGENTS.md` to scope conventions to a subdirectory (ai-kit's meta-skill)          |
 | `/create-prompt`      | Generate a prompt file from a description (VS Code built-in)                                                        |
-| `/new-skill`     | Generate a skill from a description (this scaffold's meta-skill; VS Code also has a built-in `/create-skill`)       |
-| `/new-agent`     | Generate an agent file from a description (this scaffold's meta-skill; VS Code also has a built-in `/create-agent`) |
+| `/new-skill`     | Generate a skill from a description (ai-kit's meta-skill; VS Code also has a built-in `/create-skill`)       |
+| `/new-agent`     | Generate an agent file from a description (ai-kit's meta-skill; VS Code also has a built-in `/create-agent`) |
 | `/skills`             | Open the Configure Skills menu                                                                                      |
 | `/compact`            | Compress conversation history to free context space                                                                 |
 | `/troubleshoot`       | Diagnose why instructions, skills, or agents didn't behave as expected; accepts `#session` to analyze past sessions |
@@ -491,7 +491,7 @@ Drop these into `.vscode/settings.json` to enable the customization features con
 }
 ```
 
-Review each flag — some are preview features. Enable them deliberately. See `.vscode/settings.json` in this scaffold for the same set with full inline commentary.
+Review each flag — some are preview features. Enable them deliberately. See `.vscode/settings.json` in ai-kit for the same set with full inline commentary.
 
 ---
 

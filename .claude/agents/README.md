@@ -50,7 +50,7 @@ Markdown links for progressive disclosure).
 
 ## Flat orchestration (preferred default)
 
-The scaffold prefers flat orchestration: orchestrators call every specialist
+ai-kit prefers flat orchestration: orchestrators call every specialist
 directly. Nesting (a sub-agent invoking sub-agents) is possible in both tools
 but compounds token cost and is harder to debug — reach for it only when a
 specialist genuinely needs its own helpers. See

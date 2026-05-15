@@ -40,7 +40,7 @@
     },
     "migrator": {
       "path": ".claude/agents/migrator.md",
-      "description": "Resolves brownfield migration debt — semantically merges .scaffold sidecars and updates the manifest."
+      "description": "Resolves brownfield migration debt — semantically merges .ai-kit sidecars and updates the manifest."
     }
   },
   "wiringFiles": [

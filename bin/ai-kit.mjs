@@ -8,8 +8,8 @@ const HELP = `
 Usage: ai-kit <command> [options]
 
 Commands:
-  init     Install scaffold into the current directory
-  update   Pull latest scaffold into an already-initialized repo
+  init     Install ai-kit into the current directory
+  update   Pull latest ai-kit into an already-initialized repo
   status   Show installed version, file sync state, and pending integrations
 
 Options:

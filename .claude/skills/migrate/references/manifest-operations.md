@@ -16,13 +16,13 @@ touches **only** the integration bookkeeping — nothing else.
   "files": {
     "<srcRel>": {
       "sourceHash": "<sha256>",
-      "installedAs": "<consumer path; *.scaffold if sidecar'd>",
+      "installedAs": "<consumer path; *.ai-kit if sidecar'd>",
       "role": "wiring | base | skill | agent | readme",
       "sidecar": true            // present only when sidecar'd
     }
   },
   "pendingIntegration": [
-    { "managedPath": "CLAUDE.md", "sidecarPath": "CLAUDE.md.scaffold",
+    { "managedPath": "CLAUDE.md", "sidecarPath": "CLAUDE.md.ai-kit",
       "reason": "consumer file already present" }
   ],
   "preexistingUnmanaged": [ ".github/copilot-instructions.md" ]
@@ -38,7 +38,7 @@ After the merge is written and the sidecar deleted:
 1. **Remove the `pendingIntegration` object** — delete the entry whose
    `managedPath` matches.
 2. **Flip the matching `files` entry** — locate `files[managedPath]`:
-   - Set `installedAs` from `"<managedPath>.scaffold"` back to `"<managedPath>"`.
+   - Set `installedAs` from `"<managedPath>.ai-kit"` back to `"<managedPath>"`.
    - **Delete the `sidecar` field entirely.** Do not set it to `false` — the CLI
      omits the field when falsy, so `false` would be non-canonical.
    - Leave `sourceHash` and `role` untouched.
@@ -46,7 +46,7 @@ After the merge is written and the sidecar deleted:
    Before:
    ```json
    "CLAUDE.md": {
-     "sourceHash": "5c788c...", "installedAs": "CLAUDE.md.scaffold",
+     "sourceHash": "5c788c...", "installedAs": "CLAUDE.md.ai-kit",
      "role": "wiring", "sidecar": true
    }
    ```
@@ -59,11 +59,11 @@ After the merge is written and the sidecar deleted:
 
 ## Resolve a `preexistingUnmanaged` path
 
-- **Folded into the scaffold + original deleted** (e.g.
+- **Folded into ai-kit + original deleted** (e.g.
   `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`) →
   remove the path string from `preexistingUnmanaged[]`. Do **not** add the new
   nested `AGENTS.md` / `CLAUDE.md` (or any other file the fold created) to the
-  manifest — they are consumer content, not scaffold-managed.
+  manifest — they are consumer content, not ai-kit-managed.
 - **Left as-is (intentionally unmanaged)** → keep the path string, so
   `ai-kit status` continues to list it accurately.
 
@@ -78,7 +78,7 @@ Note on drift after a merge:
   **expected and correct** — the consumer has intentionally diverged from the
   shipped version. `ai-kit status` reports them as "locally modified",
   which accurately reflects reality.
-- **`CLAUDE.md`**, once replaced with the scaffold's `CLAUDE.md` exactly, will
+- **`CLAUDE.md`**, once replaced with ai-kit's `CLAUDE.md` exactly, will
   **match** its `sourceHash` again — `status` will show it in sync, not drifted.
 
 ## Formatting

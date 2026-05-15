@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { hashFile, copyFile, walkFiles, exists } from '../lib/fsutil.mjs';
 
 function tmp() {
-  return mkdtempSync(join(tmpdir(), 'scaffold-test-'));
+  return mkdtempSync(join(tmpdir(), 'ai-kit-test-'));
 }
 
 test('hashFile — deterministic', () => {

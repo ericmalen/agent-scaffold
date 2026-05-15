@@ -12,7 +12,7 @@ import {
 } from '../lib/manifest.mjs';
 
 function tmp() {
-  return mkdtempSync(join(tmpdir(), 'scaffold-manifest-'));
+  return mkdtempSync(join(tmpdir(), 'ai-kit-manifest-'));
 }
 
 const MANIFEST_NAME = '.claude/ai-kit.json';
@@ -73,7 +73,7 @@ test('readManifest — throws on future schemaVersion', () => {
 test('addPendingIntegration — appends entry', () => {
   const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
     installedBaseSkills: [], installedSkills: [], installedAgents: [] });
-  addPendingIntegration(m, { managedPath: 'CLAUDE.md', sidecarPath: 'CLAUDE.md.scaffold', reason: 'test' });
+  addPendingIntegration(m, { managedPath: 'CLAUDE.md', sidecarPath: 'CLAUDE.md.ai-kit', reason: 'test' });
   assert.equal(m.pendingIntegration.length, 1);
   assert.equal(m.pendingIntegration[0].managedPath, 'CLAUDE.md');
 });

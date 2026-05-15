@@ -1,17 +1,17 @@
 # Why This Way
 
 Optional reading. Design rationale for readers curious about the choices baked
-into this scaffold. Skip this and go to [`conventions.md`](./conventions.md) if
+into ai-kit. Skip this and go to [`conventions.md`](./conventions.md) if
 you just want the rules.
 
-## Why a scaffold, not a fork
+## Why ai-kit, not a fork
 
-The author of this scaffold maintains a mature Copilot setup in a production
+The author of ai-kit maintains a mature Copilot setup in a production
 repo. Copying it wholesale would ship stack-specific and domain-specific
 content — layering rules, framework conventions, internal workflow names — that
 would require subtraction before addition in any other project.
 
-A scaffold inverts that. You start with the structure and conventions, then add
+ai-kit inverts that. You start with the structure and conventions, then add
 your own content. No deleting before building.
 
 ## Why a shared `.claude/` home
@@ -26,7 +26,7 @@ Copilot-only `prompts/` surface. See [`cross-tool-setup.md`](./cross-tool-setup.
 
 ## Why meta-skills
 
-The headline feature of this scaffold is **skills-as-tooling**. Three meta-skills
+The headline feature of ai-kit is **skills-as-tooling**. Three meta-skills
 — `new-skill`, `new-agent`, `layer-agents` — walk you through
 producing new assets that conform to the conventions.
 
@@ -73,7 +73,7 @@ Both Copilot and Claude Code support nested subagents (a subagent invoking
 subagents). Token cost compounds with depth, and recursive chains are easy to
 introduce by accident and hard to debug.
 
-The scaffold prefers a **flat topology** as the default: one orchestrator
+ai-kit prefers a **flat topology** as the default: one orchestrator
 calls every specialist directly. Reasons:
 
 - Easier to debug — every call appears in the orchestrator's transcript.
@@ -82,7 +82,7 @@ calls every specialist directly. Reasons:
 - Harder to accidentally make recursive — flat agents can't chain into a
   five-deep loop.
 
-The scaffold does not ship an orchestration layer in v1. When you add one,
+ai-kit does not ship an orchestration layer in v1. When you add one,
 review loops and human gates go in the orchestrator, not between specialists.
 Nesting is available when a specialist legitimately needs its own helpers —
 treat it as a deliberate choice, not the default.

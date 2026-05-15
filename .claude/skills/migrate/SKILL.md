@@ -1,6 +1,6 @@
 ---
 name: migrate
-description: "Front door for finishing a brownfield ai-kit migration. Routes into the migrator agent to semantically merge each .scaffold sidecar file into the consumer's original, review pre-existing unmanaged AI-config files, and update .claude/ai-kit.json bookkeeping. Activate when the user says 'finish my migration', 'resolve the sidecar files', 'merge the .scaffold files', 'clear pendingIntegration', 'I ran init on a brownfield repo, now what', or asks how to integrate the scaffold into a repo that already had AI config. Do not activate for fresh greenfield installs — those have nothing to migrate."
+description: "Front door for finishing a brownfield ai-kit migration. Routes into the migrator agent to semantically merge each .ai-kit sidecar file into the consumer's original, review pre-existing unmanaged AI-config files, and update .claude/ai-kit.json bookkeeping. Activate when the user says 'finish my migration', 'resolve the sidecar files', 'merge the .ai-kit files', 'clear pendingIntegration', 'I ran init on a brownfield repo, now what', or asks how to integrate ai-kit into a repo that already had AI config. Do not activate for fresh greenfield installs — those have nothing to migrate."
 argument-hint: "[optional: path to consumer repo if not cwd]"
 ---
 
@@ -9,12 +9,12 @@ argument-hint: "[optional: path to consumer repo if not cwd]"
 ## When to Use
 
 After `ai-kit init` runs on a repo that **already had AI config**, it
-installs the scaffold fully but sidecars conflicting files (`.scaffold` suffix)
+installs ai-kit fully but sidecars conflicting files (`.ai-kit` suffix)
 rather than overwriting them, and records what needs attention in
 `.claude/ai-kit.json`:
 
 - `pendingIntegration[]` — each sidecar'd conflict that needs a semantic merge.
-- `preexistingUnmanaged[]` — files in managed dirs the scaffold doesn't ship.
+- `preexistingUnmanaged[]` — files in managed dirs ai-kit doesn't ship.
 
 Use this skill to finish that migration. **Do not** use it for a fresh greenfield
 install — there is nothing to migrate.
@@ -85,13 +85,13 @@ The exact safe edits to `.claude/ai-kit.json` are in
 - [Orchestration](./references/orchestration.md) — work units, the `SCOPE` /
   `FRAGMENT` contract, parallel fan-out, and plan-file assembly.
 - [Integration rules](./references/integration-rules.md) — where each kind of
-  existing AI-config content belongs in the scaffold.
+  existing AI-config content belongs in ai-kit.
 - [Manifest operations](./references/manifest-operations.md) — exact safe edits to
   `.claude/ai-kit.json`.
 - [Brownfield migration guide](../../../docs/migration.md) — the manual process
   this skill automates.
 - [Cross-tool setup](../../../docs/cross-tool-setup.md) — what belongs where in
-  the scaffold.
+  ai-kit.
 
 ## Examples
 

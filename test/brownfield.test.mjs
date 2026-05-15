@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { resolveTarget, findPreexistingUnmanaged } from '../lib/brownfield.mjs';
 
 function tmp() {
-  return mkdtempSync(join(tmpdir(), 'scaffold-bf-'));
+  return mkdtempSync(join(tmpdir(), 'ai-kit-bf-'));
 }
 
 // resolveTarget matrix: {greenfield, brownfield} x {target-exists, target-missing}
@@ -20,7 +20,7 @@ test('resolveTarget — greenfield always returns srcRel unchanged', () => {
 test('resolveTarget — brownfield + file exists => sidecar', () => {
   const dir = tmp();
   writeFileSync(join(dir, 'AGENTS.md'), 'existing');
-  assert.equal(resolveTarget('AGENTS.md', true, dir), 'AGENTS.md.scaffold');
+  assert.equal(resolveTarget('AGENTS.md', true, dir), 'AGENTS.md.ai-kit');
 });
 
 test('resolveTarget — brownfield + file missing => normal path', () => {
@@ -33,7 +33,7 @@ test('resolveTarget — brownfield + non-wiring file exists => sidecar', () => {
   mkdirSync(join(dir, '.claude', 'skills', 'git-conventions'), { recursive: true });
   writeFileSync(join(dir, '.claude', 'skills', 'git-conventions', 'SKILL.md'), '');
   const result = resolveTarget('.claude/skills/git-conventions/SKILL.md', true, dir);
-  assert.equal(result, '.claude/skills/git-conventions/SKILL.md.scaffold');
+  assert.equal(result, '.claude/skills/git-conventions/SKILL.md.ai-kit');
 });
 
 test('findPreexistingUnmanaged — finds files not in shippedTargets', () => {

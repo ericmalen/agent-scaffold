@@ -54,14 +54,14 @@ Edit `AGENTS.md`. Leave `CLAUDE.md` alone unless you have Claude-specific notes.
 
 One copy, both tools. Skills follow the [Agent Skills](https://agentskills.io)
 open standard. Copilot also reads `.github/skills/` and the tool-agnostic
-`.agents/skills/`; this scaffold standardizes on `.claude/skills/` because it is
+`.agents/skills/`; ai-kit standardizes on `.claude/skills/` because it is
 the one location Claude Code reads too. Stick to the frontmatter fields both
 tools understand (`name`, `description`, `argument-hint`, `user-invocable`,
 `disable-model-invocation`); Claude-only fields are silently ignored by Copilot,
 so they're safe to add.
 
 `user-invocable` skills appear as `/name` in both tools — this is the
-**cross-tool slash-command mechanism**. Run `/new-skill` to scaffold one.
+**cross-tool slash-command mechanism**. Run `/new-skill` to create one.
 
 ## Agents — `.claude/agents/`
 
@@ -70,7 +70,7 @@ frontmatter with `name`, `description`, and a comma-separated `tools` list using
 Claude tool names (`Read, Grep, Glob, Bash, Edit, Write`). Claude Code reads this
 natively; Copilot detects the same files and maps the tool names to its own.
 Claude-only fields (`model`, `permissionMode`, …) are safe — Copilot ignores
-them. Run `/new-agent` to scaffold one.
+them. Run `/new-agent` to create one.
 
 ## Prompts — Copilot-only
 

@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import { table } from '../lib/table.mjs';
 
 test('table — renders header, rules, and rows', () => {
-  const out = table(['file', 'dest'], [['a.md', 'a.md.scaffold']]);
+  const out = table(['file', 'dest'], [['a.md', 'a.md.ai-kit']]);
   const lines = out.split('\n');
   assert.equal(lines.length, 5); // top rule, header, mid rule, 1 row, bottom rule
   assert.ok(lines[0].startsWith('┌') && lines[0].endsWith('┐'));
   assert.ok(lines[1].includes('file') && lines[1].includes('dest'));
   assert.ok(lines[2].startsWith('├') && lines[2].endsWith('┤'));
-  assert.ok(lines[3].includes('a.md') && lines[3].includes('a.md.scaffold'));
+  assert.ok(lines[3].includes('a.md') && lines[3].includes('a.md.ai-kit'));
   assert.ok(lines[4].startsWith('└') && lines[4].endsWith('┘'));
 });
 

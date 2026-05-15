@@ -1,6 +1,6 @@
 ---
 name: new-skill
-description: "Walks the user through creating a new Agent Skill that conforms to this project's conventions — proper frontmatter, the single-file vs. multi-file decision, and the progressive-disclosure pattern. Use whenever the user wants to create, scaffold, add, set up, or write a new skill, even when they describe it as a 'custom command,' 'saved workflow,' or 'knowledge package' rather than using the word 'skill.' Also use when extracting a reusable skill from a chat the user just had."
+description: "Walks the user through creating a new Agent Skill that conforms to this project's conventions — proper frontmatter, the single-file vs. multi-file decision, and the progressive-disclosure pattern. Use whenever the user wants to create, create, add, set up, or write a new skill, even when they describe it as a 'custom command,' 'saved workflow,' or 'knowledge package' rather than using the word 'skill.' Also use when extracting a reusable skill from a chat the user just had."
 argument-hint: "[skill purpose in one sentence]"
 ---
 
@@ -95,5 +95,5 @@ for a full single-file walkthrough.
 
 ## References
 
-- [Skills in this scaffold](../README.md)
+- [Skills in ai-kit](../README.md)
 - [Cross-tool setup](../../../docs/cross-tool-setup.md)
