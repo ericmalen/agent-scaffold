@@ -22,6 +22,7 @@ Options:
   --yes    -y     Non-interactive; accept defaults without prompting
   --force  -f     Re-initialize even if already initialized (init only)
   --json          Output audit results as JSON (audit only)
+  --strict        Escalate info/warning checks and fail exit code (audit only)
   --phase         Migration phase: preflight, stage, or apply (migrate only)
   --help   -h     Show this help
 
@@ -31,6 +32,7 @@ Examples:
   node bin/ai-kit.mjs update
   node bin/ai-kit.mjs audit
   node bin/ai-kit.mjs audit --json
+  node bin/ai-kit.mjs audit --strict
   node bin/ai-kit.mjs migrate
   node bin/ai-kit.mjs migrate --phase preflight
   node bin/ai-kit.mjs migrate --phase apply --yes
@@ -39,7 +41,7 @@ Examples:
 function parseArgs(argv) {
   const args = argv.slice(2);
   const command = args[0];
-  const flags = { yes: false, force: false, json: false, skills: null, agents: null, phase: null };
+  const flags = { yes: false, force: false, json: false, strict: false, skills: null, agents: null, phase: null };
 
   for (let i = 1; i < args.length; i++) {
     const a = args[i];
@@ -47,6 +49,7 @@ function parseArgs(argv) {
     else if (a === '--force' || a === '-f') { flags.force = true; }
     else if (a === '--help' || a === '-h')  { flags.help = true; }
     else if (a === '--json')               { flags.json = true; }
+    else if (a === '--strict')             { flags.strict = true; }
     else if (a === '--skills')             { flags.skills = args[++i] ?? null; }
     else if (a.startsWith('--skills='))    { flags.skills = a.slice('--skills='.length); }
     else if (a === '--agents')             { flags.agents = args[++i] ?? null; }
@@ -75,7 +78,10 @@ try {
     status(flags);
   } else if (command === 'audit') {
     const report = await audit(flags);
-    process.exit(report.summary.error > 0 || report.summary.warning > 0 ? 1 : 0);
+    const failed = flags.strict
+      ? (report.summary.error + report.summary.warning + report.summary.info > 0)
+      : (report.summary.error > 0);
+    process.exit(failed ? 1 : 0);
   } else if (command === 'migrate') {
     await migrate(flags);
   } else {

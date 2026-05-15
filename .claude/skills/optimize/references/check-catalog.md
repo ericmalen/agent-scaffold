@@ -94,9 +94,8 @@ coverage. See [cross-tool-setup.md](../../../../docs/cross-tool-setup.md).
 **Triggers:** No `tools:` key in the agent's YAML frontmatter.  
 **Convention:** Agents should declare only the tools they need. Omitting
 `tools:` grants all tools. See [conventions.md](../../../../docs/conventions.md).  
-**Fix class:** semantic  
-**Canonical fix:** Add `tools: Read, Grep, Glob, Edit, Write, Bash` (or a
-subset) based on what the agent's procedures actually do.
+**Fix class:** deterministic (when `## Procedures` present — finding carries `suggestedFix`) / manual (no Procedures section)  
+**Canonical fix:** Use the `suggestedFix` field from the finding directly as the `tools:` value. If no `suggestedFix`, read the agent's procedures and reason about which tools they require.
 
 ---
 
@@ -246,3 +245,256 @@ skill. Trust the skill to carry its own instructions.
 **Canonical fix:** If the AGENTS.md content genuinely duplicates the skill's
 coverage, remove or summarize to a one-line pointer. If the repetition is
 intentional context, add a comment explaining why.
+
+---
+
+## Nested AGENTS.md checks (additional)
+
+### `nested-claude-md-missing-agents-import`
+**Triggers:** A sibling `CLAUDE.md` exists but does not contain `@AGENTS.md`.  
+**Convention:** The sibling CLAUDE.md must contain `@AGENTS.md` so Claude Code
+picks up the nested rules. Existence alone is not enough.  
+See [cross-tool-setup.md](../../../../docs/cross-tool-setup.md).  
+**Fix class:** deterministic  
+**Canonical fix:** Replace (or prepend) the CLAUDE.md content with `@AGENTS.md`.
+
+---
+
+## Root CLAUDE.md checks
+
+### `root-claude-md-missing`
+**Severity:** info  
+**Triggers:** `CLAUDE.md` is absent at the repo root.  
+**Convention:** Claude Code reads `CLAUDE.md`, not `AGENTS.md`. A root
+`CLAUDE.md` containing `@AGENTS.md` is required.
+See [cross-tool-setup.md](../../../../docs/cross-tool-setup.md).  
+**Fix class:** deterministic  
+**Canonical fix:** Create `CLAUDE.md` with the single line `@AGENTS.md`.
+
+---
+
+### `root-claude-md-missing-agents-import`
+**Triggers:** `CLAUDE.md` exists but does not contain `@AGENTS.md`.  
+**Convention:** Same as above — the file must import AGENTS.md.  
+**Fix class:** deterministic  
+**Canonical fix:** Prepend `@AGENTS.md` as the first line of `CLAUDE.md`.
+
+---
+
+## Prompt checks (`.github/prompts/*.prompt.md`)
+
+### `prompt-routes-agent-with-redundant-fields`
+**Triggers:** Prompt frontmatter has `agent:` AND also `model:` or `tools:`.  
+**Convention:** When a prompt routes to an agent, the agent owns `model` and
+`tools`. Duplicating them causes drift.
+See [conventions.md](../../../../docs/conventions.md) lines 51–55 and
+[.github/prompts/README.md](../../../../.github/prompts/README.md) lines 29–32.  
+**Fix class:** deterministic  
+**Canonical fix:** Remove the `model:` and/or `tools:` lines from the prompt
+frontmatter.
+
+---
+
+### `prompt-missing-description`
+**Triggers:** No `description:` key in frontmatter.  
+**Convention:** AI tools use the description to discover and invoke prompts.  
+**Fix class:** manual  
+**Canonical fix:** Add a `description:` that explains what the prompt does and
+when to use it.
+
+---
+
+### `prompt-weak-description`
+**Severity:** info  
+**Triggers:** Description has fewer than 8 words.  
+**Fix class:** manual  
+**Canonical fix:** Expand the description with trigger phrasings and a "do not
+use for" clause.
+
+---
+
+### `prompt-filename-not-kebab-case`
+**Severity:** info  
+**Triggers:** Filename does not match `[a-z0-9-]+.prompt.md` (excluding
+underscore-prefixed files).  
+**Convention:** Prompt files use kebab-case names. Teaching material uses an
+underscore prefix. See [conventions.md](../../../../docs/conventions.md) lines
+63–67.  
+**Fix class:** deterministic  
+**Canonical fix:** Rename the file to kebab-case.
+
+---
+
+### `prompt-teaching-material-missing-underscore`
+**Severity:** info  
+**Triggers:** Description starts with "Example" or "Demo" but filename lacks
+an underscore prefix.  
+**Convention:** Teaching material should be prefixed with `_` (e.g.
+`_example-review.prompt.md`) to sort it visually and signal it is not a real
+command.  
+**Fix class:** deterministic  
+**Canonical fix:** Prefix the filename with `_`.
+
+---
+
+## Agent checks (additional)
+
+### `agent-filename-not-kebab-case`
+**Severity:** info  
+**Triggers:** Agent file basename contains uppercase letters or other
+non-kebab-case characters.  
+**Convention:** Agent files should use kebab-case names matching their `name:`
+frontmatter.  
+**Fix class:** deterministic  
+**Canonical fix:** Rename the file to kebab-case.
+
+---
+
+## Skill checks (additional)
+
+### `skill-description-missing-when`
+**Severity:** info  
+**Triggers:** Non-ai-kit skill description does not contain the word "when".  
+**Convention:** Skill descriptions should state when to invoke the skill so AI
+tools activate it on the right trigger.  
+**Fix class:** manual  
+**Canonical fix:** Add a "when" clause, e.g. "Use when the user asks to…".  
+**Note:** Skipped for ai-kit-distributed skills.
+
+---
+
+### `skill-body-uses-bare-sibling-paths`
+**Severity:** info  
+**Triggers:** SKILL.md body references `references/`, `examples/`, or
+`scripts/` paths as bare text (not inside a Markdown link).  
+**Convention:** Skills load sibling files via Markdown links — that is the
+lazy-load mechanism. Bare paths are not followed.
+See [conventions.md](../../../../docs/conventions.md) lines 10–21.  
+**Fix class:** manual  
+**Canonical fix:** Convert `references/foo.md` to `[label](references/foo.md)`.
+
+---
+
+### `command-name-collides-with-vscode-builtin`
+**Severity:** info  
+**Triggers:** Skill `name:` is one of VS Code's built-in commands:
+`create-skill`, `create-agent`, `create-prompt`, `create-instruction`,
+`create-hook`.  
+**Convention:** These names are reserved. A skill with the same name will
+conflict in the `/` menu.  
+**Fix class:** manual  
+**Canonical fix:** Rename the skill (and its folder, and update `ai-kit.config.json`).
+
+---
+
+## Settings checks
+
+### `claude-settings-missing-or-invalid`
+**Severity:** info  
+**Triggers:** `.claude/settings.json` is absent or cannot be parsed as JSON.  
+**Convention:** A `.claude/settings.json` with deny rules for `.env` files is
+recommended.  
+**Fix class:** manual  
+**Canonical fix:** Create (or fix) `.claude/settings.json` with the required
+deny rules.
+
+---
+
+### `claude-settings-missing-env-deny`
+**Triggers:** `.claude/settings.json` exists but `permissions.deny` is missing
+`Read(./.env)` or `Read(./.env.*)`.  
+**Convention:** Deny rules for `.env` files prevent Claude Code from
+accidentally reading secrets.
+See [cross-tool-setup.md](../../../../docs/cross-tool-setup.md) lines 86–87.  
+**Fix class:** deterministic  
+**Canonical fix:** Add the missing entries to `permissions.deny`. The finding's
+`suggestedFix` field carries the exact JSON to add.
+
+---
+
+### `vscode-settings-missing`
+**Severity:** info  
+**Triggers:** `.vscode/settings.json` is absent.  
+**Convention:** Required Copilot keys must be set for full ai-kit integration.  
+**Fix class:** manual  
+**Canonical fix:** Create `.vscode/settings.json` with all required keys from
+[copilot-customization-reference.md](../../../../docs/copilot-customization-reference.md)
+lines 467–492.
+
+---
+
+### `vscode-ai-key-missing-or-wrong`
+**Severity:** info  
+**Triggers:** A required VS Code key (from the 8-key list) is absent or has the
+wrong value. One finding per key.  
+**Convention:** All 8 Copilot integration keys are needed for agents, skills,
+nested AGENTS.md, and subagents to work correctly.  
+**Fix class:** manual (JSONC — preserving user comments through automated merge
+is brittle)  
+**Canonical fix:** Add the key+value documented in the finding's `suggestedFix`
+field to `.vscode/settings.json`.
+
+---
+
+## Gitignore checks
+
+### `gitignore-missing`
+**Severity:** info  
+**Triggers:** No `.gitignore` present and `.git/` exists (repo is git-tracked).  
+**Fix class:** deterministic  
+**Canonical fix:** Create `.gitignore` with the two required ai-kit entries.
+
+---
+
+### `gitignore-missing-ai-kit-entries`
+**Severity:** info  
+**Triggers:** `.gitignore` exists but is missing `.claude/settings.local.json`
+or `.claude/ai-kit-audit-report.json`.  
+**Fix class:** deterministic  
+**Canonical fix:** Append the missing entries to `.gitignore` with a
+`# Added by ai-kit optimize` header comment.
+
+---
+
+## Cross-file checks (additional)
+
+### `audit-report-committed`
+**Triggers:** `.claude/ai-kit-audit-report.json` exists on disk AND is not in
+`.gitignore`.  
+**Convention:** The audit report is auto-generated and should not be committed.  
+**Fix class:** deterministic  
+**Canonical fix:** Add `.claude/ai-kit-audit-report.json` to `.gitignore`.
+
+---
+
+### `asset-folder-missing-readme`
+**Severity:** info  
+**Triggers:** `.claude/agents/`, `.claude/skills/`, or `.github/prompts/`
+exists but has no `README.md`.  
+**Convention:** Each asset folder should have a README explaining the
+conventions for that surface.
+See [conventions.md](../../../../docs/conventions.md) lines 80–82.  
+**Fix class:** deterministic  
+**Canonical fix:** Create a `README.md` in the folder following the standard
+pattern for that surface.
+
+---
+
+### `skill-not-registered`
+**Severity:** info  
+**Triggers:** (Scaffold repo only) A skill exists in `.claude/skills/` but is
+not in `ai-kit.config.json` under `base.skills` or `skills:`.  
+**Convention:** Unregistered skills are not shipped by the CLI.  
+**Fix class:** manual  
+**Canonical fix:** Add the skill to `ai-kit.config.json` under `base.skills`
+(if bundled) or `skills:` (if opt-in).
+
+---
+
+### `agent-not-registered`
+**Severity:** info  
+**Triggers:** (Scaffold repo only) An agent exists in `.claude/agents/` but is
+not in `ai-kit.config.json` under `agents:`.  
+**Convention:** Unregistered agents are not shipped by the CLI.  
+**Fix class:** manual  
+**Canonical fix:** Add the agent to `ai-kit.config.json` under `agents:`.

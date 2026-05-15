@@ -86,15 +86,91 @@ pages almost always contains directory-scoped rules.
 ### `agent-grants-all-tools`
 
 **Procedure:**
-1. Read the agent's `## Procedures` section.
-2. List every tool the procedures actually call or imply:
-   - Reads files → `Read`
-   - Pattern matching → `Grep`, `Glob`
-   - Writes/creates files → `Edit`, `Write`
-   - Runs shell commands → `Bash`
-3. Propose `tools: <comma-list>` with only those tools.
-4. Mark as semantic because the right tool list depends on the procedures'
-   content.
+- If `finding.fixable === 'deterministic'` (Procedures section present): apply
+  `finding.suggestedFix` directly as the `tools:` value. No further reasoning
+  needed.
+- If `finding.fixable === 'manual'` (no Procedures section): document in "Manual
+  action required" — the agent also needs `agent-missing-procedures-section`
+  fixed first.
+
+---
+
+### `root-claude-md-missing` / `root-claude-md-missing-agents-import`
+
+**Procedure (deterministic):**
+- Create or overwrite `CLAUDE.md` at the repo root with a single line:
+  `@AGENTS.md`
+- For `root-claude-md-missing-agents-import`: prepend `@AGENTS.md\n` if the
+  file has existing content worth keeping; otherwise replace entirely.
+
+---
+
+### `nested-claude-md-missing-agents-import`
+
+**Procedure (deterministic):**
+- Prepend `@AGENTS.md\n` to the sibling `CLAUDE.md` content, or replace the
+  file if it contains nothing meaningful beyond the wrong content.
+
+---
+
+### `gitignore-missing-ai-kit-entries` / `gitignore-missing`
+
+**Procedure (deterministic):**
+- For `gitignore-missing`: create `.gitignore` with the two required entries.
+- For `gitignore-missing-ai-kit-entries`: append a block at the end of the
+  existing `.gitignore`:
+  ```
+  # Added by ai-kit optimize
+  .claude/settings.local.json
+  .claude/ai-kit-audit-report.json
+  ```
+  Only append lines that are actually missing.
+
+---
+
+### `.vscode/settings.json` findings (`vscode-ai-key-missing-or-wrong`, `vscode-settings-missing`)
+
+**Do NOT auto-apply.** Preserve user comments by documenting the exact change
+in the plan under "Manual action required". Include the key+value from
+`finding.suggestedFix`. Example plan entry:
+```
+### Manual action required
+- [ ] `.vscode/settings.json`: Add "chat.useClaudeMdFile": false
+- [ ] `.vscode/settings.json`: Add "chat.useAgentSkills": true
+```
+
+---
+
+### `audit-report-committed`
+
+**Procedure (deterministic):**
+- Append `.claude/ai-kit-audit-report.json` to `.gitignore` (same as
+  `gitignore-missing-ai-kit-entries`).
+
+---
+
+### `prompt-routes-agent-with-redundant-fields`
+
+**Procedure (deterministic):**
+- Remove the `model:` and/or `tools:` lines from the prompt frontmatter.
+
+---
+
+### `claude-settings-missing-env-deny`
+
+**Procedure (deterministic):**
+- Add the missing rule(s) from `finding.suggestedFix` to the `permissions.deny`
+  array in `.claude/settings.json`.
+
+---
+
+### `asset-folder-missing-readme`
+
+**Procedure (deterministic):**
+- Create a minimal `README.md` in the flagged folder following the same header
+  pattern as the corresponding file in the scaffold (e.g. `# Agents`/`# Skills`
+  heading + one-line description of the folder's purpose). Do NOT copy the full
+  scaffold README — write a consumer-appropriate stub.
 
 ---
 
