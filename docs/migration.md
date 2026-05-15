@@ -19,28 +19,39 @@ For each entry in `pendingIntegration`:
 | `managedPath` | The path the scaffold wanted to write (your original lives here) |
 | `sidecarPath` | Where the scaffold's version was written (`.scaffold` suffix) |
 
-Common cases and how to handle them:
+Each file has a fixed disposition — there is no judgment call:
 
 ### `AGENTS.md`
 Your version is the project's instruction file. The scaffold's version is a
-TODO-placeholder template. Open both, copy any structural sections from the
-`.scaffold` version you want, fill in your project's specifics, then delete
-the `.scaffold` file.
+TODO-placeholder template. Copy any structural sections from the `.scaffold`
+version your file is missing, then delete the `.scaffold` file. Never downgrade
+your real content to a TODO placeholder.
 
 ### `CLAUDE.md`
-The scaffold's `CLAUDE.md` contains only `@AGENTS.md` (an import directive).
-If your `CLAUDE.md` has this already, delete the `.scaffold` sidecar and you
-are done. If not, merge the `@AGENTS.md` line into your file.
+Move all of your `CLAUDE.md` content into `AGENTS.md`, then replace `CLAUDE.md`
+with the scaffold's version (the `.scaffold` sidecar — `@AGENTS.md` plus
+boilerplate) and delete the sidecar. Claude Code reads only `CLAUDE.md` and has
+no `AGENTS.md` fallback, so `CLAUDE.md` must stay as the import shim.
 
 ### `.claude/settings.json`
-Compare your permissions block with the scaffold's. Merge `deny` rules (the
-scaffold blocks reading `.env` files). Keep your `allow` list. Delete the
-`.scaffold` sidecar when done.
+Union the `deny` lists (keep the scaffold's `.env` rules), keep your `allow`
+list, merge `hooks`. Delete the `.scaffold` sidecar.
 
 ### `.vscode/settings.json`
-The scaffold enables specific Copilot / AI agent features. Add the AI-related
-keys from the `.scaffold` sidecar into your `settings.json`. Delete the
-sidecar when done.
+Merge **every** key from the `.scaffold` sidecar into your `settings.json` — the
+`chat.*` AI keys, `explorer.fileNesting.*`, and `chat.tools.terminal.*`. Keep
+your own extra keys; on a conflict, take the scaffold's value. Delete the
+sidecar.
+
+### `.github/copilot-instructions.md`
+Fold its content into the root `AGENTS.md`, then delete the file. The scaffold
+makes `AGENTS.md` canonical and Copilot reads it natively, so the file is
+redundant.
+
+### `.github/instructions/*.instructions.md`
+For each one, fold its content into a nested `AGENTS.md` in the directory it was
+scoped to (add a sibling `CLAUDE.md` containing `@AGENTS.md`), then delete the
+original. This preserves the path scoping.
 
 ## After merging
 

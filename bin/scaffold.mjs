@@ -13,8 +13,8 @@ Commands:
   status   Show installed version, file sync state, and pending integrations
 
 Options:
-  --skills <a,b>  Comma-separated opt-in skill IDs (init/update)
-  --agents <a,b>  Comma-separated opt-in agent IDs (init/update)
+  --skills <a,b>  Comma-separated opt-in skill IDs (init)
+  --agents <a,b>  Comma-separated opt-in agent IDs (init)
   --yes    -y     Non-interactive; accept defaults without prompting
   --force  -f     Re-initialize even if already initialized (init only)
   --help   -h     Show this help
@@ -47,7 +47,7 @@ function parseArgs(argv) {
 
 const { command, flags } = parseArgs(process.argv);
 
-if (!command || flags.help) {
+if (!command || flags.help || command === '--help' || command === '-h') {
   console.log(HELP);
   process.exit(0);
 }

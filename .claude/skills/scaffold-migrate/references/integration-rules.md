@@ -3,11 +3,25 @@
 The decision framework for brownfield migration: given a piece of existing
 AI-config content, **where does it belong in the scaffold's structure?**
 
+**Every disposition here is deterministic.** The migrator applies the rule,
+shows the result in a single batch plan, and the user approves the batch as a
+whole. It does **not** ask "what should I do with this file?" — there is no
+per-file menu.
+
+> **Scope note.** On the parallel plan path the migrator is invoked on a
+> *scope* — one **work unit** (a single write target plus the sources routing
+> into it) rather than the whole migration (see
+> [`orchestration.md`](./orchestration.md)). It applies the same rules below to
+> its sources, writes the merged result to a staging file, and returns a
+> metadata fragment; the orchestrator assembles the fragments. Splitting the
+> work across workers never changes a disposition.
+
 The scaffold's organizing principle (see
 [`docs/cross-tool-setup.md`](../../../../docs/cross-tool-setup.md)):
 
 - `AGENTS.md` is the **canonical** instructions file. `CLAUDE.md` just imports it
-  (`@AGENTS.md`).
+  (`@AGENTS.md`) — Claude Code reads only `CLAUDE.md`, it has no `AGENTS.md`
+  fallback, so `CLAUDE.md` must always exist as the import shim.
 - Skills live in `.claude/skills/`, agents in `.claude/agents/` — both tools read
   them natively.
 - `.github/` is Copilot-only legacy surface; the scaffold standardizes on
@@ -18,15 +32,17 @@ The scaffold's organizing principle (see
 ### `CLAUDE.md` (sidecar'd)
 
 The consumer's `CLAUDE.md` usually holds real project rules. The scaffold's
-`CLAUDE.md.scaffold` is just `@AGENTS.md`.
+`CLAUDE.md.scaffold` is the `@AGENTS.md` import plus standard boilerplate.
 
-- **Project rules / conventions** → move into `AGENTS.md` under appropriate
-  headings. They are tool-agnostic; `AGENTS.md` is where they belong.
-- **The `@AGENTS.md` import line** → ensure it is line 1 of the merged `CLAUDE.md`.
-- **Genuine Claude-only notes** (rare — e.g. "in Claude Code, prefer the X
-  subagent") → keep them in `CLAUDE.md` *below* the `@AGENTS.md` import.
-- End state: `CLAUDE.md` is `@AGENTS.md` plus any Claude-only notes; the rules now
-  live in `AGENTS.md`; delete `CLAUDE.md.scaffold`.
+- **All consumer content** → move into `AGENTS.md` under appropriate headings.
+  It is tool-agnostic; `AGENTS.md` is where it belongs.
+- `CLAUDE.md` is then **replaced with the scaffold's `CLAUDE.md`** — i.e.
+  `CLAUDE.md.scaffold` becomes `CLAUDE.md`. Delete the `.scaffold` sidecar.
+- There is no "genuine Claude-only notes" branch. If a line looks genuinely
+  Claude-specific, the migrator may *note* it in the batch plan, but the default
+  is everything → `AGENTS.md`.
+- End state: `CLAUDE.md` equals the scaffold's version exactly (so it will
+  **not** drift from `sourceHash`); the consumer's rules now live in `AGENTS.md`.
 
 ### `AGENTS.md` (sidecar'd)
 
@@ -47,36 +63,45 @@ The consumer already has an `AGENTS.md` — it is already canonical. The scaffol
 
 ### `.vscode/settings.json` (sidecar'd)
 
-The consumer's file usually has unrelated editor settings. The scaffold's version
-adds AI-feature keys.
+Everything in the scaffold's `.vscode/settings.json` is intended for the consumer
+repo post-init — not just the AI-feature keys.
 
-- Merge **only** the AI keys from the sidecar — the `vscodeAiKeys` set in
-  `scaffold.config.json` (`chat.useAgentsMdFile`, `chat.useAgentSkills`,
-  `chat.useNestedAgentsMdFiles`, etc.).
-- Leave every non-AI key in the consumer's file untouched.
+- **Merge ALL keys** from the scaffold's `.vscode/settings.json.scaffold` into the
+  consumer's file — including `explorer.fileNesting.*` and
+  `chat.tools.terminal.*`, not only the `chat.*` AI keys.
+- **Preserve** the consumer's extra keys (e.g. `editor.formatOnSave`).
+- On a key **conflict**, the scaffold's value wins — its values are the intended
+  configuration.
 - Delete `.vscode/settings.json.scaffold`.
 
-### `.github/copilot-instructions.md` (usually `preexistingUnmanaged`)
+### `.github/copilot-instructions.md`
 
 Legacy Copilot-only instructions. The scaffold makes `AGENTS.md` canonical, and
 Copilot reads `AGENTS.md` natively — so this file is redundant once its content
 moves.
 
-- Fold any substantive instructions into `AGENTS.md`.
-- Replace the file with a thin pointer (`Instructions live in AGENTS.md.`) or
-  remove it — ask the user which.
+- Fold all substantive content into the **root `AGENTS.md`**.
+- **Delete the original.** No thin-pointer stub, no "leave as-is".
 
-### `.github/instructions/*.instructions.md` (usually `preexistingUnmanaged`)
+### `.github/instructions/*.instructions.md`
 
-Path-scoped Copilot instructions. The scaffold's cross-tool equivalent is a nested
-`AGENTS.md` (+ sibling `CLAUDE.md`) in the scoped directory.
+Path-scoped Copilot instructions — each applies to one directory. The scaffold's
+cross-tool equivalent is a nested `AGENTS.md`.
 
-- Recommend running `/scaffold-nested-agents-md` to port each one, **or** leave
-  as-is if the consumer wants to keep Copilot-only path scoping. Do not auto-port.
+- For each file, fold its content into a **nested `AGENTS.md`** in the directory
+  it was scoped to, and create a sibling `CLAUDE.md` containing `@AGENTS.md`
+  (mirrors the root pairing; see `/scaffold-nested-agents-md`).
+- **Delete the original `.instructions.md`.**
+- This preserves the path scoping while removing the Copilot-only file.
 
-### `.github/chatmodes/*` (usually `preexistingUnmanaged`)
+### `.github/chatmodes/*`, `.github/prompts/*`, other non-instruction files
 
-No scaffold equivalent. Leave as-is; note it is intentionally unmanaged.
+These are not instruction files and have no scaffold conflict.
+
+- **Leave as-is.** Recorded as intentionally unmanaged. Deterministic "leave" —
+  still no question.
+- (`.github/prompts/` is a Copilot-only surface the scaffold explicitly
+  supports; the consumer's own prompt files are fine where they are.)
 
 ### Content overlapping an opt-in skill
 
@@ -85,8 +110,8 @@ conventions overlap `git-conventions`):
 
 - **Skill already installed** → drop the duplicated prose from the merged file;
   point at the skill instead.
-- **Skill not installed** → do **not** auto-install. Tell the user the skill
-  exists and offer `agent-scaffold init --skills <name>`.
+- **Skill not installed** → do **not** auto-install. Note in the batch plan that
+  the skill exists and recommend `agent-scaffold init --skills <name>`.
 
 ## Detecting overlap with an un-installed opt-in skill
 
@@ -95,4 +120,5 @@ conventions overlap `git-conventions`):
 2. Grep the consumer's content for that domain's vocabulary (for
    `git-conventions`: "conventional commit", "feat:", "fix:", "PR title", "branch
    name").
-3. On a match, surface it as a **recommendation** — never install silently.
+3. On a match, surface it as a **recommendation** in the batch plan — never
+   install silently.

@@ -1,39 +1,19 @@
 # Worked migration
 
-A full two-phase walkthrough of a real brownfield repo, end to end.
+Two walkthroughs — the **parallel path** (≥ 3 work units, plan-phase fan-out)
+and the **degenerate path** (≤ 2 work units, a single agent). Both write each
+work unit's merged content **once** into `.ai-scaffold-staging/`, end with one
+approval, and one mechanical apply that just *moves* the staging files into
+place. See [`../references/orchestration.md`](../references/orchestration.md) for
+the `SCOPE` / `FRAGMENT` grammars and the staging convention.
 
-## Starting state
+## Parallel path
+
+### Starting state
 
 A repo that already had AI config when `agent-scaffold init --skills
-git-conventions` ran. The relevant pre-existing files:
+git-conventions` ran. After `init`, `.ai-scaffold.json` shows:
 
-`CLAUDE.md` (the consumer's original):
-```markdown
-# Project instructions
-
-- Always use TypeScript, never plain JS
-- Run `pnpm test` before opening a PR
-- We use GCDS for all UI components
-- Conventional commits: feat:, fix:, chore:, docs:. Squash on merge.
-```
-
-`.vscode/settings.json` (the consumer's original):
-```json
-{
-  "editor.formatOnSave": true,
-  "typescript.preferences.importModuleSpecifier": "relative"
-}
-```
-
-`.github/copilot-instructions.md`:
-```markdown
-# Copilot instructions
-
-Use TypeScript. Prefer functional patterns. All components must use GCDS.
-Run tests before suggesting a PR.
-```
-
-After `init`, `.ai-scaffold.json` shows:
 ```jsonc
 "pendingIntegration": [
   { "managedPath": "CLAUDE.md", "sidecarPath": "CLAUDE.md.scaffold",
@@ -42,70 +22,101 @@ After `init`, `.ai-scaffold.json` shows:
     "sidecarPath": ".vscode/settings.json.scaffold",
     "reason": "consumer file already present" }
 ],
-"preexistingUnmanaged": [ ".github/copilot-instructions.md" ]
+"preexistingUnmanaged": [ ".claude/settings.local.json" ]
 ```
 
-## Phase 1 — resolve `pendingIntegration`
+The consumer's `CLAUDE.md` holds ~600 lines of real project rules; its
+`.vscode/settings.json` has one custom key; `.claude/settings.local.json` is a
+local Claude Code permissions file.
 
-### Entry 1: `CLAUDE.md`
+### Preflight — enumerate work units (by write target)
 
-The agent reads `CLAUDE.md` (4 project rules) and `CLAUDE.md.scaffold` (just
-`@AGENTS.md`). Per [integration-rules](../references/integration-rules.md), the
-project rules belong in `AGENTS.md`, not `CLAUDE.md`. One rule —
-"Conventional commits…" — overlaps the `git-conventions` skill, which is already
-installed.
+The orchestrator groups every source by its **write target**:
 
-**Proposal:**
-- Move "Always use TypeScript", "Run `pnpm test` before opening a PR", and "We use
-  GCDS for all UI components" into `AGENTS.md` under a `## Conventions` heading.
-- Drop the "Conventional commits…" line — `git-conventions` covers it. Add a
-  one-line pointer in `AGENTS.md`: "Commit/PR/branch conventions: see the
-  `git-conventions` skill."
-- Rewrite `CLAUDE.md` to just `@AGENTS.md`.
+| unit-id | sources | target(s) |
+|---|---|---|
+| `root-agents-md` | `CLAUDE.md` (+ sidecar) | `AGENTS.md`, `CLAUDE.md` |
+| `vscode-settings` | `.vscode/settings.json` (+ sidecar) | `.vscode/settings.json` |
+| `settings-local` | `.claude/settings.local.json` | *(none — review unit)* |
 
-On approval: apply the edits, `rm CLAUDE.md.scaffold`, then per
-[manifest-operations](../references/manifest-operations.md) remove the
-`pendingIntegration` entry and flip `files["CLAUDE.md"]` — `installedAs`:
-`"CLAUDE.md.scaffold"` → `"CLAUDE.md"`, delete `sidecar: true`.
+Three work units → **parallel path**. The orchestrator removes any stale
+`.ai-scaffold-staging/` so workers start clean.
 
-### Entry 2: `.vscode/settings.json`
+### Plan phase — fan-out
 
-The agent reads both. The consumer's file has editor settings; the
-`.scaffold` version adds AI-feature keys. Per integration-rules, merge **only**
-the AI keys.
+The orchestrator spawns **three `scaffold-migrator` workers in one message**,
+each in scoped plan mode with its `SCOPE` block. Each reads only its scoped
+sources, **writes its merged result to staging files**, and returns a small
+metadata `FRAGMENT` — e.g. `root-agents-md`:
 
-**Proposal:** add the `vscodeAiKeys` (`chat.useAgentsMdFile`,
-`chat.useAgentSkills`, etc.) from the sidecar into the consumer's
-`.vscode/settings.json`; leave `editor.formatOnSave` and the TypeScript key
-alone.
+```
+FRAGMENT unit-id=root-agents-md
+disposition: fold consumer CLAUDE.md (~600 lines) into AGENTS.md under its
+  headings; replace CLAUDE.md with the @AGENTS.md shim; delete the sidecar
+moves:
+  - from: .ai-scaffold-staging/AGENTS.md   to: AGENTS.md
+  - from: .ai-scaffold-staging/CLAUDE.md   to: CLAUDE.md
+premise-snapshots:
+  - file: AGENTS.md   lines: 52   first: "# Project Name"   last: "the relevant subdirectory."
+  - file: CLAUDE.md   lines: 593  first: "# CLAUDE.md"      last: "13. **Token security** — …"
+  - file: CLAUDE.md.scaffold   lines: 14   first: "@AGENTS.md"   last: "…load them natively…"
+manifest-delta:
+  - remove pendingIntegration[CLAUDE.md]; flip files[CLAUDE.md]: installedAs->CLAUDE.md, drop sidecar
+deletions:
+  - CLAUDE.md.scaffold
+notes:
+  - no git-conventions vocabulary in CLAUDE.md — no skill-overlap action
+```
 
-On approval: apply, `rm .vscode/settings.json.scaffold`, remove the
-`pendingIntegration` entry, flip `files[".vscode/settings.json"]`.
+The `~600 lines` of merged `AGENTS.md` are now in
+`.ai-scaffold-staging/AGENTS.md` — **not** in the FRAGMENT, **not** (later) in
+the plan file. `vscode-settings` returns a similar fragment with its merged
+`.vscode/settings.json` staged. `settings-local` is a review unit — empty
+`moves`/`deletions`, disposition "leave as-is".
 
-## Phase 2 — review `preexistingUnmanaged`
+### Assemble the plan
 
-### `.github/copilot-instructions.md`
+The orchestrator collects the three fragments and writes a **small**
+`.ai-scaffold-migration-plan.md` — just the unioned move-list, premise
+snapshots, manifest changes, deletions, and a coverage check. It does **not**
+read or copy the staging files; the content was generated once and stays on
+disk.
 
-Per integration-rules, this is legacy Copilot-only surface. Its content
-("TypeScript", "GCDS", "run tests before a PR") now lives in `AGENTS.md`, which
-Copilot reads natively. The one unique line — "Prefer functional patterns" — is
-not yet captured.
+### Present + approve
 
-**Proposal:** fold "Prefer functional patterns" into `AGENTS.md` under
-`## Conventions`, then replace `.github/copilot-instructions.md` with a one-line
-pointer: `Instructions live in AGENTS.md.` (or remove it — ask the user).
+The user reads the short plan and can inspect the actual merged files in
+`.ai-scaffold-staging/`. They approve once. No per-file menu.
 
-On approval: apply, then drop `.github/copilot-instructions.md` from
-`preexistingUnmanaged[]`.
+### Apply
 
-## End state
+One `scaffold-migrator` in apply mode: re-verify every premise snapshot (stop on
+drift), then **move** each staging file onto its target
+(`.ai-scaffold-staging/AGENTS.md` → `AGENTS.md`, etc.), apply the manifest
+changes, and `rm` the resolved sidecars, the `.ai-scaffold-staging/` directory,
+and the plan file. No content is regenerated — apply is `mv` + `rm` + a small
+manifest edit.
 
-- `AGENTS.md` carries all the project conventions; `CLAUDE.md` is just
-  `@AGENTS.md`.
-- `.vscode/settings.json` has the AI keys merged in, editor settings intact.
-- No `.scaffold` files remain.
-- `pendingIntegration` and `preexistingUnmanaged` are both empty.
-- `agent-scaffold status` shows no integration warning. It *does* report
-  `AGENTS.md`, `CLAUDE.md`, and `.vscode/settings.json` as "locally modified" —
-  that is expected: the consumer intentionally diverged from the shipped
-  versions.
+### End state
+
+- `AGENTS.md` carries all the project rules; `CLAUDE.md` equals the scaffold's
+  `CLAUDE.md` exactly; `.vscode/settings.json` has every scaffold key merged in,
+  consumer keys intact.
+- No `.scaffold` files, no `.ai-scaffold-staging/`, no plan file remain.
+- `pendingIntegration` is empty; `.claude/settings.local.json` stays in
+  `preexistingUnmanaged` (left as-is).
+- `agent-scaffold status` shows no integration warning — `AGENTS.md` and
+  `.vscode/settings.json` are "locally modified" (expected), `CLAUDE.md` is in
+  sync, `.claude/settings.local.json` is listed as unmanaged.
+
+## Degenerate path
+
+A repo where `init` sidecar'd only `CLAUDE.md` — **one work unit** (or two:
+`CLAUDE.md` + `.vscode/settings.json`). With ≤ 2 work units the orchestrator
+**skips fan-out**: it invokes a single `scaffold-migrator` with **no `SCOPE`
+block**, which runs in *whole plan mode* — it classifies every unit itself,
+writes the staging files, and writes `.ai-scaffold-migration-plan.md` directly.
+
+Present, approve, and apply are identical to the parallel path: one approval,
+one mechanical apply that moves staging files into place. The degenerate path
+just avoids spawning workers when the migration is too small to benefit from
+parallelism.

@@ -3,6 +3,12 @@
 Exact, safe edits to `.ai-scaffold.json` when resolving a migration. The migrator
 touches **only** the integration bookkeeping — nothing else.
 
+> **Who writes the manifest.** On the parallel plan path, scoped workers never
+> touch `.ai-scaffold.json` — each records its `manifest-delta` in its fragment,
+> the orchestrator unions them into the plan's `## Manifest changes`, and the
+> single **apply** agent performs exactly one manifest write. The edit rules
+> below are unchanged — this just fixes *who* applies them and *when*.
+
 ## Manifest shape (relevant fields)
 
 ```jsonc
@@ -53,20 +59,27 @@ After the merge is written and the sidecar deleted:
 
 ## Resolve a `preexistingUnmanaged` path
 
-- **Folded into the scaffold** → remove the path string from
-  `preexistingUnmanaged[]`.
-- **Left as-is (intentionally unmanaged)** → keep the path string by default, so
-  `agent-scaffold status` continues to list it accurately. Remove it only if the
-  user explicitly wants to stop being reminded.
+- **Folded into the scaffold + original deleted** (e.g.
+  `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md`) →
+  remove the path string from `preexistingUnmanaged[]`. Do **not** add the new
+  nested `AGENTS.md` / `CLAUDE.md` (or any other file the fold created) to the
+  manifest — they are consumer content, not scaffold-managed.
+- **Left as-is (intentionally unmanaged)** → keep the path string, so
+  `agent-scaffold status` continues to list it accurately.
 
 ## Never touch
 
 `schemaVersion`, `source.*`, `mode`, `installed.*`, or any `sourceHash`.
 
-Note: after a merge, `sourceHash` will no longer match the merged file's content.
-That is **expected and correct** — the consumer has intentionally diverged from
-the shipped version. `agent-scaffold status` will report the file as "locally
-modified" / drifted, which accurately reflects reality.
+Note on drift after a merge:
+
+- **`AGENTS.md` and the merged settings files** (`.vscode/settings.json`,
+  `.claude/settings.json`) will no longer match their `sourceHash`. That is
+  **expected and correct** — the consumer has intentionally diverged from the
+  shipped version. `agent-scaffold status` reports them as "locally modified",
+  which accurately reflects reality.
+- **`CLAUDE.md`**, once replaced with the scaffold's `CLAUDE.md` exactly, will
+  **match** its `sourceHash` again — `status` will show it in sync, not drifted.
 
 ## Formatting
 

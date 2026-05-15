@@ -59,3 +59,41 @@ test('findPreexistingUnmanaged — empty when no managed dirs exist', () => {
   const result = findPreexistingUnmanaged(dir, new Set());
   assert.deepEqual(result, []);
 });
+
+test('findPreexistingUnmanaged — scopes .github/.vscode to AI surfaces only', () => {
+  const dir = tmp();
+  // Non-AI files in shared dirs — must NOT be flagged.
+  mkdirSync(join(dir, '.github', 'workflows'), { recursive: true });
+  writeFileSync(join(dir, '.github', 'workflows', 'deploy.yml'), '');
+  mkdirSync(join(dir, '.vscode'), { recursive: true });
+  writeFileSync(join(dir, '.vscode', 'launch.json'), '');
+  writeFileSync(join(dir, '.vscode', 'tasks.json'), '');
+  // docs/ is general-purpose — not scanned at all.
+  mkdirSync(join(dir, 'docs'), { recursive: true });
+  writeFileSync(join(dir, 'docs', 'architecture.md'), '');
+  // Genuine AI surfaces — must be flagged.
+  writeFileSync(join(dir, '.github', 'copilot-instructions.md'), '');
+  writeFileSync(join(dir, '.vscode', 'settings.json'), '{}');
+  mkdirSync(join(dir, '.claude'), { recursive: true });
+  writeFileSync(join(dir, '.claude', 'settings.local.json'), '{}');
+  const result = findPreexistingUnmanaged(dir, new Set());
+
+  assert.ok(result.includes('.github/copilot-instructions.md'), 'flags copilot-instructions.md');
+  assert.ok(result.includes('.vscode/settings.json'), 'flags unmanaged .vscode/settings.json');
+  assert.ok(result.includes('.claude/settings.local.json'), 'flags .claude/settings.local.json');
+  assert.ok(!result.includes('.github/workflows/deploy.yml'), 'does NOT flag CI workflows');
+  assert.ok(!result.includes('.vscode/launch.json'), 'does NOT flag launch.json');
+  assert.ok(!result.includes('.vscode/tasks.json'), 'does NOT flag tasks.json');
+  assert.ok(!result.some((p) => p.startsWith('docs/')), 'does NOT scan docs/');
+});
+
+test('findPreexistingUnmanaged — scans .github/instructions and prompts subtrees', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github', 'instructions'), { recursive: true });
+  writeFileSync(join(dir, '.github', 'instructions', 'api.instructions.md'), '');
+  mkdirSync(join(dir, '.github', 'prompts'), { recursive: true });
+  writeFileSync(join(dir, '.github', 'prompts', 'custom.prompt.md'), '');
+  const result = findPreexistingUnmanaged(dir, new Set());
+  assert.ok(result.includes('.github/instructions/api.instructions.md'));
+  assert.ok(result.includes('.github/prompts/custom.prompt.md'));
+});

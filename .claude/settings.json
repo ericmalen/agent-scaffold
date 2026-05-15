@@ -1,7 +1,22 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
-    "allow": [],
+    "allow": [
+      "Edit(./AGENTS.md)",
+      "Write(./AGENTS.md)",
+      "Edit(./CLAUDE.md)",
+      "Write(./CLAUDE.md)",
+      "Edit(./**/AGENTS.md)",
+      "Write(./**/AGENTS.md)",
+      "Edit(./**/CLAUDE.md)",
+      "Write(./**/CLAUDE.md)",
+      "Edit(./.vscode/settings.json)",
+      "Edit(./.claude/settings.json)",
+      "Edit(./.ai-scaffold.json)",
+      "Write(./.ai-scaffold.json)",
+      "Write(./.ai-scaffold-migration-plan.md)",
+      "Edit(./.ai-scaffold-migration-plan.md)"
+    ],
     "ask": [],
     "deny": [
       "Read(./.env)",

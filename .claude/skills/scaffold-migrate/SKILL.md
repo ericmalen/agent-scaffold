@@ -21,32 +21,69 @@ install — there is nothing to migrate.
 
 ## Workflow
 
-This skill is the **front door**. The [`scaffold-migrator`](../../agents/scaffold-migrator.md)
-agent does the actual edits — it carries the procedures, a constrained tool list,
-and explicit safety boundaries.
+This skill is the **front door** and **orchestrator**. The
+[`scaffold-migrator`](../../agents/scaffold-migrator.md) agent does the actual
+classification and edits — it carries the procedures, a constrained tool list,
+and explicit safety boundaries. Because a subagent cannot pause for approval
+mid-run, the migration is **two phases** — plan, then apply — bridged by a plan
+file (`.ai-scaffold-migration-plan.md` at the consumer repo root). This skill
+runs in the main thread and is the only thing that may use the Agent tool: it
+fans the **plan phase** out across parallel workers, then drives a single
+mechanical apply.
 
-1. Confirm `.ai-scaffold.json` exists at the consumer repo root and that
-   `pendingIntegration` or `preexistingUnmanaged` is non-empty. If both are empty,
-   there is nothing to migrate — stop.
-2. Hand off to the `scaffold-migrator` agent (invoke `@scaffold-migrator`, or in
-   Claude Code delegate to it by name). It runs a two-phase, approval-gated merge:
-   - **Phase 1** — for each `pendingIntegration` entry: read the consumer's
-     original and the scaffold's `.scaffold` version, propose a merge (routing
-     content to wherever it belongs — project rules go to `AGENTS.md`, not
-     necessarily back into the original file), apply on approval, delete the
-     sidecar, fix the manifest bookkeeping.
-   - **Phase 2** — for each `preexistingUnmanaged` file: propose folding it into a
-     scaffold file or leaving it as intentionally unmanaged.
-3. When done, run `agent-scaffold status` to confirm the integration warning
+The plan phase writes each work unit's merged content **once**, to a staging
+directory (`.ai-scaffold-staging/`); the plan file carries only a *move-list*,
+never content; apply just moves staging files into place. The full `SCOPE` /
+`FRAGMENT` contract, the staging convention, and assembly rules are in
+[`references/orchestration.md`](./references/orchestration.md) — read it first.
+
+1. **Preflight.** Confirm `.ai-scaffold.json` exists at the consumer repo root
+   and that `pendingIntegration` or `preexistingUnmanaged` is non-empty. If both
+   are empty, there is nothing to migrate — stop. Otherwise enumerate the
+   **work units** — group every source (`pendingIntegration` sidecars,
+   `preexistingUnmanaged` paths) by its **write target** per
+   `orchestration.md`; "leave as-is" paths collapse into one review unit. Then
+   remove any stale `.ai-scaffold-staging/` so workers start clean.
+2. **Plan phase.**
+   - **Degenerate path (≤ 2 work units):** invoke a single `scaffold-migrator`
+     with **no** `SCOPE` block — it runs in *whole plan mode*, classifies every
+     unit against the deterministic rules in
+     [`references/integration-rules.md`](./references/integration-rules.md),
+     writes the staging files, and writes `.ai-scaffold-migration-plan.md` itself.
+   - **Parallel path (≥ 3 work units):** spawn one `scaffold-migrator` per work
+     unit, **all in a single message** (multiple Agent calls in one turn —
+     separate messages serialize them and defeat the optimization). Each runs in
+     *scoped plan mode* with a `SCOPE` block, writes its staging files, and
+     returns a small metadata-only `FRAGMENT` as text. Once every fragment is
+     back, **assemble** `.ai-scaffold-migration-plan.md` yourself per
+     `orchestration.md` — a small move-list, **never** the content. You are the
+     sole writer of the plan file. If the fan-out is interrupted before all
+     fragments return, write no plan file and re-run the plan phase.
+3. **Present the plan.** Read `.ai-scaffold-migration-plan.md` and show it to the
+   user for a single approval. The plan is short; the actual merged content sits
+   in `.ai-scaffold-staging/` for the user to inspect. The user may edit the plan
+   file or the staging files directly before approving.
+4. **Apply phase.** On approval, invoke a single `scaffold-migrator` with the
+   plan file present — it runs in *apply mode*: re-verifies every premise
+   snapshot (and stops if anything drifted), **moves** each staging file onto its
+   target, applies the `.ai-scaffold.json` changes, and deletes the resolved
+   sidecars, the staging directory, and the plan file. Apply regenerates no
+   content — the staging files are authoritative.
+5. When done, run `agent-scaffold status` to confirm the integration warning
    cleared.
 
-The decision framework for *where each kind of content belongs* lives in
-[`references/integration-rules.md`](./references/integration-rules.md). The exact
-safe edits to `.ai-scaffold.json` are in
+If the apply call's outcome is ever uncertain (interrupted, ambiguous result),
+just invoke `scaffold-migrator` again — with the plan file still present it
+re-enters apply mode, and its premise check makes a re-run safe: it applies
+cleanly or stops on detected drift, never double-applies blindly.
+
+The exact safe edits to `.ai-scaffold.json` are in
 [`references/manifest-operations.md`](./references/manifest-operations.md).
 
 ## References
 
+- [Orchestration](./references/orchestration.md) — work units, the `SCOPE` /
+  `FRAGMENT` contract, parallel fan-out, and plan-file assembly.
 - [Integration rules](./references/integration-rules.md) — where each kind of
   existing AI-config content belongs in the scaffold.
 - [Manifest operations](./references/manifest-operations.md) — exact safe edits to
