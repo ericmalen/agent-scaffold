@@ -116,6 +116,12 @@ conventions.
 
 ## Using the meta-skills in ai-kit
 
+- **Picking opt-in skills at install.** `ai-kit init` shows a category-first
+  picker (terraform, kubernetes, git, ...) with an "(advanced) pick
+  individual skills" escape hatch. On the CLI, `--skills <name>` accepts both
+  category names (expand to all skills in that folder) and individual IDs:
+  `--skills terraform,prompt-engineer` installs all 5 terraform skills plus
+  prompt-engineer.
 - **Start with `/skill-creator`, `/new-agent`,
   `/layer-agents`.** The meta-skills encode the conventions
   operationally; using them gives you a correct starting point.

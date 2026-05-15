@@ -17,7 +17,7 @@ Commands:
   migrate   Finish a brownfield migration (preflight → stage → apply)
 
 Options:
-  --skills <a,b>  Comma-separated opt-in skill IDs (init)
+  --skills <a,b>  Comma-separated opt-in skill IDs or category names (init)
   --agents <a,b>  Comma-separated opt-in agent IDs (init)
   --yes    -y     Non-interactive; accept defaults without prompting
   --force  -f     Re-initialize even if already initialized (init only)

@@ -41,8 +41,14 @@ project you want to set up:
 ```sh
 git clone <this-repo-url> ~/tools/ai-kit
 cd /path/to/my-project
-node ~/tools/ai-kit/bin/ai-kit.mjs init --skills git-conventions --yes
+node ~/tools/ai-kit/bin/ai-kit.mjs init --skills git,terraform --yes
 ```
+
+`--skills` accepts both individual skill IDs and category names. Categories
+expand to every skill in the folder (`git` → all 6 git/* skills,
+`terraform` → all 5 terraform/* skills, etc.). Run `init` interactively
+(no `--yes`) for a category-first picker with an "(advanced) pick individual
+skills" escape hatch.
 
 The CLI detects whether you have existing AI resources (**brownfield**) or a
 fresh repo (**greenfield**) and handles both correctly. Re-running with

@@ -106,7 +106,7 @@ New skills live in this same folder. The steps are:
    | Surface | Where in `ai-kit.config.json` | When it ships |
    |---|---|---|
    | Always-installed | `base.skills` string array | Every `init` and `update` |
-   | Opt-in | `skills` map — `{ path, description }` | `init --skills <name>` (or interactive prompt) |
+   | Opt-in | `skills` map — `{ path, description }` | `init --skills <name-or-category>` (or interactive prompt) |
 
    The `git-conventions` entry in the `skills` map is the canonical template
    for an opt-in skill. `path` points to the skill folder;
