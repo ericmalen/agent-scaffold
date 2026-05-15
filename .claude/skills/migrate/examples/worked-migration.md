@@ -1,18 +1,11 @@
 # Worked migration
 
-Two walkthroughs — the **parallel path** (≥ 3 work units, plan-phase fan-out)
-and the **degenerate path** (≤ 2 work units, a single agent). Both write each
-work unit's merged content **once** into `.ai-kit-staging/`, end with one
-approval, and one mechanical apply that just *moves* the staging files into
-place. See [`../references/orchestration.md`](../references/orchestration.md) for
-the `SCOPE` / `FRAGMENT` grammars and the staging convention.
+A walkthrough of the full `/migrate` flow on a repo that already had AI config
+when `ai-kit init` ran.
 
-## Parallel path
+## Starting state
 
-### Starting state
-
-A repo that already had AI config when `ai-kit init --skills
-git-conventions` ran. After `init`, `.claude/ai-kit.json` shows:
+`.claude/ai-kit.json` shows:
 
 ```jsonc
 "pendingIntegration": [
@@ -25,98 +18,111 @@ git-conventions` ran. After `init`, `.claude/ai-kit.json` shows:
 "preexistingUnmanaged": [ ".claude/settings.local.json" ]
 ```
 
-The consumer's `CLAUDE.md` holds ~600 lines of real project rules; its
-`.vscode/settings.json` has one custom key; `.claude/settings.local.json` is a
-local Claude Code permissions file.
+The consumer's `CLAUDE.md` has ~600 lines of real project rules.
 
-### Preflight — enumerate work units (by write target)
+## Step 1 — Preflight
 
-The orchestrator groups every source by its **write target**:
+```
+node bin/ai-kit.mjs migrate preflight
+```
 
-| unit-id | sources | target(s) |
+Enumerates work units from the manifest and writes `.ai-kit-migration-scope.json`:
+
+| unit-id | type | target |
 |---|---|---|
-| `root-agents-md` | `CLAUDE.md` (+ sidecar) | `AGENTS.md`, `CLAUDE.md` |
-| `vscode-settings` | `.vscode/settings.json` (+ sidecar) | `.vscode/settings.json` |
-| `settings-local` | `.claude/settings.local.json` | *(none — review unit)* |
+| `root-agents-md` | `markdown-fold` | `AGENTS.md` + `CLAUDE.md` (shim) |
+| `vscode-settings` | `json-merge` | `.vscode/settings.json` |
+| `review-unmanaged` | `leave-as-is` | *(none)* |
 
-Three work units → **parallel path**. The orchestrator removes any stale
-`.ai-kit-staging/` so workers start clean.
+## Step 2 — Route (migrator agent)
 
-### Plan phase — fan-out
+The `migrator` agent reads the scope, `integration-rules.md`, and each source
+file. It writes `.ai-kit-migration-routing.json` — **routing decisions only**,
+no body content. For `root-agents-md`:
 
-The orchestrator spawns **three `migrator` workers in one message**,
-each in scoped plan mode with its `SCOPE` block. Each reads only its scoped
-sources, **writes its merged result to staging files**, and returns a small
-metadata `FRAGMENT` — e.g. `root-agents-md`:
+```jsonc
+{
+  "id": "root-agents-md",
+  "type": "markdown-fold",
+  "target": "AGENTS.md",
+  "shimInstall": { "from": "CLAUDE.md.ai-kit", "to": "CLAUDE.md" },
+  "sources": [{
+    "path": "CLAUDE.md",
+    "h2Routing": [
+      { "sourceHeading": "## Project Overview", "sourceLineRange": [5, 8],
+        "targetHeading": "## Overview", "demote": true, "keepOriginalHeading": false },
+      { "sourceHeading": "## Architecture",     "sourceLineRange": [9, 17],
+        "targetHeading": "## Architecture",    "demote": true, "keepOriginalHeading": false },
+      { "sourceHeading": "## Common Commands",  "sourceLineRange": [18, 53],
+        "targetHeading": "## Conventions",     "demote": true, "keepOriginalHeading": true }
+    ]
+  }],
+  "deletions": ["CLAUDE.md.ai-kit"],
+  "manifestDelta": [{ "kind": "resolvePending", "managedPath": "CLAUDE.md" }]
+}
+```
+
+The body text of `CLAUDE.md` never appears in the routing JSON — only line
+ranges and heading names. Total LLM output: ~500 tokens, ~10-15s.
+
+## Step 3 — Stage
 
 ```
-FRAGMENT unit-id=root-agents-md
-disposition: fold consumer CLAUDE.md (~600 lines) into AGENTS.md under its
-  headings; replace CLAUDE.md with the @AGENTS.md shim; delete the sidecar
-moves:
-  - from: .ai-kit-staging/AGENTS.md   to: AGENTS.md
-  - from: .ai-kit-staging/CLAUDE.md   to: CLAUDE.md
-premise-snapshots:
-  - file: AGENTS.md   lines: 52   first: "# Project Name"   last: "the relevant subdirectory."
-  - file: CLAUDE.md   lines: 593  first: "# CLAUDE.md"      last: "13. **Token security** — …"
-  - file: CLAUDE.md.ai-kit   lines: 14   first: "@AGENTS.md"   last: "…load them natively…"
-manifest-delta:
-  - remove pendingIntegration[CLAUDE.md]; flip files[CLAUDE.md]: installedAs->CLAUDE.md, drop sidecar
-deletions:
-  - CLAUDE.md.ai-kit
-notes:
-  - no git-conventions vocabulary in CLAUDE.md — no skill-overlap action
+node bin/ai-kit.mjs migrate stage
 ```
 
-The `~600 lines` of merged `AGENTS.md` are now in
-`.ai-kit-staging/AGENTS.md` — **not** in the FRAGMENT, **not** (later) in
-the plan file. `vscode-settings` returns a similar fragment with its merged
-`.vscode/settings.json` staged. `settings-local` is a review unit — empty
-`moves`/`deletions`, disposition "leave as-is".
+The CLI reads the routing JSON and executes all file I/O deterministically:
 
-### Assemble the plan
+- `markdown-fold`: reads each `sourceLineRange` from `CLAUDE.md`, demotes `##`
+  → `###`, appends body under the target H2 in canonical order, writes
+  `.ai-kit-staging/AGENTS.md`. Byte-copies `CLAUDE.md.ai-kit` → staging
+  `CLAUDE.md`.
+- `json-merge` (`aikit-wins-on-conflict`): merges `settings.json.ai-kit` into
+  consumer's `settings.json`, writes `.ai-kit-staging/.vscode/settings.json`.
+- `leave-as-is`: no-op for `.claude/settings.local.json`.
+- Snapshots premise hashes; writes `.ai-kit-migration-plan.md`.
 
-The orchestrator collects the three fragments and writes a **small**
-`.ai-kit-migration-plan.md` — just the unioned move-list, premise
-snapshots, manifest changes, deletions, and a coverage check. It does **not**
-read or copy the staging files; the content was generated once and stays on
-disk.
+Deletes routing + scope JSON (consumed). Total time: <200ms.
 
-### Present + approve
+## Step 4 — Review
 
-The user reads the short plan and can inspect the actual merged files in
-`.ai-kit-staging/`. They approve once. No per-file menu.
+The skill presents the plan. You can inspect staging files at
+`.ai-kit-staging/` and edit them directly before approving.
 
-### Apply
+`.ai-kit-migration-plan.md` summary section:
 
-One `migrator` in apply mode: re-verify every premise snapshot (stop on
-drift), then **move** each staging file onto its target
-(`.ai-kit-staging/AGENTS.md` → `AGENTS.md`, etc.), apply the manifest
-changes, and `rm` the resolved sidecars, the `.ai-kit-staging/` directory,
-and the plan file. No content is regenerated — apply is `mv` + `rm` + a small
-manifest edit.
+```
+## Summary
+- root-agents-md: fold CLAUDE.md → AGENTS.md (markdown-fold)
+- vscode-settings: merge ai-kit keys → .vscode/settings.json (json-merge)
+- review-unmanaged: .claude/settings.local.json left as-is
+```
 
-### End state
+## Step 5 — Apply
 
-- `AGENTS.md` carries all the project rules; `CLAUDE.md` equals ai-kit's
-  `CLAUDE.md` exactly; `.vscode/settings.json` has every ai-kit key merged in,
-  consumer keys intact.
-- No `.ai-kit` files, no `.ai-kit-staging/`, no plan file remain.
-- `pendingIntegration` is empty; `.claude/settings.local.json` stays in
-  `preexistingUnmanaged` (left as-is).
-- `ai-kit status` shows no integration warning — `AGENTS.md` and
-  `.vscode/settings.json` are "locally modified" (expected), `CLAUDE.md` is in
-  sync, `.claude/settings.local.json` is listed as unmanaged.
+On approval:
 
-## Degenerate path
+```
+node bin/ai-kit.mjs migrate apply
+```
 
-A repo where `init` sidecar'd only `CLAUDE.md` — **one work unit** (or two:
-`CLAUDE.md` + `.vscode/settings.json`). With ≤ 2 work units the orchestrator
-**skips fan-out**: it invokes a single `migrator` with **no `SCOPE`
-block**, which runs in *whole plan mode* — it classifies every unit itself,
-writes the staging files, and writes `.ai-kit-migration-plan.md` directly.
+1. Verifies premise snapshots match current files (aborts on drift).
+2. Checks no sacred local files (`settings.local.json`,
+   `appsettings.Local.json`) in deletions list.
+3. Moves `.ai-kit-staging/AGENTS.md` → `AGENTS.md`,
+   `.ai-kit-staging/CLAUDE.md` → `CLAUDE.md`,
+   `.ai-kit-staging/.vscode/settings.json` → `.vscode/settings.json`.
+4. Calls `applyDeltas` — removes `pendingIntegration` entries, flips
+   `installedAs`, drops `sidecar` field. Writes manifest once.
+5. Deletes `CLAUDE.md.ai-kit`, `.vscode/settings.json.ai-kit`.
+6. Removes staging dir and plan file.
+7. Runs `ai-kit audit`.
 
-Present, approve, and apply are identical to the parallel path: one approval,
-one mechanical apply that moves staging files into place. The degenerate path
-just avoids spawning workers when the migration is too small to benefit from
-parallelism.
+## End state
+
+- `AGENTS.md` holds all consumer rules under canonical H2s.
+- `CLAUDE.md` is the `@AGENTS.md` shim — 2 lines.
+- `.vscode/settings.json` has consumer keys + ai-kit keys merged.
+- `pendingIntegration` is empty; `preexistingUnmanaged` still lists
+  `.claude/settings.local.json` (left as-is by design).
+- No staging dir, no plan file, no `.ai-kit` sidecars remain.

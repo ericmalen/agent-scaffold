@@ -61,17 +61,30 @@ Once you have manually merged a file, remove its entry from
 
 ## Automated migration (recommended)
 
-You don't have to do any of the above by hand. The `migrator` agent
-ships with every install and performs the semantic merges for you, with
-approval-gated review at each step.
+You don't have to do any of the above by hand. The `/migrate` skill handles
+everything: routing decisions are made by the `migrator` agent; file I/O is
+executed deterministically by the `ai-kit migrate` CLI. No body content is
+ever token-generated — the agent only emits structured routing decisions
+(which source H2 maps to which target H2), so migrations are fast (~10-20s
+LLM call + <1s JS stitching) and fully auditable.
 
-Run `/migrate` (or invoke `@migrator`) in Claude Code or
-Copilot. It walks `pendingIntegration` and `preexistingUnmanaged` from
-`.claude/ai-kit.json`, proposes each merge as a concrete before/after, applies it
-on your approval, deletes resolved sidecars, and updates the manifest
-bookkeeping. The manual steps above remain available if you prefer to merge by
-hand.
+**How it works:**
 
-After migration completes, the migrator automatically runs `ai-kit audit` and
-reports any convention violations it finds. If findings are shown, run
-`/optimize` to fix them automatically.
+1. **Preflight** (`ai-kit migrate preflight`) — enumerates work units from
+   `pendingIntegration` and `preexistingUnmanaged`, writes a scope summary.
+2. **Route** (`migrator` agent) — reads sources + `integration-rules.md`,
+   writes `.ai-kit-migration-routing.json` with H2 mappings and merge
+   strategies. Never touches real files.
+3. **Stage** (`ai-kit migrate stage`) — reads routing JSON, stitches content
+   from source line ranges into staging files under `.ai-kit-staging/`,
+   snapshots premise hashes, writes `.ai-kit-migration-plan.md`.
+4. **Review** — you inspect the plan and staging files. Edit staging files
+   directly if you want tweaks.
+5. **Apply** (`ai-kit migrate apply`) — verifies premise snapshots (aborts on
+   drift), moves staging → real paths, updates manifest, deletes sidecars.
+
+Run `/migrate` in Claude Code to start. The manual steps above remain
+available if you prefer to merge by hand.
+
+After migration, `ai-kit audit` runs automatically. If findings are shown,
+run `/optimize` to fix them.

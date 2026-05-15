@@ -8,13 +8,11 @@ shows the result in a single batch plan, and the user approves the batch as a
 whole. It does **not** ask "what should I do with this file?" — there is no
 per-file menu.
 
-> **Scope note.** On the parallel plan path the migrator is invoked on a
-> *scope* — one **work unit** (a single write target plus the sources routing
-> into it) rather than the whole migration (see
-> [`orchestration.md`](./orchestration.md)). It applies the same rules below to
-> its sources, writes the merged result to a staging file, and returns a
-> metadata fragment; the orchestrator assembles the fragments. Splitting the
-> work across workers never changes a disposition.
+> **Implementation note.** These routing rules are applied by the `migrator`
+> agent, which emits a structured routing JSON. The CLI `migrate stage` phase
+> reads that JSON and performs all file I/O — no LLM token-generates body
+> content. The rules here are the spec; `lib/migrate/dispositions/` and the
+> migrator agent are the implementation.
 
 ai-kit's organizing principle (see
 [`docs/cross-tool-setup.md`](../../../../docs/cross-tool-setup.md)):

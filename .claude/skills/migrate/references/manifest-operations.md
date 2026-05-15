@@ -3,11 +3,10 @@
 Exact, safe edits to `.claude/ai-kit.json` when resolving a migration. The migrator
 touches **only** the integration bookkeeping — nothing else.
 
-> **Who writes the manifest.** On the parallel plan path, scoped workers never
-> touch `.claude/ai-kit.json` — each records its `manifest-delta` in its fragment,
-> the orchestrator unions them into the plan's `## Manifest changes`, and the
-> single **apply** agent performs exactly one manifest write. The edit rules
-> below are unchanged — this just fixes *who* applies them and *when*.
+> **Who writes the manifest.** Manifest mutations are applied programmatically
+> by `lib/migrate/manifest-resolve.mjs::applyDeltas()` in the CLI apply phase,
+> per the `manifestDelta` entries in the routing JSON. The migrator agent never
+> touches `.claude/ai-kit.json` — it only emits routing decisions.
 
 ## Manifest shape (relevant fields)
 
