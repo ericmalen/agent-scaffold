@@ -62,6 +62,32 @@ See [`example-reviewer.md`](./example-reviewer.md) for an annotated read-only
 reviewer showing correct frontmatter, a tight tools list, and a lazy-load
 `## Documents` section.
 
+## Adding agents
+
+New agents live in this same folder. The steps mirror the skills workflow:
+
+1. **Author** — run `/new-agent` in chat. The meta-skill walks you through
+   the role statement, procedures, tool list, and lazy-load `## Documents`
+   section.
+
+2. **Register** — an agent file in `.claude/agents/` is **not shipped** by the
+   CLI unless it is registered in `ai-kit.config.json`. Two surfaces:
+
+   | Surface | Where in `ai-kit.config.json` | When it ships |
+   |---|---|---|
+   | Always-installed | `base.agents` string array | Every `init` and `update` |
+   | Opt-in | `agents` map — `{ path, description }` | `init --agents <name>` (or interactive prompt) |
+
+   The `example-reviewer` entry in the `agents` map is the canonical template
+   for an opt-in agent. `path` points to the agent's `.md` file;
+   `description` is the one-liner shown in the interactive selector.
+
+3. **Consume** — same hash-tracking and conflict-resolution flow as skills.
+   On `ai-kit update`, registered agents are overwritten when upstream changes
+   and the consumer hasn't edited them; both-sides conflicts offer
+   `sidecar` / `keep` / `take-upstream` — see
+   [`docs/migration.md`](../../docs/migration.md).
+
 ## Filename convention
 
 `{name}.md` — e.g., `code-reviewer.md`, `release-agent.md`.

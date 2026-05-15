@@ -73,6 +73,34 @@ skill bundles the
 descriptions, and branch names — a useful pattern when codifying a cluster of
 related conventions under one skill.
 
+## Adding skills
+
+New skills live in this same folder. The steps are:
+
+1. **Author** — run `/new-skill` in chat. The meta-skill walks you through
+   naming, single- vs multi-file layout, frontmatter, and the progressive-
+   disclosure pattern.
+
+2. **Register** — a skill sitting in `.claude/skills/` but not registered in
+   `ai-kit.config.json` is **not shipped** by the CLI. Add it to one of two
+   surfaces:
+
+   | Surface | Where in `ai-kit.config.json` | When it ships |
+   |---|---|---|
+   | Always-installed | `base.skills` string array | Every `init` and `update` |
+   | Opt-in | `skills` map — `{ path, description }` | `init --skills <name>` (or interactive prompt) |
+
+   The `git-conventions` entry in the `skills` map is the canonical template
+   for an opt-in skill. `path` points to the skill folder;
+   `description` is the one-liner shown in the interactive selector.
+
+3. **Consume** — on `ai-kit update` in consumer repos, registered skills are
+   hash-tracked in the consumer's `.claude/ai-kit.json`. The CLI overwrites
+   them when upstream changes and the consumer hasn't edited them. If both
+   sides changed, it offers `sidecar` / `keep` / `take-upstream` — see
+   [`docs/migration.md`](../../docs/migration.md) for the full conflict-
+   resolution flow.
+
 ## Frontmatter fields
 
 Skills follow the [Agent Skills](https://agentskills.io) open standard. Stick to

@@ -66,6 +66,11 @@ inevitable. (Prompts are a Copilot-only surface — see `.github/prompts/README.
 The underscore prefix sorts teaching material first in file listings and
 visually separates it from real assets.
 
+To add a new skill or agent to the scaffold and have the CLI distribute it,
+see the "Adding skills" and "Adding agents" sections in
+[`.claude/skills/README.md`](../.claude/skills/README.md) and
+[`.claude/agents/README.md`](../.claude/agents/README.md).
+
 Directory-scoped conventions go in a nested `AGENTS.md` (plus a sibling
 `CLAUDE.md` that imports it, for Claude Code) placed in that directory — no
 special filename, no frontmatter. See
