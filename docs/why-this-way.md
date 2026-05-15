@@ -27,11 +27,12 @@ Copilot-only `prompts/` surface. See [`cross-tool-setup.md`](./cross-tool-setup.
 ## Why meta-skills
 
 The headline feature of ai-kit is **skills-as-tooling**. Three meta-skills
-— `new-skill`, `new-agent`, `layer-agents` — walk you through
-producing new assets that conform to the conventions.
+— `skill-creator`, `new-agent`, `layer-agents` — walk you through
+producing new assets that conform to the conventions. (`skill-creator` is
+Anthropic's official skill-authoring tool, shipped here as a base skill.)
 
 Prose teaches conventions slowly. Tooling teaches them the first time you use
-them. Typing `/new-skill` and being asked the three questions the skill
+them. Typing `/skill-creator` and being asked the questions the skill
 enforces is faster than reading a style guide, and it produces a file that is
 already conformant.
 

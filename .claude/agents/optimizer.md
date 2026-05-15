@@ -111,7 +111,7 @@ Suggest running `/optimize` again if warranted.
 
 - Apply any edit before the batch plan is approved.
 - Delete or remove content before it has been written to its new location.
-- Create unrelated net-new assets (use `new-skill`, `new-agent`, or
+- Create unrelated net-new assets (use `skill-creator`, `new-agent`, or
   `layer-agents` for that).
 - Resolve `.ai-kit` sidecars or `pendingIntegration` entries (use
   `migrate` for that).

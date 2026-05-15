@@ -21,7 +21,7 @@
     ],
     "skills": [
       "new-agent",
-      "new-skill",
+      "skill-creator",
       "layer-agents",
       "migrate",
       "optimize"
@@ -201,8 +201,8 @@
       "description": "Security checklist for auth, input handling, secrets, payments, sensitive features."
     },
     "skill-creator": {
-      "path": ".claude/skills/anthropic/skill-creator",
-      "description": "Anthropic skill: create, modify, eval, and benchmark skills; optimize descriptions for triggering accuracy."
+      "path": ".claude/skills/skill-creator",
+      "description": "Anthropic's official skill-authoring meta-skill — create, modify, eval, and benchmark skills; optimize descriptions for triggering accuracy. Replaces ai-kit's former `new-skill`."
     },
     "tailwind-css-rules": {
       "path": ".claude/skills/frontend/tailwind-css-rules",

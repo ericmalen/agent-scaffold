@@ -38,12 +38,13 @@ Three meta-skills live in this folder. They are **the primary onboarding tool**
 for ai-kit — they encode the conventions operationally so you don't have
 to memorize them.
 
-- [`new-skill`](./new-skill/SKILL.md) — create a new skill.
+- [`skill-creator`](./skill-creator/SKILL.md) — create, modify, and benchmark
+  skills (Anthropic's official skill-authoring meta-skill).
 - [`new-agent`](./new-agent/SKILL.md) — create a new agent.
 - [`layer-agents`](./layer-agents/SKILL.md) — create
   a nested `AGENTS.md` to scope conventions to a subdirectory.
 
-Type `/new-skill` in chat to walk through creating your first skill.
+Type `/skill-creator` in chat to walk through creating your first skill.
 
 ## Maintenance skills
 
@@ -58,17 +59,16 @@ Two skills handle the ongoing lifecycle of installed assets:
 
 > There is no `new-prompt` meta-skill. Copilot prompt files have no Claude
 > equivalent, so the cross-tool way to make a `/command` is a `user-invocable`
-> skill — which is what `new-skill` produces. `.github/prompts/` remains as
+> skill — which is what `skill-creator` produces. `.github/prompts/` remains as
 > an optional Copilot-only extra.
 
 ### Note on slash-command names
 
 VS Code ships built-in `/create-skill`, `/create-agent`, `/create-prompt`,
-`/create-instruction`, and `/create-hook` commands. Those do generic versions of
-some of the same tasks. ai-kit's meta-skills (`/new-skill`, `/new-agent`) are unambiguous — they don't collide with VS Code's built-in `/create-skill` and `/create-agent`
-to avoid any name collision — `/new-skill` and `/new-agent` are
-unambiguously ai-kit's convention-enforcing versions, not VS Code's
-generic built-ins.
+`/create-instruction`, and `/create-hook` commands. ai-kit's meta-skills
+(`/skill-creator`, `/new-agent`) don't collide with those — `/skill-creator`
+is Anthropic's official authoring tool and `/new-agent` is ai-kit's
+convention-enforcing agent generator.
 
 ## A worked example: `git-conventions`
 
@@ -95,7 +95,7 @@ Opt-in skills may live at any depth — registered via the `path` field in
 
 New skills live in this same folder. The steps are:
 
-1. **Author** — run `/new-skill` in chat. The meta-skill walks you through
+1. **Author** — run `/skill-creator` in chat. The meta-skill walks you through
    naming, single- vs multi-file layout, frontmatter, and the progressive-
    disclosure pattern.
 

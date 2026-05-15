@@ -1,6 +1,6 @@
 ---
 name: optimize
-description: "Front door for auditing and optimizing installed AI assets. Routes into the optimizer agent to classify convention violations, then applies a batch of fixes on single approval. Activate when the user says 'audit my ai-kit', 'optimize my AGENTS.md', 'my AGENTS.md is too long', 'split the root AGENTS.md into nested ones', 'clean up my agents/skills', 'this SKILL.md is too long', 'find convention violations', or 'check my AI config'. Do not use for fresh installs (use init), brownfield migrations (use migrate), or creating new assets (use new-skill, new-agent, layer-agents)."
+description: "Front door for auditing and optimizing installed AI assets. Routes into the optimizer agent to classify convention violations, then applies a batch of fixes on single approval. Activate when the user says 'audit my ai-kit', 'optimize my AGENTS.md', 'my AGENTS.md is too long', 'split the root AGENTS.md into nested ones', 'clean up my agents/skills', 'this SKILL.md is too long', 'find convention violations', or 'check my AI config'. Do not use for fresh installs (use init), brownfield migrations (use migrate), or creating new assets (use skill-creator, new-agent, layer-agents)."
 argument-hint: "[optional: path to consumer repo if not cwd]"
 ---
 
@@ -14,7 +14,7 @@ conformant to begin with.
 
 | Verb | When |
 |---|---|
-| **CREATE** (`new-skill`, `new-agent`, `layer-agents`) | Building net-new conformant assets |
+| **CREATE** (`skill-creator`, `new-agent`, `layer-agents`) | Building net-new conformant assets |
 | **MIGRATE** (`migrate`) | Resolving brownfield `.ai-kit` sidecars after `ai-kit init` |
 | **OPTIMIZE** (this skill) | Fixing existing assets that violate conventions |
 

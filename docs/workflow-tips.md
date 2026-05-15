@@ -116,14 +116,14 @@ conventions.
 
 ## Using the meta-skills in ai-kit
 
-- **Start with `/new-skill`, `/new-agent`,
+- **Start with `/skill-creator`, `/new-agent`,
   `/layer-agents`.** The meta-skills encode the conventions
   operationally; using them gives you a correct starting point.
 - **Review what the meta-skill produces before committing.** Meta-skills are
   a starting point, not a rubber stamp. Tweak frontmatter descriptions and
   trim where needed.
 - **Extract from conversations.** After a productive chat session,
-  `/new-skill` can extract a reusable skill from what you just did. Often
+  `/skill-creator` can extract a reusable skill from what you just did. Often
   better than starting from scratch.
 
 ---

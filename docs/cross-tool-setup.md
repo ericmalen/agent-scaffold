@@ -61,7 +61,7 @@ tools understand (`name`, `description`, `argument-hint`, `user-invocable`,
 so they're safe to add.
 
 `user-invocable` skills appear as `/name` in both tools — this is the
-**cross-tool slash-command mechanism**. Run `/new-skill` to create one.
+**cross-tool slash-command mechanism**. Run `/skill-creator` to create one.
 
 ## Agents — `.claude/agents/`
 

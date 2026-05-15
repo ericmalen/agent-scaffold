@@ -37,10 +37,11 @@ CLI, some in both.
 User-defined slash commands (from `.github/prompts/*.prompt.md`) and
 user-invocable skills (from `.claude/skills/`) appear in the same `/` menu.
 
-> **Note:** ai-kit ships meta-skills named `/new-skill` and
-> `/new-agent` — distinct from VS Code's built-in `/create-skill` and
-> `/create-agent` above. ai-kit's versions enforce this project's
-> conventions; VS Code's built-ins generate generic files.
+> **Note:** ai-kit ships meta-skills named `/skill-creator` (Anthropic's
+> official authoring tool) and `/new-agent` — distinct from VS Code's
+> built-in `/create-skill` and `/create-agent` above. ai-kit's versions
+> follow Anthropic's spec and this project's conventions; VS Code's
+> built-ins generate generic files.
 
 ---
 

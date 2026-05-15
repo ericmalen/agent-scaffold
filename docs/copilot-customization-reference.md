@@ -447,7 +447,7 @@ Autopilot is powerful for scripted orchestrations but unsuitable for exploratory
 | `/init`               | Auto-generate repo-wide instructions for your project                                                               |
 | `/layer-agents` | Generate a nested `AGENTS.md` to scope conventions to a subdirectory (ai-kit's meta-skill)          |
 | `/create-prompt`      | Generate a prompt file from a description (VS Code built-in)                                                        |
-| `/new-skill`     | Generate a skill from a description (ai-kit's meta-skill; VS Code also has a built-in `/create-skill`)       |
+| `/skill-creator` | Generate, modify, and benchmark skills (Anthropic's official meta-skill, shipped by ai-kit; VS Code also has a built-in `/create-skill`) |
 | `/new-agent`     | Generate an agent file from a description (ai-kit's meta-skill; VS Code also has a built-in `/create-agent`) |
 | `/skills`             | Open the Configure Skills menu                                                                                      |
 | `/compact`            | Compress conversation history to free context space                                                                 |

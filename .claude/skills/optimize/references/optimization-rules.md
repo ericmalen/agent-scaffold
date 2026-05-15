@@ -62,7 +62,7 @@ pages almost always contains directory-scoped rules.
    `references/topic.md`".
 6. Replace the extracted sections in SKILL.md with a `## References` or
    `## Examples` section containing Markdown links to the new files.
-7. Cross-reference the `new-skill` skill for the canonical SKILL.md structure.
+7. Cross-reference the `skill-creator` skill for the canonical SKILL.md structure.
 
 ---
 
@@ -215,7 +215,7 @@ Rules for the plan:
 
 - Apply any edit before the batch plan is approved.
 - Delete content that has not yet been written to its new location.
-- Create unrelated net-new assets (use `new-skill`, `new-agent`, or
+- Create unrelated net-new assets (use `skill-creator`, `new-agent`, or
   `layer-agents` for that).
 - Resolve `.ai-kit` sidecars or `pendingIntegration` entries (use `migrate`).
 - Modify `.claude/ai-kit.json`.
