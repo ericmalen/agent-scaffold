@@ -107,18 +107,22 @@ planning or applying.
     - Apply the `## Manifest changes` to `.claude/ai-kit.json` exactly as written.
     - `rm` everything in `## Deletions` — resolved sidecars and folded files,
       then the `.ai-kit-staging/` directory, then the plan file.
-15. Run `ai-kit audit` via Bash. Capture the full stdout/stderr and exit code.
+15. Read `source.localPath` from `.claude/ai-kit.json`. If present and
+    `<localPath>/bin/ai-kit.mjs` exists, run:
+    `node <localPath>/bin/ai-kit.mjs audit`
+    via Bash from the consumer repo root. Capture full stdout/stderr and exit code.
+    If `source.localPath` is null or the file does not exist, skip audit and note
+    "audit skipped — re-run `ai-kit audit` manually once the binary is on PATH."
 16. Print a final summary: every file moved into place, created, or deleted, and
     the resulting state of both manifest arrays. Suggest `ai-kit status` to confirm.
-    Then report audit results — always show the audit output (truncated to ~20 lines
-    if long; tell the user to run `ai-kit audit` for the full report):
-    - **Exit 0:** Migration complete — no warnings or errors. Any `[info]` lines in
-      the output are informational only and require no immediate action.
+    Then report audit results — always show the raw audit output (truncated to ~20
+    lines if long; tell the user to run `node <localPath>/bin/ai-kit.mjs audit`
+    for the full report):
+    - **Exit 0:** No warnings or errors. Any `[info]` lines are informational only.
     - **Exit 1 (warnings/errors):** Show the truncated output. Append: "Run
-      `/optimize` to fix these automatically, or `node bin/ai-kit.mjs audit` for
-      the full report."
-    - **Unexpected error (audit command itself failed):** Show the error output.
-      Suggest re-running `ai-kit audit` manually. Do not swallow.
+      `/optimize` to fix these automatically."
+    - **Unexpected error (audit command itself failed):** Show the error output and
+      suggest re-running manually. Do not swallow or fabricate a result.
 
 ## Never
 
@@ -151,8 +155,8 @@ planning or applying.
 - Use Bash for anything other than: in apply mode, moving staging files into
   place and `rm` of confirmed-resolved sidecars / folded instruction files / the
   `.ai-kit-staging/` directory / `.ai-kit-migration-plan.md`;
-  `ai-kit status`; `ai-kit audit`; or `ai-kit init --skills <name>` for an
-  opt-in skill the user approved. (Scoped plan mode uses no Bash — it writes
+  `ai-kit status`; `node <localPath>/bin/ai-kit.mjs audit`; or
+  `ai-kit init --skills <name>` for an opt-in skill the user approved. (Scoped plan mode uses no Bash — it writes
   staging files with the Write tool.)
 - Re-run `ai-kit init` or `update` in a way that would re-sidecar files.
 
