@@ -49,7 +49,16 @@ attention in `.claude/ai-kit.json`. This skill resolves that debt.
    ```
    The CLI re-verifies premise snapshots (stops on any drift), moves staging
    files into place, updates `.claude/ai-kit.json`, deletes resolved sidecars,
-   and runs `ai-kit audit`. If audit findings appear, suggest `/optimize`.
+   runs `ai-kit audit`, and writes `.claude/ai-kit-audit-report.json`.
+
+   **After apply completes, read `.claude/ai-kit-audit-report.json` and
+   summarize the audit results to the user:** report the total counts (errors /
+   warnings / info) and a short bulleted list of any findings (file, severity,
+   message). If errors or warnings exist, recommend `/optimize`. If the report
+   file is absent, say so — never fabricate a result.
+
+   Note: `.claude/ai-kit-audit-report.json` is auto-generated. Add it to your
+   `.gitignore`.
 
 **Re-run safety:** the plan file acts as a checkpoint. If apply is interrupted,
 just run apply again — the premise check prevents double-application.
