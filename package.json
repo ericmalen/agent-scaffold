@@ -1,10 +1,10 @@
 {
-  "name": "agent-scaffold",
+  "name": "ai-kit",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "bin": {
-    "agent-scaffold": "bin/scaffold.mjs"
+    "ai-kit": "bin/ai-kit.mjs"
   },
   "engines": {
     "node": ">=18.0.0"

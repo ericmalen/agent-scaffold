@@ -5,7 +5,7 @@ import { update } from '../lib/update.mjs';
 import { status } from '../lib/status.mjs';
 
 const HELP = `
-Usage: agent-scaffold <command> [options]
+Usage: ai-kit <command> [options]
 
 Commands:
   init     Install scaffold into the current directory
@@ -20,9 +20,9 @@ Options:
   --help   -h     Show this help
 
 Examples:
-  node bin/scaffold.mjs init --skills git-conventions --yes
-  node bin/scaffold.mjs status
-  node bin/scaffold.mjs update
+  node bin/ai-kit.mjs init --skills git-conventions --yes
+  node bin/ai-kit.mjs status
+  node bin/ai-kit.mjs update
 `;
 
 function parseArgs(argv) {

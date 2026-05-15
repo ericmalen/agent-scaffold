@@ -1,10 +1,10 @@
 # Manifest operations
 
-Exact, safe edits to `.ai-scaffold.json` when resolving a migration. The migrator
+Exact, safe edits to `.claude/ai-kit.json` when resolving a migration. The migrator
 touches **only** the integration bookkeeping — nothing else.
 
 > **Who writes the manifest.** On the parallel plan path, scoped workers never
-> touch `.ai-scaffold.json` — each records its `manifest-delta` in its fragment,
+> touch `.claude/ai-kit.json` — each records its `manifest-delta` in its fragment,
 > the orchestrator unions them into the plan's `## Manifest changes`, and the
 > single **apply** agent performs exactly one manifest write. The edit rules
 > below are unchanged — this just fixes *who* applies them and *when*.
@@ -65,7 +65,7 @@ After the merge is written and the sidecar deleted:
   nested `AGENTS.md` / `CLAUDE.md` (or any other file the fold created) to the
   manifest — they are consumer content, not scaffold-managed.
 - **Left as-is (intentionally unmanaged)** → keep the path string, so
-  `agent-scaffold status` continues to list it accurately.
+  `ai-kit status` continues to list it accurately.
 
 ## Never touch
 
@@ -76,7 +76,7 @@ Note on drift after a merge:
 - **`AGENTS.md` and the merged settings files** (`.vscode/settings.json`,
   `.claude/settings.json`) will no longer match their `sourceHash`. That is
   **expected and correct** — the consumer has intentionally diverged from the
-  shipped version. `agent-scaffold status` reports them as "locally modified",
+  shipped version. `ai-kit status` reports them as "locally modified",
   which accurately reflects reality.
 - **`CLAUDE.md`**, once replaced with the scaffold's `CLAUDE.md` exactly, will
   **match** its `sourceHash` again — `status` will show it in sync, not drifted.

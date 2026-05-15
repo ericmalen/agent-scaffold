@@ -37,8 +37,8 @@ CLI, some in both.
 User-defined slash commands (from `.github/prompts/*.prompt.md`) and
 user-invocable skills (from `.claude/skills/`) appear in the same `/` menu.
 
-> **Note:** This scaffold ships meta-skills named `/scaffold-skill` and
-> `/scaffold-agent` — distinct from VS Code's built-in `/create-skill` and
+> **Note:** This scaffold ships meta-skills named `/new-skill` and
+> `/new-agent` — distinct from VS Code's built-in `/create-skill` and
 > `/create-agent` above. The scaffold's versions enforce this project's
 > conventions; VS Code's built-ins generate generic files.
 

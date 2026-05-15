@@ -1,11 +1,11 @@
-# agent-scaffold
+# ai-kit
 
 ## What this is
 
 A scaffold for adding AI-coding customization to internal repos, wired for
 **both GitHub Copilot and Claude Code** from one set of files. Ships the folder
 structure, conventions, annotated `_example` files, and three meta-skills
-(`scaffold-skill`, `scaffold-agent`, `scaffold-nested-agents-md`) that scaffold new
+(`new-skill`, `new-agent`, `layer-agents`) that scaffold new
 assets to match the conventions.
 
 No stack-specific or domain-specific content — you add those on top.
@@ -35,9 +35,9 @@ Clone this repo once to a shared tools location, then run `init` from any
 project you want to scaffold:
 
 ```sh
-git clone <this-repo-url> ~/tools/agent-scaffold
+git clone <this-repo-url> ~/tools/ai-kit
 cd /path/to/my-project
-node ~/tools/agent-scaffold/bin/scaffold.mjs init --skills git-conventions --yes
+node ~/tools/ai-kit/bin/ai-kit.mjs init --skills git-conventions --yes
 ```
 
 The CLI detects whether you have existing AI resources (**brownfield**) or a
@@ -46,10 +46,10 @@ fresh repo (**greenfield**) and handles both correctly. Re-running with
 
 ```sh
 # See what's installed and whether anything has drifted
-node ~/tools/agent-scaffold/bin/scaffold.mjs status
+node ~/tools/ai-kit/bin/ai-kit.mjs status
 
 # Pull latest scaffold version (asks before overwriting locally modified files)
-node ~/tools/agent-scaffold/bin/scaffold.mjs update
+node ~/tools/ai-kit/bin/ai-kit.mjs update
 ```
 
 ### Manual (alternative)
@@ -62,7 +62,7 @@ existing repo by hand.
 1. Fill in the TODO sections of [`AGENTS.md`](./AGENTS.md). Leave `CLAUDE.md`
    unless you have Claude-specific notes — it imports `AGENTS.md`.
 2. Open the repo in VS Code (Copilot extension) or Claude Code.
-3. Try `/scaffold-skill` to walk through creating your first skill.
+3. Try `/new-skill` to walk through creating your first skill.
 4. Read [`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md) and
    [`docs/conventions.md`](./docs/conventions.md) when ready to go deeper.
 
@@ -79,9 +79,9 @@ CLAUDE.md                       — imports AGENTS.md for Claude Code
     example-reviewer.md         — annotated example agent
   skills/
     README.md
-    scaffold-skill/             — meta-skill: scaffold a new skill
-    scaffold-agent/             — meta-skill: scaffold a new agent
-    scaffold-nested-agents-md/  — meta-skill: scaffold a nested AGENTS.md
+    new-skill/             — meta-skill: scaffold a new skill
+    new-agent/             — meta-skill: scaffold a new agent
+    layer-agents/  — meta-skill: scaffold a nested AGENTS.md
     git-conventions/            — a finished skill, as a reference
 .github/
   prompts/

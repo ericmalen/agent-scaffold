@@ -445,10 +445,10 @@ Autopilot is powerful for scripted orchestrations but unsuitable for exploratory
 | Command               | What it does                                                                                                        |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `/init`               | Auto-generate repo-wide instructions for your project                                                               |
-| `/scaffold-nested-agents-md` | Generate a nested `AGENTS.md` to scope conventions to a subdirectory (this scaffold's meta-skill)          |
+| `/layer-agents` | Generate a nested `AGENTS.md` to scope conventions to a subdirectory (this scaffold's meta-skill)          |
 | `/create-prompt`      | Generate a prompt file from a description (VS Code built-in)                                                        |
-| `/scaffold-skill`     | Generate a skill from a description (this scaffold's meta-skill; VS Code also has a built-in `/create-skill`)       |
-| `/scaffold-agent`     | Generate an agent file from a description (this scaffold's meta-skill; VS Code also has a built-in `/create-agent`) |
+| `/new-skill`     | Generate a skill from a description (this scaffold's meta-skill; VS Code also has a built-in `/create-skill`)       |
+| `/new-agent`     | Generate an agent file from a description (this scaffold's meta-skill; VS Code also has a built-in `/create-agent`) |
 | `/skills`             | Open the Configure Skills menu                                                                                      |
 | `/compact`            | Compress conversation history to free context space                                                                 |
 | `/troubleshoot`       | Diagnose why instructions, skills, or agents didn't behave as expected; accepts `#session` to analyze past sessions |

@@ -15,14 +15,14 @@ function tmp() {
   return mkdtempSync(join(tmpdir(), 'scaffold-manifest-'));
 }
 
-const MANIFEST_NAME = '.ai-scaffold.json';
+const MANIFEST_NAME = '.claude/ai-kit.json';
 
 test('buildManifest — shape is correct', () => {
   const m = buildManifest({
     sourceRepo: 'https://example.com/repo',
     commit: 'abc1234def5678',
     mode: 'greenfield',
-    installedBaseSkills: ['scaffold-agent'],
+    installedBaseSkills: ['new-agent'],
     installedSkills: [],
     installedAgents: [],
   });
@@ -40,7 +40,7 @@ test('writeManifest + readManifest — round-trip', () => {
     sourceRepo: 'repo',
     commit: 'deadbeef',
     mode: 'brownfield',
-    installedBaseSkills: ['scaffold-skill'],
+    installedBaseSkills: ['new-skill'],
     installedSkills: ['git-conventions'],
     installedAgents: [],
   });

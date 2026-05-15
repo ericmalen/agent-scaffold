@@ -38,16 +38,16 @@ Three meta-skills live in this folder. They are **the primary onboarding tool**
 for this scaffold — they encode the conventions operationally so you don't have
 to memorize them.
 
-- [`scaffold-skill`](./scaffold-skill/SKILL.md) — scaffold a new skill.
-- [`scaffold-agent`](./scaffold-agent/SKILL.md) — scaffold a new agent.
-- [`scaffold-nested-agents-md`](./scaffold-nested-agents-md/SKILL.md) — scaffold
+- [`new-skill`](./new-skill/SKILL.md) — scaffold a new skill.
+- [`new-agent`](./new-agent/SKILL.md) — scaffold a new agent.
+- [`layer-agents`](./layer-agents/SKILL.md) — scaffold
   a nested `AGENTS.md` to scope conventions to a subdirectory.
 
-Type `/scaffold-skill` in chat to walk through creating your first skill.
+Type `/new-skill` in chat to walk through creating your first skill.
 
 > There is no `scaffold-prompt` meta-skill. Copilot prompt files have no Claude
 > equivalent, so the cross-tool way to make a `/command` is a `user-invocable`
-> skill — which is what `scaffold-skill` produces. `.github/prompts/` remains as
+> skill — which is what `new-skill` produces. `.github/prompts/` remains as
 > an optional Copilot-only extra.
 
 ### Note on slash-command names
@@ -55,7 +55,7 @@ Type `/scaffold-skill` in chat to walk through creating your first skill.
 VS Code ships built-in `/create-skill`, `/create-agent`, `/create-prompt`,
 `/create-instruction`, and `/create-hook` commands. Those do generic versions of
 some of the same tasks. This scaffold's meta-skills use the `scaffold-` prefix
-to avoid any name collision — `/scaffold-skill` and `/scaffold-agent` are
+to avoid any name collision — `/new-skill` and `/new-agent` are
 unambiguously this scaffold's convention-enforcing versions, not VS Code's
 generic built-ins.
 

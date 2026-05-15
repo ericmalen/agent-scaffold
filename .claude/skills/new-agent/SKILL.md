@@ -1,5 +1,5 @@
 ---
-name: scaffold-agent
+name: new-agent
 description: "Walks the user through creating a new custom agent that conforms to this project's conventions — lean role statement, minimal tools list, explicit boundaries, lazy-load Documents section, Claude sub-agent format in .claude/agents/. Use whenever the user wants to create, scaffold, add, or set up a custom agent, specialized role, reviewer, implementer, or orchestrator — even when they describe it as a 'persona,' 'role,' or 'assistant' rather than using the word 'agent.'"
 argument-hint: "[agent role in one sentence]"
 ---

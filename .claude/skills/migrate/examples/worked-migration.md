@@ -2,7 +2,7 @@
 
 Two walkthroughs — the **parallel path** (≥ 3 work units, plan-phase fan-out)
 and the **degenerate path** (≤ 2 work units, a single agent). Both write each
-work unit's merged content **once** into `.ai-scaffold-staging/`, end with one
+work unit's merged content **once** into `.ai-kit-staging/`, end with one
 approval, and one mechanical apply that just *moves* the staging files into
 place. See [`../references/orchestration.md`](../references/orchestration.md) for
 the `SCOPE` / `FRAGMENT` grammars and the staging convention.
@@ -11,8 +11,8 @@ the `SCOPE` / `FRAGMENT` grammars and the staging convention.
 
 ### Starting state
 
-A repo that already had AI config when `agent-scaffold init --skills
-git-conventions` ran. After `init`, `.ai-scaffold.json` shows:
+A repo that already had AI config when `ai-kit init --skills
+git-conventions` ran. After `init`, `.claude/ai-kit.json` shows:
 
 ```jsonc
 "pendingIntegration": [
@@ -40,11 +40,11 @@ The orchestrator groups every source by its **write target**:
 | `settings-local` | `.claude/settings.local.json` | *(none — review unit)* |
 
 Three work units → **parallel path**. The orchestrator removes any stale
-`.ai-scaffold-staging/` so workers start clean.
+`.ai-kit-staging/` so workers start clean.
 
 ### Plan phase — fan-out
 
-The orchestrator spawns **three `scaffold-migrator` workers in one message**,
+The orchestrator spawns **three `migrator` workers in one message**,
 each in scoped plan mode with its `SCOPE` block. Each reads only its scoped
 sources, **writes its merged result to staging files**, and returns a small
 metadata `FRAGMENT` — e.g. `root-agents-md`:
@@ -54,8 +54,8 @@ FRAGMENT unit-id=root-agents-md
 disposition: fold consumer CLAUDE.md (~600 lines) into AGENTS.md under its
   headings; replace CLAUDE.md with the @AGENTS.md shim; delete the sidecar
 moves:
-  - from: .ai-scaffold-staging/AGENTS.md   to: AGENTS.md
-  - from: .ai-scaffold-staging/CLAUDE.md   to: CLAUDE.md
+  - from: .ai-kit-staging/AGENTS.md   to: AGENTS.md
+  - from: .ai-kit-staging/CLAUDE.md   to: CLAUDE.md
 premise-snapshots:
   - file: AGENTS.md   lines: 52   first: "# Project Name"   last: "the relevant subdirectory."
   - file: CLAUDE.md   lines: 593  first: "# CLAUDE.md"      last: "13. **Token security** — …"
@@ -69,7 +69,7 @@ notes:
 ```
 
 The `~600 lines` of merged `AGENTS.md` are now in
-`.ai-scaffold-staging/AGENTS.md` — **not** in the FRAGMENT, **not** (later) in
+`.ai-kit-staging/AGENTS.md` — **not** in the FRAGMENT, **not** (later) in
 the plan file. `vscode-settings` returns a similar fragment with its merged
 `.vscode/settings.json` staged. `settings-local` is a review unit — empty
 `moves`/`deletions`, disposition "leave as-is".
@@ -77,7 +77,7 @@ the plan file. `vscode-settings` returns a similar fragment with its merged
 ### Assemble the plan
 
 The orchestrator collects the three fragments and writes a **small**
-`.ai-scaffold-migration-plan.md` — just the unioned move-list, premise
+`.ai-kit-migration-plan.md` — just the unioned move-list, premise
 snapshots, manifest changes, deletions, and a coverage check. It does **not**
 read or copy the staging files; the content was generated once and stays on
 disk.
@@ -85,14 +85,14 @@ disk.
 ### Present + approve
 
 The user reads the short plan and can inspect the actual merged files in
-`.ai-scaffold-staging/`. They approve once. No per-file menu.
+`.ai-kit-staging/`. They approve once. No per-file menu.
 
 ### Apply
 
-One `scaffold-migrator` in apply mode: re-verify every premise snapshot (stop on
+One `migrator` in apply mode: re-verify every premise snapshot (stop on
 drift), then **move** each staging file onto its target
-(`.ai-scaffold-staging/AGENTS.md` → `AGENTS.md`, etc.), apply the manifest
-changes, and `rm` the resolved sidecars, the `.ai-scaffold-staging/` directory,
+(`.ai-kit-staging/AGENTS.md` → `AGENTS.md`, etc.), apply the manifest
+changes, and `rm` the resolved sidecars, the `.ai-kit-staging/` directory,
 and the plan file. No content is regenerated — apply is `mv` + `rm` + a small
 manifest edit.
 
@@ -101,10 +101,10 @@ manifest edit.
 - `AGENTS.md` carries all the project rules; `CLAUDE.md` equals the scaffold's
   `CLAUDE.md` exactly; `.vscode/settings.json` has every scaffold key merged in,
   consumer keys intact.
-- No `.scaffold` files, no `.ai-scaffold-staging/`, no plan file remain.
+- No `.scaffold` files, no `.ai-kit-staging/`, no plan file remain.
 - `pendingIntegration` is empty; `.claude/settings.local.json` stays in
   `preexistingUnmanaged` (left as-is).
-- `agent-scaffold status` shows no integration warning — `AGENTS.md` and
+- `ai-kit status` shows no integration warning — `AGENTS.md` and
   `.vscode/settings.json` are "locally modified" (expected), `CLAUDE.md` is in
   sync, `.claude/settings.local.json` is listed as unmanaged.
 
@@ -112,9 +112,9 @@ manifest edit.
 
 A repo where `init` sidecar'd only `CLAUDE.md` — **one work unit** (or two:
 `CLAUDE.md` + `.vscode/settings.json`). With ≤ 2 work units the orchestrator
-**skips fan-out**: it invokes a single `scaffold-migrator` with **no `SCOPE`
+**skips fan-out**: it invokes a single `migrator` with **no `SCOPE`
 block**, which runs in *whole plan mode* — it classifies every unit itself,
-writes the staging files, and writes `.ai-scaffold-migration-plan.md` directly.
+writes the staging files, and writes `.ai-kit-migration-plan.md` directly.
 
 Present, approve, and apply are identical to the parallel path: one approval,
 one mechanical apply that moves staging files into place. The degenerate path

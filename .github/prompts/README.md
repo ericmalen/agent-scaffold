@@ -7,7 +7,7 @@ equivalent — its `agent:` routing, `${input:…}` variables, and `.prompt.md`
 format don't port.
 
 **For a cross-tool `/command`, write a `user-invocable` skill instead** — both
-Claude Code and Copilot expose those in the `/` menu. Run `/scaffold-skill` to
+Claude Code and Copilot expose those in the `/` menu. Run `/new-skill` to
 scaffold one. This folder is kept only as an optional extra for teams that are
 Copilot-only and want prompt-specific features (agent routing, editor-context
 variables).

@@ -1,10 +1,10 @@
 # Orchestration
 
-How the `scaffold-migrate` skill parallelizes the **plan phase** across several
-`scaffold-migrator` workers, and how the pieces fit back together.
+How the `migrate` skill parallelizes the **plan phase** across several
+`migrator` workers, and how the pieces fit back together.
 
 The skill is the **orchestrator** — it runs in the main thread and is the only
-thing that uses the Agent tool. Workers (`scaffold-migrator` subagents) cannot
+thing that uses the Agent tool. Workers (`migrator` subagents) cannot
 spawn other agents; all fan-out lives in the skill.
 
 ## The staging directory — why this is fast
@@ -20,11 +20,11 @@ it. If the merged content rode *through* the plan file, it would be regenerated
 at every hop (worker → plan file → target). Staging files let the content sit on
 disk and just get `mv`'d, so it is generated **exactly once**.
 
-- Staging root: `.ai-scaffold-staging/` at the consumer repo root.
+- Staging root: `.ai-kit-staging/` at the consumer repo root.
 - Staging files mirror their final target path:
-  `.ai-scaffold-staging/AGENTS.md`, `.ai-scaffold-staging/CLAUDE.md`,
-  `.ai-scaffold-staging/.vscode/settings.json`,
-  `.ai-scaffold-staging/src/api/AGENTS.md`, …
+  `.ai-kit-staging/AGENTS.md`, `.ai-kit-staging/CLAUDE.md`,
+  `.ai-kit-staging/.vscode/settings.json`,
+  `.ai-kit-staging/src/api/AGENTS.md`, …
 - The directory is **transient** — apply moves every staging file to its target
   and deletes the directory. Nothing in the real working tree is touched until
   apply, so the approval gate is unchanged.
@@ -54,8 +54,8 @@ of staging files — **no write contention**, even on the parallel path.
 ## Degenerate path
 
 If there are **≤ 2 work units total**, skip fan-out: invoke a single
-`scaffold-migrator` in **whole plan mode** (no `SCOPE` block). It produces every
-staging file and writes `.ai-scaffold-migration-plan.md` itself. Everything below
+`migrator` in **whole plan mode** (no `SCOPE` block). It produces every
+staging file and writes `.ai-kit-migration-plan.md` itself. Everything below
 describes the **parallel path** (≥ 3 work units).
 
 ## SCOPE block
@@ -67,11 +67,11 @@ fenced `SCOPE` block naming exactly one work unit:
 SCOPE
 unit-id:       <stable kebab-case id, e.g. root-agents-md, vscode-settings>
 consumer-repo: <absolute path to the consumer repo root>
-staging-root:  <consumer-repo>/.ai-scaffold-staging
+staging-root:  <consumer-repo>/.ai-kit-staging
 sources:       [<every source path routing into this unit — sidecars and/or unmanaged paths>]
 targets:       [<the final path(s) this unit produces — e.g. AGENTS.md, CLAUDE.md>]
 rule:          integration-rules.md → "<section name(s)>"
-installed-opt-in-skills: [<from .ai-scaffold.json installed.skills>]
+installed-opt-in-skills: [<from .claude/ai-kit.json installed.skills>]
 return:        a FRAGMENT as text — write ONLY under staging-root
 ```
 
@@ -101,7 +101,7 @@ A review-unit worker does only step 1 (read sources) and step 5, with empty
 FRAGMENT unit-id=<id>
 disposition: <one line — what happens to this unit>
 moves:
-  - from: .ai-scaffold-staging/<path>   to: <final target path>
+  - from: .ai-kit-staging/<path>   to: <final target path>
   - ...                                       # one per staging file produced
 premise-snapshots:
   - file: <path>   lines: <n>   first: "<first line>"   last: "<last line>"
@@ -117,7 +117,7 @@ notes:
 ## Assembly (orchestrator, inline)
 
 After **all** fragments return, the orchestrator writes
-`.ai-scaffold-migration-plan.md` — it is the **sole writer** of the plan file.
+`.ai-kit-migration-plan.md` — it is the **sole writer** of the plan file.
 The plan file is **small**: it lists *moves*, not content. The orchestrator does
 **not** read or copy the staging files — it only unions the fragments' metadata.
 
@@ -128,16 +128,16 @@ The plan file is **small**: it lists *moves*, not content. The orchestrator does
 <one line per work unit — its disposition>
 
 ## Moves
-<every fragment's `moves`, grouped — "move .ai-scaffold-staging/X -> X">
+<every fragment's `moves`, grouped — "move .ai-kit-staging/X -> X">
 
 ## Premise snapshots
 <the unioned list — apply re-verifies every entry before any move>
 
 ## Manifest changes
-<the unioned, exact .ai-scaffold.json edits>
+<the unioned, exact .claude/ai-kit.json edits>
 
 ## Deletions
-<every sidecar / folded original to rm; then .ai-scaffold-staging/ ; then the plan file itself>
+<every sidecar / folded original to rm; then .ai-kit-staging/ ; then the plan file itself>
 
 ## Coverage check
 <one line per target — confirm every source was accounted for>
@@ -151,9 +151,9 @@ Apply mode consumes the plan file mechanically — **no content is regenerated**
    drift → stop, write nothing.
 2. For each `## Moves` entry, move the staging file onto its target (overwriting),
    creating parent directories as needed.
-3. Apply `## Manifest changes` to `.ai-scaffold.json`.
+3. Apply `## Manifest changes` to `.claude/ai-kit.json`.
 4. `rm` everything in `## Deletions` — the resolved sidecars, then the
-   `.ai-scaffold-staging/` directory, then the plan file.
+   `.ai-kit-staging/` directory, then the plan file.
 
 The merged content was generated exactly once — by the scoped worker, into the
 staging file. Apply only moves it. That is the whole point.
@@ -162,11 +162,11 @@ staging file. Apply only moves it. That is the whole point.
 
 - The orchestrator must spawn **all** workers in **one message** (multiple Agent
   calls in a single turn) — separate messages serialize them.
-- Before the fan-out, the orchestrator removes any stale `.ai-scaffold-staging/`
+- Before the fan-out, the orchestrator removes any stale `.ai-kit-staging/`
   so workers start from a clean staging directory.
 - The orchestrator writes the plan file **only after every fragment returns**,
   and never copies staging-file *content* into the plan — only the move-list.
-- Scoped workers write **only** under `.ai-scaffold-staging/`. A worker that
+- Scoped workers write **only** under `.ai-kit-staging/`. A worker that
   touches a real repo file, the manifest, or the plan file is a bug.
 - If the plan fan-out is interrupted, no plan file exists → re-running the skill
   cleanly restarts (the orchestrator wipes and rebuilds the staging directory).

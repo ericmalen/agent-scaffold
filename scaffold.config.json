@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "manifestName": ".ai-scaffold.json",
+  "manifestName": ".claude/ai-kit.json",
   "source": {
     "repo": "https://dev.azure.com/ericmalen/ado-repo-tests/_git/ado-repo-tests"
   },
@@ -18,13 +18,13 @@
       "docs/migration.md"
     ],
     "skills": [
-      "scaffold-agent",
-      "scaffold-skill",
-      "scaffold-nested-agents-md",
-      "scaffold-migrate"
+      "new-agent",
+      "new-skill",
+      "layer-agents",
+      "migrate"
     ],
     "agents": [
-      "scaffold-migrator"
+      "migrator"
     ]
   },
   "skills": {
@@ -38,8 +38,8 @@
       "path": ".claude/agents/example-reviewer.md",
       "description": "Annotated example read-only reviewer agent."
     },
-    "scaffold-migrator": {
-      "path": ".claude/agents/scaffold-migrator.md",
+    "migrator": {
+      "path": ".claude/agents/migrator.md",
       "description": "Resolves brownfield migration debt — semantically merges .scaffold sidecars and updates the manifest."
     }
   },

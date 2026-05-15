@@ -49,7 +49,7 @@ test('loadRegistry — throws on missing file in base.files', () => {
   const dir = mkdtempSync(join(tmpdir(), 'scaffold-reg-'));
   writeFileSync(join(dir, 'scaffold.config.json'), JSON.stringify({
     schemaVersion: 1,
-    manifestName: '.ai-scaffold.json',
+    manifestName: '.claude/ai-kit.json',
     source: { repo: 'x' },
     base: { files: ['MISSING.md'], skills: [] },
     skills: {},
@@ -67,28 +67,28 @@ test('loadRegistry — throws on unknown schemaVersion', () => {
   assert.throws(() => loadRegistry(dir), /schemaVersion/);
 });
 
-test('loadRegistry — baseAgents includes scaffold-migrator', () => {
+test('loadRegistry — baseAgents includes migrator', () => {
   const registry = loadRegistry(scaffoldRoot);
   assert.ok(Array.isArray(registry.baseAgents()));
-  assert.ok(registry.baseAgents().includes('scaffold-migrator'));
+  assert.ok(registry.baseAgents().includes('migrator'));
 });
 
 test('loadRegistry — base agent resolves to an existing file via agents{}', () => {
   const registry = loadRegistry(scaffoldRoot);
-  const info = registry.getAgentInfo('scaffold-migrator');
+  const info = registry.getAgentInfo('migrator');
   assert.ok(info);
   assert.ok(typeof info.path === 'string' && info.path.length > 0);
 });
 
-test('loadRegistry — scaffold-migrate is a base skill', () => {
+test('loadRegistry — migrate is a base skill', () => {
   const registry = loadRegistry(scaffoldRoot);
-  assert.ok(registry.baseSkills().includes('scaffold-migrate'));
+  assert.ok(registry.baseSkills().includes('migrate'));
 });
 
 test('loadRegistry — optInAgents excludes base agents', () => {
   const registry = loadRegistry(scaffoldRoot);
   const ids = registry.optInAgents().map(a => a.id);
-  assert.ok(!ids.includes('scaffold-migrator'));
+  assert.ok(!ids.includes('migrator'));
   assert.ok(ids.includes('example-reviewer'));
 });
 
@@ -96,7 +96,7 @@ test('loadRegistry — throws on base agent with no agents{} entry', () => {
   const dir = mkdtempSync(join(tmpdir(), 'scaffold-reg3-'));
   writeFileSync(join(dir, 'scaffold.config.json'), JSON.stringify({
     schemaVersion: 1,
-    manifestName: '.ai-scaffold.json',
+    manifestName: '.claude/ai-kit.json',
     source: { repo: 'x' },
     base: { files: [], skills: [], agents: ['ghost'] },
     skills: {},
@@ -112,7 +112,7 @@ test('loadRegistry — throws on base agent path not found', () => {
   const dir = mkdtempSync(join(tmpdir(), 'scaffold-reg4-'));
   writeFileSync(join(dir, 'scaffold.config.json'), JSON.stringify({
     schemaVersion: 1,
-    manifestName: '.ai-scaffold.json',
+    manifestName: '.claude/ai-kit.json',
     source: { repo: 'x' },
     base: { files: [], skills: [], agents: ['ghost'] },
     skills: {},

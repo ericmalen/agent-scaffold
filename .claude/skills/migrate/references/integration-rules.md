@@ -90,7 +90,7 @@ cross-tool equivalent is a nested `AGENTS.md`.
 
 - For each file, fold its content into a **nested `AGENTS.md`** in the directory
   it was scoped to, and create a sibling `CLAUDE.md` containing `@AGENTS.md`
-  (mirrors the root pairing; see `/scaffold-nested-agents-md`).
+  (mirrors the root pairing; see `/layer-agents`).
 - **Delete the original `.instructions.md`.**
 - This preserves the path scoping while removing the Copilot-only file.
 
@@ -111,7 +111,7 @@ conventions overlap `git-conventions`):
 - **Skill already installed** → drop the duplicated prose from the merged file;
   point at the skill instead.
 - **Skill not installed** → do **not** auto-install. Note in the batch plan that
-  the skill exists and recommend `agent-scaffold init --skills <name>`.
+  the skill exists and recommend `ai-kit init --skills <name>`.
 
 ## Detecting overlap with an un-installed opt-in skill
 

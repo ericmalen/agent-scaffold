@@ -12,10 +12,10 @@
       "Write(./**/CLAUDE.md)",
       "Edit(./.vscode/settings.json)",
       "Edit(./.claude/settings.json)",
-      "Edit(./.ai-scaffold.json)",
-      "Write(./.ai-scaffold.json)",
-      "Write(./.ai-scaffold-migration-plan.md)",
-      "Edit(./.ai-scaffold-migration-plan.md)"
+      "Edit(./.claude/ai-kit.json)",
+      "Write(./.claude/ai-kit.json)",
+      "Write(./.ai-kit-migration-plan.md)",
+      "Edit(./.ai-kit-migration-plan.md)"
     ],
     "ask": [],
     "deny": [
