@@ -22,8 +22,14 @@ all file I/O. This agent never edits files or runs Bash.
 
 3. **Process each work unit** in `scope.workUnits`:
    - **`markdown-fold`** — This is the only unit type requiring LLM judgment.
+     Applies to root AND nested targets (e.g. `src/AGENTS.md`). Rules are
+     identical regardless of target depth.
      For each entry in `sources[]`, build an annotated source object:
      - Read the source file at `consumerRoot/<path>`.
+     - If `originType` is `'instructions-fold'`, the file has YAML frontmatter
+       at the top. Strip the frontmatter block before counting lines and
+       locating H2 headings. `sourceLineRange` values are 1-based from the
+       first line of the body (after frontmatter).
      - Split by H2 (level-2 markdown headings — ignore H2s inside fenced code
        blocks).
      - For each H2, decide which canonical target heading it belongs to per
@@ -46,13 +52,13 @@ all file I/O. This agent never edits files or runs Bash.
    - **`json-merge`**, **`agents-md-merge`**, **`leave-as-is`**, **`instructions-fold`** —
      Pass through unchanged. The CLI handles these deterministically.
 
-4. **Write the routing JSON.** Copy every work unit from the scope verbatim,
-   then for each `markdown-fold` unit replace each source object with the
-   annotated version (adds `h2Routing` and optionally `suggestedH1` **inside
-   the source object**). Write to
+4. **Write the routing JSON.** Emit a minimal JSON with only the fields the
+   CLI needs from you. The CLI merges your h2Routing decisions back into the
+   authoritative scope; you never need to copy `deletions`, `manifestDelta`,
+   `shimInstall`, or `shimReplace`. Write to
    `<consumerRoot>/.ai-kit-migration-routing.json`.
 
-   Schema:
+   Schema (only fields you must provide — omit anything not listed):
    ```json
    {
      "schemaVersion": 1,
@@ -60,8 +66,6 @@ all file I/O. This agent never edits files or runs Bash.
        {
          "id": "<from scope>",
          "type": "markdown-fold",
-         "target": "<from scope>",
-         "shimInstall": "<from scope, or omit if null>",
          "sources": [
            {
              "path": "<from scope>",
@@ -78,13 +82,14 @@ all file I/O. This agent never edits files or runs Bash.
              ]
            }
          ],
-         "deletions": "<from scope>",
-         "manifestDelta": "<from scope>",
          "skillOverlapNotes": []
        }
      ]
    }
    ```
+   `sourceLineRange` is optional (fold logic matches by heading name). Include
+   it for documentation purposes if convenient, but inaccurate line numbers
+   will not cause failures.
 
 5. **Return a brief summary** — unit count, any skill-overlap warnings, any
    ambiguity calls you made. Do **not** quote body text.
@@ -92,6 +97,8 @@ all file I/O. This agent never edits files or runs Bash.
 ## Never
 
 - Edit or delete any file except `.ai-kit-migration-routing.json`.
+- Copy `deletions`, `manifestDelta`, `shimInstall`, or `shimReplace` into
+  the routing JSON — the CLI merges those from scope automatically.
 - Include body content (prose, code) in the routing JSON or in your return
   message. Only headings, line ranges, routing decisions, and notes.
 - Place `h2Routing` at the work-unit level — it MUST be inside each source

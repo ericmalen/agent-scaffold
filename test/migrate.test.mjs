@@ -6,12 +6,14 @@ import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 import { validateRouting } from '../lib/migrate/routing.mjs';
+import { validateRoutingSemantic } from '../lib/migrate/routing-validate.mjs';
+import { deriveTargetDirs } from '../lib/migrate/applyto.mjs';
+import { findPreexistingUnmanaged } from '../lib/brownfield.mjs';
 import { snapshot, verifyAll } from '../lib/migrate/premise.mjs';
 import { applyDeltas } from '../lib/migrate/manifest-resolve.mjs';
 import { stageUnit as stageMarkdownFold } from '../lib/migrate/dispositions/markdown-fold.mjs';
 import { stageUnit as stageJsonMerge } from '../lib/migrate/dispositions/json-merge.mjs';
 import { stageUnit as stageLeaveAsIs } from '../lib/migrate/dispositions/leave-as-is.mjs';
-import { stageUnit as stageInstructions } from '../lib/migrate/dispositions/instructions-fold.mjs';
 import { clear as clearStaging, write as writeStaging, STAGING_DIR } from '../lib/migrate/staging.mjs';
 import { buildAndWrite, parsePlan, PLAN_FILE } from '../lib/migrate/plan.mjs';
 import { applyMigration } from '../lib/migrate/apply-exec.mjs';
@@ -55,14 +57,15 @@ test('validateRouting — rejects unknown unit type', () => {
   }), /Unknown unit type/);
 });
 
-test('validateRouting — rejects markdown-fold missing h2Routing', () => {
-  assert.throws(() => validateRouting({
+test('validateRouting — accepts markdown-fold without h2Routing (injected from scope at stage)', () => {
+  // Agent-emitted routing JSON need not include h2Routing — scope merge provides it.
+  assert.doesNotThrow(() => validateRouting({
     schemaVersion: 1,
     workUnits: [{
-      id: 'x', type: 'markdown-fold', target: 'AGENTS.md', manifestDelta: [], deletions: [],
-      sources: [{ path: 'CLAUDE.md' }], // missing h2Routing
+      id: 'x', type: 'markdown-fold',
+      sources: [{ path: 'CLAUDE.md' }], // no h2Routing — valid agent output
     }],
-  }), /h2Routing/);
+  }));
 });
 
 // ── premise.mjs ──────────────────────────────────────────────────────────────
@@ -307,36 +310,50 @@ test('json-merge — deny-union-allow-keep-hooks-merge: deny is union', () => {
   assert.deepEqual(merged.permissions.allow, ['Bash(git*)']);
 });
 
-// ── instructions-fold ────────────────────────────────────────────────────────
+// ── instructions-fold via markdown-fold ──────────────────────────────────────
 
-test('instructions-fold — creates nested AGENTS.md and CLAUDE.md shim', () => {
+test('markdown-fold — instructions-fold source: strips frontmatter, folds H2s, shimReplace creates shim', () => {
   const dir = tmp();
   mkdirSync(join(dir, '.github/instructions'), { recursive: true });
+  mkdirSync(join(dir, 'src/api'), { recursive: true });
   writeFileSync(join(dir, '.github/instructions/backend.instructions.md'), [
     '---',
     'applyTo: src/api/**',
     '---',
     '',
-    '# Backend Instructions',
+    '## Backend Conventions',
     '',
     'Use Result<T> for error propagation.',
   ].join('\n') + '\n');
 
   const unit = {
-    type: 'instructions-fold',
-    sources: ['.github/instructions/backend.instructions.md'],
+    type: 'markdown-fold',
+    target: 'src/api/AGENTS.md',
+    shimReplace: { path: 'src/api/CLAUDE.md', content: '@AGENTS.md\n' },
+    sources: [{
+      path: '.github/instructions/backend.instructions.md',
+      originType: 'instructions-fold',
+      h2Routing: [{
+        sourceHeading: '## Backend Conventions',
+        sourceLineRange: [2, 4],
+        targetHeading: '## Conventions',
+        demote: true,
+        keepOriginalHeading: true,
+      }],
+    }],
     deletions: ['.github/instructions/backend.instructions.md'],
     manifestDelta: [],
   };
 
-  const { stagingFiles } = stageInstructions(unit, dir);
+  const { stagingFiles } = stageMarkdownFold(unit, dir);
 
   const agentsMd = stagingFiles.find(f => f.relPath === 'src/api/AGENTS.md');
   const claudeMd = stagingFiles.find(f => f.relPath === 'src/api/CLAUDE.md');
 
-  assert.ok(agentsMd, 'nested AGENTS.md created at correct path');
-  assert.ok(claudeMd, 'nested CLAUDE.md shim created');
+  assert.ok(agentsMd, 'nested AGENTS.md staged at correct path');
+  assert.ok(claudeMd, 'nested CLAUDE.md shim staged');
   assert.ok(agentsMd.content.includes('Use Result<T>'), 'body content preserved');
+  assert.ok(agentsMd.content.includes('## Conventions'), 'content routed to canonical section');
   assert.equal(claudeMd.content, '@AGENTS.md\n');
 });
 
@@ -523,4 +540,439 @@ test('e2e — perf guard: stage + apply < 2s', () => {
 
   const elapsed = Date.now() - t0;
   assert.ok(elapsed < 2000, `stage + apply should complete in < 2s, took ${elapsed}ms`);
+});
+
+// ── applyto.mjs ───────────────────────────────────────────────────────────────
+
+test('deriveTargetDirs — global glob → root', () => {
+  assert.deepEqual(deriveTargetDirs('**'), ['']);
+});
+
+test('deriveTargetDirs — path glob → static prefix', () => {
+  assert.deepEqual(deriveTargetDirs('src/**/*.ts'), ['src']);
+});
+
+test('deriveTargetDirs — deep path glob', () => {
+  assert.deepEqual(deriveTargetDirs('src/api/**'), ['src/api']);
+});
+
+test('deriveTargetDirs — multi-glob → one dir per prefix', () => {
+  const dirs = deriveTargetDirs('src/**,test/**');
+  assert.ok(dirs.includes('src'));
+  assert.ok(dirs.includes('test'));
+  assert.equal(dirs.length, 2);
+});
+
+test('deriveTargetDirs — null input → null', () => {
+  assert.equal(deriveTargetDirs(null), null);
+  assert.equal(deriveTargetDirs(undefined), null);
+  assert.equal(deriveTargetDirs(''), null);
+});
+
+// ── brownfield nested scan ────────────────────────────────────────────────────
+
+test('findPreexistingUnmanaged — discovers nested CLAUDE.md and AGENTS.md', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, 'src/api'), { recursive: true });
+  writeFileSync(join(dir, 'src/CLAUDE.md'), '# Src instructions\n');
+  writeFileSync(join(dir, 'src/api/AGENTS.md'), '## Overview\n\nsome content\n');
+
+  const unmanaged = findPreexistingUnmanaged(dir, new Set());
+
+  assert.ok(unmanaged.includes('src/CLAUDE.md'), 'finds nested CLAUDE.md');
+  assert.ok(unmanaged.includes('src/api/AGENTS.md'), 'finds deeply nested AGENTS.md');
+});
+
+test('findPreexistingUnmanaged — excludes node_modules and dist', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, 'node_modules/some-pkg'), { recursive: true });
+  mkdirSync(join(dir, 'dist'), { recursive: true });
+  writeFileSync(join(dir, 'node_modules/some-pkg/CLAUDE.md'), '# should be ignored\n');
+  writeFileSync(join(dir, 'dist/AGENTS.md'), '# should be ignored\n');
+
+  const unmanaged = findPreexistingUnmanaged(dir, new Set());
+
+  assert.ok(!unmanaged.some(p => p.includes('node_modules')), 'ignores node_modules');
+  assert.ok(!unmanaged.some(p => p.includes('dist')), 'ignores dist');
+});
+
+test('findPreexistingUnmanaged — does not report root CLAUDE.md or AGENTS.md', () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'CLAUDE.md'), '# root\n');
+  writeFileSync(join(dir, 'AGENTS.md'), '# root\n');
+
+  const unmanaged = findPreexistingUnmanaged(dir, new Set());
+
+  assert.ok(!unmanaged.includes('CLAUDE.md'), 'root CLAUDE.md excluded');
+  assert.ok(!unmanaged.includes('AGENTS.md'), 'root AGENTS.md excluded');
+});
+
+// ── work-units: nested paths ──────────────────────────────────────────────────
+
+test('work-units.enumerate — nested CLAUDE.md → markdown-fold unit with shimReplace', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, 'src'), { recursive: true });
+  writeFileSync(join(dir, 'src/CLAUDE.md'), '## Conventions\n\nsome rules\n');
+
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(m, 'src/CLAUDE.md');
+
+  const units = enumerate(m, dir);
+  const unit = units.find(u => u.id === 'nested-agents-md-src');
+
+  assert.ok(unit, 'nested markdown-fold unit emitted');
+  assert.equal(unit.type, 'markdown-fold');
+  assert.equal(unit.target, 'src/AGENTS.md');
+  assert.ok(unit.sources.some(s => s.path === 'src/CLAUDE.md'), 'src/CLAUDE.md is a source');
+  assert.ok(unit.shimReplace?.path === 'src/CLAUDE.md', 'shimReplace targets src/CLAUDE.md');
+  assert.equal(unit.shimReplace.content, '@AGENTS.md\n');
+  assert.ok(unit.manifestDelta.some(d => d.kind === 'installNested'), 'installNested delta present');
+});
+
+test('work-units.enumerate — nested AGENTS.md only → unit with CLAUDE.md shimReplace', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, 'src'), { recursive: true });
+  writeFileSync(join(dir, 'src/AGENTS.md'), '## Conventions\n\nsome rules\n');
+
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(m, 'src/AGENTS.md');
+
+  const units = enumerate(m, dir);
+  const unit = units.find(u => u.id === 'nested-agents-md-src');
+
+  assert.ok(unit, 'nested markdown-fold unit emitted for pre-existing AGENTS.md');
+  assert.equal(unit.target, 'src/AGENTS.md');
+  assert.ok(unit.shimReplace?.path === 'src/CLAUDE.md', 'shimReplace creates CLAUDE.md shim');
+});
+
+test('work-units.enumerate — both nested CLAUDE.md and AGENTS.md → single unit', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, 'src'), { recursive: true });
+  writeFileSync(join(dir, 'src/CLAUDE.md'), '## Conventions\n\nrules\n');
+  writeFileSync(join(dir, 'src/AGENTS.md'), '## Overview\n\nexisting\n');
+
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(m, 'src/CLAUDE.md');
+  addPreexistingUnmanaged(m, 'src/AGENTS.md');
+
+  const units = enumerate(m, dir);
+  const nestedUnits = units.filter(u => u.id === 'nested-agents-md-src');
+
+  assert.equal(nestedUnits.length, 1, 'single unit for both CLAUDE.md + AGENTS.md');
+  assert.ok(nestedUnits[0].sources.some(s => s.path === 'src/CLAUDE.md'), 'CLAUDE.md is source');
+});
+
+// ── markdown-fold: canonical skeleton seed ────────────────────────────────────
+
+test('markdown-fold — seeds canonical H2 skeleton when target absent', () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'CLAUDE.md'), '## Conventions\n\nsome rule\n');
+
+  const unit = {
+    type: 'markdown-fold',
+    target: 'src/AGENTS.md', // does not exist
+    sources: [{
+      path: 'CLAUDE.md',
+      originType: 'claude-md-fold',
+      h2Routing: [{
+        sourceHeading: '## Conventions',
+        sourceLineRange: [1, 3],
+        targetHeading: '## Conventions',
+        demote: false,
+        keepOriginalHeading: false,
+      }],
+    }],
+    deletions: [],
+    manifestDelta: [],
+  };
+
+  const { stagingFiles } = stageMarkdownFold(unit, dir);
+  const out = stagingFiles.find(f => f.relPath === 'src/AGENTS.md')?.content ?? '';
+
+  assert.ok(out.includes('## Overview'), 'canonical ## Overview seeded');
+  assert.ok(out.includes('## Architecture'), 'canonical ## Architecture seeded');
+  assert.ok(out.includes('## Conventions'), 'canonical ## Conventions seeded');
+  assert.ok(out.includes('## Do Not'), 'canonical ## Do Not seeded');
+  assert.ok(out.includes('## More Context'), 'canonical ## More Context seeded');
+  assert.ok(out.includes('some rule'), 'consumer content folded in');
+});
+
+// ── markdown-fold: shimReplace ────────────────────────────────────────────────
+
+test('markdown-fold — shimReplace stages replacement file with shim content', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, 'src'), { recursive: true });
+  writeFileSync(join(dir, 'src/CLAUDE.md'), '## Conventions\n\nrules\n');
+
+  const unit = {
+    type: 'markdown-fold',
+    target: 'src/AGENTS.md',
+    shimReplace: { path: 'src/CLAUDE.md', content: '@AGENTS.md\n' },
+    sources: [{
+      path: 'src/CLAUDE.md',
+      originType: 'claude-md-fold',
+      h2Routing: [{
+        sourceHeading: '## Conventions',
+        sourceLineRange: [1, 3],
+        targetHeading: '## Conventions',
+        demote: false,
+        keepOriginalHeading: false,
+      }],
+    }],
+    deletions: [],
+    manifestDelta: [],
+  };
+
+  const { stagingFiles, premiseSnapshots } = stageMarkdownFold(unit, dir);
+
+  const shimFile = stagingFiles.find(f => f.relPath === 'src/CLAUDE.md');
+  assert.ok(shimFile, 'shimReplace produces staging file');
+  assert.equal(shimFile.content, '@AGENTS.md\n');
+  assert.ok(premiseSnapshots.some(s => s.file.endsWith('src/CLAUDE.md')), 'shimReplace path snapshotted');
+});
+
+// ── routing-validate ──────────────────────────────────────────────────────────
+
+test('routing-validate — accepts canonical targetHeadings', () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'CLAUDE.md'), '## Overview\n\ncontent\n## Conventions\n\nrules\n');
+
+  const routing = {
+    schemaVersion: 1,
+    workUnits: [{
+      id: 'root-agents-md', type: 'markdown-fold', target: 'AGENTS.md',
+      sources: [{ path: 'CLAUDE.md', originType: 'claude-md-fold', h2Routing: [
+        { sourceHeading: '## Overview', sourceLineRange: [1, 2], targetHeading: '## Overview', demote: true, keepOriginalHeading: false },
+        { sourceHeading: '## Conventions', sourceLineRange: [4, 5], targetHeading: '## Conventions', demote: true, keepOriginalHeading: false },
+      ]}],
+      deletions: [], manifestDelta: [],
+    }],
+  };
+
+  const errors = validateRoutingSemantic(routing, dir);
+  assert.equal(errors.length, 0);
+});
+
+test('routing-validate — rejects non-canonical targetHeading with suggestion', () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'CLAUDE.md'), '## Workflow\n\ncontent\n');
+
+  const routing = {
+    schemaVersion: 1,
+    workUnits: [{
+      id: 'root-agents-md', type: 'markdown-fold', target: 'AGENTS.md',
+      sources: [{ path: 'CLAUDE.md', originType: 'claude-md-fold', h2Routing: [
+        { sourceHeading: '## Workflow', sourceLineRange: [1, 2], targetHeading: '## Workflow', demote: true, keepOriginalHeading: true },
+      ]}],
+      deletions: [], manifestDelta: [],
+    }],
+  };
+
+  const errors = validateRoutingSemantic(routing, dir);
+  assert.ok(errors.some(e => e.field === 'targetHeading'), 'rejects non-canonical targetHeading');
+  assert.ok(errors.some(e => e.reason.includes('Non-canonical')), 'error message includes "Non-canonical"');
+});
+
+test('routing-validate — accepts non-canonical targetHeading that matches pre-existing AGENTS.md H2', () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'CLAUDE.md'), '## Workflow\n\ncontent\n');
+  writeFileSync(join(dir, 'AGENTS.md'), '## Workflow\n\nexisting\n');
+
+  const routing = {
+    schemaVersion: 1,
+    workUnits: [{
+      id: 'root-agents-md', type: 'markdown-fold', target: 'AGENTS.md',
+      sources: [{ path: 'CLAUDE.md', originType: 'claude-md-fold', h2Routing: [
+        { sourceHeading: '## Workflow', sourceLineRange: [1, 2], targetHeading: '## Workflow', demote: true, keepOriginalHeading: true },
+      ]}],
+      deletions: [], manifestDelta: [],
+    }],
+  };
+
+  const errors = validateRoutingSemantic(routing, dir);
+  assert.equal(errors.length, 0, 'consumer H2 in merge base is a valid target');
+});
+
+test('routing-validate — accepts sourceLineRange out of bounds (not validated)', () => {
+  const dir = tmp();
+  writeFileSync(join(dir, 'CLAUDE.md'), '## Overview\n\ncontent\n');
+
+  const routing = {
+    schemaVersion: 1,
+    workUnits: [{
+      id: 'root-agents-md', type: 'markdown-fold', target: 'AGENTS.md',
+      sources: [{ path: 'CLAUDE.md', originType: 'claude-md-fold', h2Routing: [
+        { sourceHeading: '## Overview', sourceLineRange: [1, 999], targetHeading: '## Overview', demote: true, keepOriginalHeading: false },
+      ]}],
+      deletions: [], manifestDelta: [],
+    }],
+  };
+
+  // sourceLineRange bounds are not validated (fold logic uses heading names, not line numbers)
+  const errors = validateRoutingSemantic(routing, dir);
+  assert.ok(!errors.some(e => e.field?.startsWith('sourceLineRange')), 'sourceLineRange bounds not validated');
+});
+
+test('routing-validate — rejects bare-string source', () => {
+  const dir = tmp();
+
+  const routing = {
+    schemaVersion: 1,
+    workUnits: [{
+      id: 'root-agents-md', type: 'markdown-fold', target: 'AGENTS.md',
+      sources: ['CLAUDE.md'], // bare string, not object
+      deletions: [], manifestDelta: [],
+    }],
+  };
+
+  const errors = validateRoutingSemantic(routing, dir);
+  assert.ok(errors.some(e => e.field === 'sources[]'), 'rejects bare-string source');
+});
+
+// ── manifest-resolve: installNested ──────────────────────────────────────────
+
+test('applyDeltas — installNested adds file entry with nested-agents-md role', () => {
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+
+  applyDeltas(m, [{ kind: 'installNested', path: 'src/AGENTS.md' }]);
+
+  assert.equal(m.files['src/AGENTS.md']?.role, 'nested-agents-md');
+  assert.equal(m.files['src/AGENTS.md']?.installedAs, 'src/AGENTS.md');
+});
+
+test('applyDeltas — installNested removes path from preexistingUnmanaged', () => {
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  m.preexistingUnmanaged = ['src/AGENTS.md', 'other/file.md'];
+
+  applyDeltas(m, [{ kind: 'installNested', path: 'src/AGENTS.md' }]);
+
+  assert.ok(!m.preexistingUnmanaged.includes('src/AGENTS.md'), 'removed from preexistingUnmanaged');
+  assert.ok(m.preexistingUnmanaged.includes('other/file.md'), 'other entries preserved');
+});
+
+// ── end-to-end: nested CLAUDE.md + pre-existing AGENTS.md ────────────────────
+
+test('e2e — nested CLAUDE.md folds into pre-existing AGENTS.md, shimReplace creates shim', () => {
+  const registry = loadRegistry(getScaffoldRoot(import.meta.url));
+  const dir = tmp();
+  mkdirSync(join(dir, 'src'), { recursive: true });
+  mkdirSync(join(dir, '.claude'), { recursive: true });
+
+  // Consumer files
+  writeFileSync(join(dir, 'src/CLAUDE.md'), '# src Docs\n\n## Conventions\n\nuse Result<T>\n');
+  writeFileSync(join(dir, 'src/AGENTS.md'), '# src\n\n## Overview\n\nexisting overview\n');
+
+  // Minimal manifest
+  const manifest = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(manifest, 'src/CLAUDE.md');
+  addPreexistingUnmanaged(manifest, 'src/AGENTS.md');
+  writeFileSync(join(dir, '.claude/ai-kit.json'), JSON.stringify(manifest, null, 2));
+
+  // enumerate work units
+  const units = enumerate(manifest, dir);
+  assert.equal(units.length, 1, 'one unit for src/');
+  const unit = units[0];
+  assert.equal(unit.target, 'src/AGENTS.md');
+  assert.equal(unit.type, 'markdown-fold');
+
+  // Inject h2Routing (simulating migrator agent)
+  const unitWithRouting = {
+    ...unit,
+    sources: unit.sources.map(s => ({
+      ...s,
+      h2Routing: [{ sourceHeading: '## Conventions', targetHeading: '## Conventions',
+        demote: true, keepOriginalHeading: false }],
+    })),
+  };
+
+  // Stage
+  clearStaging(dir);
+  const result = stageMarkdownFold(unitWithRouting, dir);
+  writeStaging(dir, result.stagingFiles);
+  buildAndWrite(dir, { units: [unitWithRouting], stageResults: [{ unit: unitWithRouting, ...result }],
+    premiseSnapshots: result.premiseSnapshots });
+
+  // Apply
+  const freshManifest = JSON.parse(readFileSync(join(dir, '.claude/ai-kit.json'), 'utf8'));
+  applyMigration(dir, freshManifest, registry);
+
+  // Verify
+  const agentsMd = readFileSync(join(dir, 'src/AGENTS.md'), 'utf8');
+  assert.ok(agentsMd.includes('## Overview'), 'pre-existing section preserved');
+  assert.ok(agentsMd.includes('existing overview'), 'pre-existing content preserved');
+  assert.ok(agentsMd.includes('## Conventions'), 'folded section present');
+  assert.ok(agentsMd.includes('use Result<T>'), 'folded content present');
+
+  const shim = readFileSync(join(dir, 'src/CLAUDE.md'), 'utf8');
+  assert.equal(shim, '@AGENTS.md\n', 'src/CLAUDE.md replaced with shim');
+
+  const finalManifest = JSON.parse(readFileSync(join(dir, '.claude/ai-kit.json'), 'utf8'));
+  assert.equal(finalManifest.files['src/AGENTS.md']?.role, 'nested-agents-md', 'manifest tracks nested AGENTS.md');
+  assert.ok(!finalManifest.preexistingUnmanaged.includes('src/AGENTS.md'), 'cleared from preexistingUnmanaged');
+  assert.ok(!finalManifest.preexistingUnmanaged.includes('src/CLAUDE.md'), 'src/CLAUDE.md cleared from preexistingUnmanaged');
+});
+
+// ── end-to-end: multi-glob instructions → two nested targets ─────────────────
+
+test('e2e — multi-glob instructions file produces two units, content in both', () => {
+  const registry = loadRegistry(getScaffoldRoot(import.meta.url));
+  const dir = tmp();
+  mkdirSync(join(dir, 'src'), { recursive: true });
+  mkdirSync(join(dir, 'tests'), { recursive: true });
+  mkdirSync(join(dir, '.github/instructions'), { recursive: true });
+  mkdirSync(join(dir, '.claude'), { recursive: true });
+
+  const instructionsContent = '---\napplyTo: src/**,tests/**\n---\n\n## Conventions\n\nshared rule\n';
+  writeFileSync(join(dir, '.github/instructions/shared.instructions.md'), instructionsContent);
+
+  const manifest = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(manifest, '.github/instructions/shared.instructions.md');
+  writeFileSync(join(dir, '.claude/ai-kit.json'), JSON.stringify(manifest, null, 2));
+
+  const units = enumerate(manifest, dir);
+  assert.equal(units.length, 2, 'two units for src/ and tests/');
+  assert.ok(units.some(u => u.target === 'src/AGENTS.md'), 'src unit present');
+  assert.ok(units.some(u => u.target === 'tests/AGENTS.md'), 'tests unit present');
+
+  // Stage and apply both units
+  clearStaging(dir);
+  const allSnapshots = new Map();
+  const unitResults = [];
+  for (const unit of units) {
+    const withRouting = {
+      ...unit,
+      sources: unit.sources.map(s => ({
+        ...s,
+        h2Routing: [{ sourceHeading: '## Conventions', targetHeading: '## Conventions',
+          demote: true, keepOriginalHeading: false }],
+      })),
+    };
+    const result = stageMarkdownFold(withRouting, dir);
+    unitResults.push({ unit: withRouting, ...result });
+    writeStaging(dir, result.stagingFiles);
+    for (const snap of result.premiseSnapshots) allSnapshots.set(snap.file, snap);
+  }
+  buildAndWrite(dir, { units: units.map((u, i) => unitResults[i].unit),
+    stageResults: unitResults, premiseSnapshots: [...allSnapshots.values()] });
+
+  const freshManifest = JSON.parse(readFileSync(join(dir, '.claude/ai-kit.json'), 'utf8'));
+  applyMigration(dir, freshManifest, registry);
+
+  const srcAgents = readFileSync(join(dir, 'src/AGENTS.md'), 'utf8');
+  const testsAgents = readFileSync(join(dir, 'tests/AGENTS.md'), 'utf8');
+  assert.ok(srcAgents.includes('shared rule'), 'shared rule in src/AGENTS.md');
+  assert.ok(testsAgents.includes('shared rule'), 'shared rule in tests/AGENTS.md');
+  assert.ok(!existsSync(join(dir, '.github/instructions/shared.instructions.md')),
+    'instructions file deleted');
+
+  const finalManifest = JSON.parse(readFileSync(join(dir, '.claude/ai-kit.json'), 'utf8'));
+  assert.equal(finalManifest.files['src/AGENTS.md']?.role, 'nested-agents-md');
+  assert.equal(finalManifest.files['tests/AGENTS.md']?.role, 'nested-agents-md');
 });
