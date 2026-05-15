@@ -68,3 +68,16 @@ test('init --skills dedupes when category and individual id overlap', () => {
   const count = manifest.installed.skills.filter(s => s === 'refactor-module').length;
   assert.equal(count, 1, 'refactor-module should appear exactly once');
 });
+
+test('init --skills skill-creator: base skill stays out of installed.skills', () => {
+  const dir = tmp();
+  // skill-creator is a base skill. Passing it via --skills must NOT duplicate
+  // it into installed.skills — it already ships in installed.baseSkills.
+  const result = runInit(dir, 'skill-creator');
+  assert.equal(result.status, 0, `init failed: ${result.stderr}\n${result.stdout}`);
+  const manifest = readManifest(dir);
+  assert.ok(manifest.installed.baseSkills.includes('skill-creator'),
+    'skill-creator should be in baseSkills');
+  assert.ok(!manifest.installed.skills.includes('skill-creator'),
+    'skill-creator should NOT be in installed.skills');
+});

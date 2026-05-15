@@ -237,6 +237,41 @@ test('audit — skill-weak-description fires for user-authored skill not in mani
   assert.ok(ids.includes('skill-weak-description'), `Expected finding, got: ${ids}`);
 });
 
+test('audit — skill-md-too-long suppressed for ai-kit-distributed skill (Bug 5)', async () => {
+  const dir = tmp();
+  const skillRelPath = '.claude/skills/upstream/SKILL.md';
+  writeManifest(dir, {
+    files: {
+      '.claude/skills/upstream/SKILL.md': {
+        sourceHash: 'abc',
+        installedAs: skillRelPath,
+        role: 'skill',
+      },
+    },
+  });
+  mkdirSync(join(dir, '.claude', 'skills', 'upstream'), { recursive: true });
+  const longBody = Array.from({ length: 250 }, (_, i) => `Line ${i + 1}`).join('\n');
+  writeFileSync(join(dir, skillRelPath),
+    `---\nname: upstream\ndescription: Long upstream skill that does X when invoked\n---\n# Upstream\n${longBody}\n`);
+  const report = await audit({ _consumerRoot: dir });
+  const ids = report.findings.map(f => f.id);
+  assert.ok(!ids.includes('skill-md-too-long'),
+    `ai-kit-distributed skills should be exempt; got: ${ids}`);
+});
+
+test('audit — skill-md-too-long still fires for consumer-authored skill (Bug 5)', async () => {
+  const dir = tmp();
+  writeManifest(dir); // empty files map; skill is consumer-authored
+  mkdirSync(join(dir, '.claude', 'skills', 'local'), { recursive: true });
+  const longBody = Array.from({ length: 250 }, (_, i) => `Line ${i + 1}`).join('\n');
+  writeFileSync(join(dir, '.claude', 'skills', 'local', 'SKILL.md'),
+    `---\nname: local\ndescription: Long local skill that does X when invoked\n---\n# Local\n${longBody}\n`);
+  const report = await audit({ _consumerRoot: dir });
+  const ids = report.findings.map(f => f.id);
+  assert.ok(ids.includes('skill-md-too-long'),
+    `Consumer-authored skills should still fire; got: ${ids}`);
+});
+
 // ── Wave 1: schemaVersion + surface field ─────────────────────────────────────
 
 test('audit — schemaVersion is 2', async () => {
@@ -541,6 +576,28 @@ test('audit — gitignore-missing-ai-kit-entries silent when all entries present
   const report = await audit({ _consumerRoot: dir, json: true });
   const ids = report.findings.map(f => f.id);
   assert.ok(!ids.includes('gitignore-missing-ai-kit-entries'), `Should not fire, got: ${ids}`);
+});
+
+test('audit — gitignore parent-directory ignore covers required children (Bug 4b)', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  // A wholesale `.claude/` ignore covers .claude/settings.local.json and
+  // .claude/ai-kit-audit-report.json — the checker must not report them missing.
+  writeFileSync(join(dir, '.gitignore'), '.claude/\nnode_modules\n');
+  const report = await audit({ _consumerRoot: dir, json: true });
+  const ids = report.findings.map(f => f.id);
+  assert.ok(!ids.includes('gitignore-missing-ai-kit-entries'),
+    `Parent-dir ignore should suppress per-file findings; got: ${ids}`);
+});
+
+test('audit — gitignore bare directory name (no trailing slash) also covers children (Bug 4b)', async () => {
+  const dir = tmp();
+  writeManifest(dir);
+  writeFileSync(join(dir, '.gitignore'), '.claude\n');
+  const report = await audit({ _consumerRoot: dir, json: true });
+  const ids = report.findings.map(f => f.id);
+  assert.ok(!ids.includes('gitignore-missing-ai-kit-entries'),
+    `Bare directory ignore should suppress per-file findings; got: ${ids}`);
 });
 
 // ── Wave 3: audit-report leak ─────────────────────────────────────────────────

@@ -7,13 +7,14 @@ import { fileURLToPath } from 'node:url';
 
 import { validateRouting } from '../lib/migrate/routing.mjs';
 import { validateRoutingSemantic } from '../lib/migrate/routing-validate.mjs';
-import { deriveTargetDirs } from '../lib/migrate/applyto.mjs';
+import { deriveTargetDirs, isUnscopedApplyTo } from '../lib/migrate/applyto.mjs';
 import { findPreexistingUnmanaged } from '../lib/brownfield.mjs';
 import { snapshot, verifyAll } from '../lib/migrate/premise.mjs';
 import { applyDeltas } from '../lib/migrate/manifest-resolve.mjs';
 import { stageUnit as stageMarkdownFold } from '../lib/migrate/dispositions/markdown-fold.mjs';
 import { stageUnit as stageJsonMerge } from '../lib/migrate/dispositions/json-merge.mjs';
 import { stageUnit as stageLeaveAsIs } from '../lib/migrate/dispositions/leave-as-is.mjs';
+import { stageUnit as stageGithubRoute } from '../lib/migrate/dispositions/github-route.mjs';
 import { clear as clearStaging, write as writeStaging, STAGING_DIR } from '../lib/migrate/staging.mjs';
 import { buildAndWrite, parsePlan, PLAN_FILE } from '../lib/migrate/plan.mjs';
 import { applyMigration } from '../lib/migrate/apply-exec.mjs';
@@ -567,6 +568,233 @@ test('deriveTargetDirs — null input → null', () => {
   assert.equal(deriveTargetDirs(null), null);
   assert.equal(deriveTargetDirs(undefined), null);
   assert.equal(deriveTargetDirs(''), null);
+});
+
+// Bug 1 — isUnscopedApplyTo distinguishes deliberate root scope from no scope
+test('isUnscopedApplyTo — missing/empty applyTo is unscoped', () => {
+  assert.equal(isUnscopedApplyTo(null), true);
+  assert.equal(isUnscopedApplyTo(undefined), true);
+  assert.equal(isUnscopedApplyTo(''), true);
+});
+
+test('isUnscopedApplyTo — global glob ** is unscoped', () => {
+  assert.equal(isUnscopedApplyTo('**'), true);
+});
+
+test('isUnscopedApplyTo — directory glob is scoped', () => {
+  assert.equal(isUnscopedApplyTo('src/**'), false);
+  assert.equal(isUnscopedApplyTo('src/api/**'), false);
+});
+
+test('isUnscopedApplyTo — multi-glob with at least one scoped dir is scoped', () => {
+  assert.equal(isUnscopedApplyTo('src/**,tests/**'), false);
+});
+
+// Bug 1 — work-units flags unscoped instruction files on the root-fold source
+test('work-units.enumerate — unscoped .instructions.md tagged unscoped on root-fold source', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/instructions'), { recursive: true });
+  writeFileSync(join(dir, '.github/instructions/cross-cutting.instructions.md'),
+    '---\n---\n\n## Pipeline\n\nUse Azure DevOps.\n');
+
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(m, '.github/instructions/cross-cutting.instructions.md');
+
+  const units = enumerate(m, dir);
+  const root = units.find(u => u.id === 'root-agents-md');
+  assert.ok(root, 'root-agents-md fold unit emitted');
+  const src = root.sources.find(s => s.path === '.github/instructions/cross-cutting.instructions.md');
+  assert.ok(src, 'unscoped file present as a source');
+  assert.equal(src.unscoped, true, 'source flagged unscoped');
+});
+
+test('work-units.enumerate — scoped .instructions.md not flagged unscoped', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/instructions'), { recursive: true });
+  writeFileSync(join(dir, '.github/instructions/backend.instructions.md'),
+    '---\napplyTo: src/api/**\n---\n\n## Backend\n');
+
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(m, '.github/instructions/backend.instructions.md');
+
+  const units = enumerate(m, dir);
+  const nested = units.find(u => u.target === 'src/api/AGENTS.md');
+  assert.ok(nested, 'nested fold unit emitted');
+  const src = nested.sources.find(s => s.path === '.github/instructions/backend.instructions.md');
+  assert.equal(src.unscoped, undefined, 'scoped source not flagged unscoped');
+});
+
+// Bug 2 — .github/skills/* and .github/agents/* discovery + routing
+test('findPreexistingUnmanaged — discovers .github/skills and .github/agents files', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/skills/foo/references'), { recursive: true });
+  mkdirSync(join(dir, '.github/agents'), { recursive: true });
+  writeFileSync(join(dir, '.github/skills/foo/SKILL.md'),
+    '---\nname: foo\n---\n# Foo\n');
+  writeFileSync(join(dir, '.github/skills/foo/references/notes.md'), 'notes\n');
+  writeFileSync(join(dir, '.github/agents/bar.agent.md'),
+    '---\nname: bar\n---\n# Bar\n');
+
+  const unmanaged = findPreexistingUnmanaged(dir, new Set());
+  assert.ok(unmanaged.includes('.github/skills/foo/SKILL.md'), 'finds SKILL.md');
+  assert.ok(unmanaged.includes('.github/skills/foo/references/notes.md'), 'finds nested skill file');
+  assert.ok(unmanaged.includes('.github/agents/bar.agent.md'), 'finds agent file');
+});
+
+test('work-units.enumerate — emits github-skill-route grouped by skill name', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/skills/foo/references'), { recursive: true });
+  writeFileSync(join(dir, '.github/skills/foo/SKILL.md'),
+    '---\nname: foo\ndescription: Does things when invoked\n---\n# Foo\n');
+  writeFileSync(join(dir, '.github/skills/foo/references/notes.md'), 'notes\n');
+
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(m, '.github/skills/foo/SKILL.md');
+  addPreexistingUnmanaged(m, '.github/skills/foo/references/notes.md');
+
+  const units = enumerate(m, dir);
+  const unit = units.find(u => u.id === 'github-skill-foo');
+  assert.ok(unit, 'github-skill-foo unit emitted');
+  assert.equal(unit.type, 'github-skill-route');
+  assert.equal(unit.category, 'misc');
+  assert.equal(unit.target, '.claude/skills/misc/foo');
+  assert.equal(unit.hasCollision, false);
+  assert.equal(unit.files.length, 2);
+  assert.ok(unit.files.some(f => f.dst === '.claude/skills/misc/foo/SKILL.md'));
+  assert.ok(unit.files.some(f => f.dst === '.claude/skills/misc/foo/references/notes.md'));
+  assert.equal(unit.deletions.length, 2);
+});
+
+test('work-units.enumerate — emits github-agent-route for each agent file', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/agents'), { recursive: true });
+  writeFileSync(join(dir, '.github/agents/bar.agent.md'),
+    '---\nname: bar\n---\n# Bar\n');
+
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(m, '.github/agents/bar.agent.md');
+
+  const units = enumerate(m, dir);
+  const unit = units.find(u => u.id === 'github-agent-bar');
+  assert.ok(unit, 'github-agent-bar unit emitted');
+  assert.equal(unit.type, 'github-agent-route');
+  assert.equal(unit.target, '.claude/agents/bar.agent.md');
+  assert.equal(unit.hasCollision, false);
+  assert.deepEqual(unit.deletions, ['.github/agents/bar.agent.md']);
+});
+
+test('github-route — stages content for non-collision skill route', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/skills/foo'), { recursive: true });
+  writeFileSync(join(dir, '.github/skills/foo/SKILL.md'),
+    '---\nname: foo\n---\n# Foo\nbody\n');
+
+  const unit = {
+    id: 'github-skill-foo',
+    type: 'github-skill-route',
+    skillName: 'foo',
+    source: '.github/skills/foo',
+    target: '.claude/skills/misc/foo',
+    category: 'misc',
+    files: [{ src: '.github/skills/foo/SKILL.md', dst: '.claude/skills/misc/foo/SKILL.md' }],
+    hasCollision: false,
+    deletions: ['.github/skills/foo/SKILL.md'],
+    manifestDelta: [{ kind: 'resolveUnmanaged', path: '.github/skills/foo/SKILL.md' }],
+  };
+
+  const { stagingFiles, premiseSnapshots } = stageGithubRoute(unit, dir);
+  assert.equal(stagingFiles.length, 1);
+  assert.equal(stagingFiles[0].relPath, '.claude/skills/misc/foo/SKILL.md');
+  assert.ok(stagingFiles[0].content.includes('body'));
+  assert.equal(premiseSnapshots.length, 1);
+});
+
+test('github-route — collision unit produces no staging', () => {
+  const dir = tmp();
+  const unit = {
+    id: 'github-skill-foo',
+    type: 'github-skill-route',
+    hasCollision: true,
+    files: [{ src: '.github/skills/foo/SKILL.md', dst: '.claude/skills/misc/foo/SKILL.md' }],
+  };
+  const { stagingFiles, premiseSnapshots } = stageGithubRoute(unit, dir);
+  assert.equal(stagingFiles.length, 0);
+  assert.equal(premiseSnapshots.length, 0);
+});
+
+test('e2e — github-skill-route + github-agent-route stage + apply', () => {
+  const registry = loadRegistry(getScaffoldRoot(import.meta.url));
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/skills/foo'), { recursive: true });
+  mkdirSync(join(dir, '.github/agents'), { recursive: true });
+  mkdirSync(join(dir, '.claude'), { recursive: true });
+  writeFileSync(join(dir, '.github/skills/foo/SKILL.md'),
+    '---\nname: foo\ndescription: Does X when invoked\n---\n# Foo\n');
+  writeFileSync(join(dir, '.github/agents/bar.agent.md'),
+    '---\nname: bar\ndescription: Does Y when invoked\n---\n# Bar\n');
+
+  const manifest = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(manifest, '.github/skills/foo/SKILL.md');
+  addPreexistingUnmanaged(manifest, '.github/agents/bar.agent.md');
+  writeFileSync(join(dir, '.claude/ai-kit.json'), JSON.stringify(manifest, null, 2));
+
+  const units = enumerate(manifest, dir);
+
+  clearStaging(dir);
+  const stageResults = [];
+  const snapshots = new Map();
+  for (const u of units) {
+    const res = stageGithubRoute(u, dir);
+    stageResults.push({ unit: u, ...res });
+    writeStaging(dir, res.stagingFiles);
+    for (const s of res.premiseSnapshots) snapshots.set(s.file, s);
+  }
+  buildAndWrite(dir, { units, stageResults, premiseSnapshots: [...snapshots.values()] });
+
+  const freshManifest = JSON.parse(readFileSync(join(dir, '.claude/ai-kit.json'), 'utf8'));
+  applyMigration(dir, freshManifest, registry);
+
+  assert.ok(existsSync(join(dir, '.claude/skills/misc/foo/SKILL.md')), 'skill moved');
+  assert.ok(existsSync(join(dir, '.claude/agents/bar.agent.md')), 'agent moved');
+  assert.ok(!existsSync(join(dir, '.github/skills/foo/SKILL.md')), 'github source deleted');
+  assert.ok(!existsSync(join(dir, '.github/agents/bar.agent.md')), 'github agent deleted');
+
+  const final = JSON.parse(readFileSync(join(dir, '.claude/ai-kit.json'), 'utf8'));
+  assert.ok(!final.preexistingUnmanaged.includes('.github/skills/foo/SKILL.md'),
+    'skill removed from preexistingUnmanaged');
+  assert.ok(!final.preexistingUnmanaged.includes('.github/agents/bar.agent.md'),
+    'agent removed from preexistingUnmanaged');
+});
+
+test('work-units.enumerate — flags collision when target already exists, skips deletions', () => {
+  const dir = tmp();
+  mkdirSync(join(dir, '.github/skills/foo'), { recursive: true });
+  mkdirSync(join(dir, '.claude/skills/misc/foo'), { recursive: true });
+  writeFileSync(join(dir, '.github/skills/foo/SKILL.md'),
+    '---\nname: foo\n---\n# Foo new\n');
+  writeFileSync(join(dir, '.claude/skills/misc/foo/SKILL.md'),
+    '---\nname: foo\n---\n# Foo existing\n');
+
+  const m = buildManifest({ sourceRepo: 'r', commit: null, mode: 'brownfield',
+    installedBaseSkills: [], installedBaseAgents: [], installedSkills: [], installedAgents: [] });
+  addPreexistingUnmanaged(m, '.github/skills/foo/SKILL.md');
+
+  const units = enumerate(m, dir);
+  const unit = units.find(u => u.id === 'github-skill-foo');
+  assert.ok(unit);
+  assert.equal(unit.hasCollision, true);
+  assert.equal(unit.deletions.length, 0, 'no deletions on collision');
+  assert.equal(unit.manifestDelta.length, 0, 'no manifest delta on collision');
+  // Source surfaced under leave-as-is for manual resolution
+  const leave = units.find(u => u.type === 'leave-as-is');
+  assert.ok(leave, 'leave-as-is unit emitted');
+  assert.ok(leave.paths.includes('.github/skills/foo/SKILL.md'),
+    'collision source listed under leave-as-is');
 });
 
 // ── brownfield nested scan ────────────────────────────────────────────────────

@@ -92,6 +92,14 @@ cross-tool equivalent is a nested `AGENTS.md`.
 - **Delete the original `.instructions.md`.**
 - This preserves the path scoping while removing the Copilot-only file.
 
+**Unscoped instruction files.** When `applyTo` is missing, empty, or resolves
+only to the repo root (`**`), the file is "unscoped" — cross-cutting content
+with no directory to nest under. Preflight folds these into the **root
+`AGENTS.md`** and tags each source with `unscoped: true` so it shows up as
+`[unscoped]` in the work-unit summary. This keeps the file visible to the user
+rather than silently rolling it into the root fold; they can override the
+routing during plan review if a different target makes more sense.
+
 ### `.github/chatmodes/*`, `.github/prompts/*`, other non-instruction files
 
 These are not instruction files and have no ai-kit conflict.
@@ -100,6 +108,34 @@ These are not instruction files and have no ai-kit conflict.
   still no question.
 - (`.github/prompts/` is a Copilot-only surface ai-kit explicitly
   supports; the consumer's own prompt files are fine where they are.)
+
+### `.github/skills/<name>/`
+
+Custom skills some teams added under `.github/` by analogy with
+`.github/instructions/`, before VS Code Copilot Chat standardized on
+`chat.useAgentSkills` reading from `.claude/`. ai-kit's canonical location is
+`.claude/skills/<category>/<name>/`.
+
+- For each skill directory, copy every file into
+  `.claude/skills/<category>/<name>/`. Default `category` is `misc`. The
+  migrator agent may override `category` per skill by emitting `category:
+  "<name>"` on the corresponding `github-skill-route` work-unit in the
+  routing JSON (e.g. set to `frontend` if the SKILL.md describes UI work).
+- **Delete the originals** under `.github/skills/<name>/`.
+- If `.claude/skills/<category>/<name>/` already exists, mark
+  `hasCollision: true`, skip staging, and surface the source path under
+  the leave-as-is review unit so the user resolves manually.
+
+### `.github/agents/<name>.agent.md`
+
+Custom agents some teams added under `.github/` by analogy with
+`.github/skills/`. ai-kit's canonical location is `.claude/agents/`.
+
+- Move `.github/agents/<name>.agent.md` → `.claude/agents/<name>.agent.md`.
+  No category folder; agents live flat.
+- **Delete the original.**
+- Same collision handling as skills: `hasCollision: true` skips staging and
+  surfaces the path under leave-as-is.
 
 ### Content overlapping an opt-in skill
 
