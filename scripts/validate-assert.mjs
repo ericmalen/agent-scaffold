@@ -30,6 +30,7 @@ const failures = [];
 const results = { fixture: opt.fixture, dir };
 
 const run = (cmd, cmdArgs, cwd = dir) => spawnSync(cmd, cmdArgs, { cwd, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+const git = (...a) => { const r = run('git', a); if (r.status !== 0) throw new Error(r.stderr); return (r.stdout ?? '').trim(); };
 
 // 1. Gates: check + audit exit 0 (skip for pure-greenfield with no .adoption)
 const hasAdoption = existsSync(join(dir, '.adoption'))
