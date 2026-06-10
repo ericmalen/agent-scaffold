@@ -229,7 +229,8 @@ FAIL: worker that spawns its own reviewer which spawns a fixer, no gate anywhere
 default is now true and would inject the literal shim text) ·
 `chat.useCustomizationsInParentRepositories: true` · `chat.useAgentSkills: true` ·
 `chat.useCustomAgentHooks: true` · `chat.subagents.allowInvocationsFromSubagents:
-true` · `chat.tools.terminal.enableAutoApprove: false` (deliberate override of the
+true` (enables the mechanism — R-37 governs whether a given agent DESIGN
+should nest; verifiers must not flag this setting as an R-37 conflict) · `chat.tools.terminal.enableAutoApprove: false` (deliberate override of the
 now-true VS Code default) · empty terminal auto-approve rule map ·
 `explorer.fileNesting.enabled: true` with `"AGENTS.md": "CLAUDE.md"` pattern ·
 plus `chat.useNestedAgentsMdFiles: true` only when the compat option is active

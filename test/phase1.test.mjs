@@ -254,7 +254,7 @@ test('report: risk-ordered, drops carry full text, merge side-by-side, merged-by
     // out-of-scope full matched lines
     assert.ok(md.includes('CONTRIBUTING.md'));
     // merged-bytes % present and nonzero
-    assert.match(md, /merged\/superseded[^|]*\| 1 \((\d+\.\d)% of source bytes\)/);
+    assert.match(md, /merged\/superseded[^|]*\| 1 \((\d+\.\d)% of source bytes rewritten\)/);\n    assert.ok(md.includes('verbatim-via-literal'), 'F-3 split metric present');
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

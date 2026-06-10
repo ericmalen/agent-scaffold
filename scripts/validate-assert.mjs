@@ -32,7 +32,8 @@ const results = { fixture: opt.fixture, dir };
 const run = (cmd, cmdArgs, cwd = dir) => spawnSync(cmd, cmdArgs, { cwd, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
 
 // 1. Gates: check + audit exit 0 (skip for pure-greenfield with no .adoption)
-const hasAdoption = existsSync(join(dir, '.adoption'));
+const hasAdoption = existsSync(join(dir, '.adoption'))
+  && existsSync(join(dir, '.claude/ai-kit-adoption/scripts/check.mjs'));
 if (hasAdoption) {
   const check = run(process.execPath, [join(dir, '.claude/ai-kit-adoption/scripts/check.mjs'), '--root', dir,
     '--templates', join(dir, '.claude/ai-kit-adoption/templates')]);
@@ -50,8 +51,17 @@ if (hasAdoption) {
 
 // 2. Sentinel accounting: each sentinel present in working tree OR covered in
 //    the report's drop / out-of-scope sections. Silent loss = hard failure.
-const reportText = existsSync(join(dir, '.adoption/report.md'))
-  ? readFileSync(join(dir, '.adoption/report.md'), 'utf8') : '';
+// F-2 fix: adopt-verify removes .adoption/ as merge prep — when absent,
+// read the report from git history (last commit that carried it).
+let reportText = '';
+if (existsSync(join(dir, '.adoption/report.md'))) {
+  reportText = readFileSync(join(dir, '.adoption/report.md'), 'utf8');
+} else {
+  try {
+    const lastRev = git('log', '-1', '--format=%H', '--', '.adoption/report.md');
+    if (lastRev) reportText = git('show', `${lastRev}:.adoption/report.md`);
+  } catch {}
+}
 const grep = run('grep', ['-rl', '--exclude-dir=.git', '--exclude-dir=.adoption',
   '--exclude-dir=node_modules', '-e', 'SENTINEL-', '.'], dir);
 const treeHits = grep.stdout ?? '';

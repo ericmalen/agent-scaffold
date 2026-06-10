@@ -42,10 +42,19 @@ export function generateReport({ root }) {
 
   let sourceBytes = 0;
   for (const id of Object.keys(inventory.nodes)) sourceBytes += inventory.nodes[id].bytes ?? 0;
-  let mergedBytes = 0;
-  for (const e of [...groups.merge, ...groups.supersede]) {
-    mergedBytes += nodeMeta(e.node).bytes ?? 0;
+  const norm = (t) => t.replace(/\s+/g, ' ').trim();
+  const isVerbatimLiteral = (e) => {
+    try {
+      const lit = readFileSync(join(adoptionDir, e.literal), 'utf8');
+      return norm(lit) === norm(nodeText(e.node));
+    } catch { return false; }
+  };
+  let mergedBytes = 0, verbatimLitBytes = 0;
+  for (const e of groups.merge) {
+    if (isVerbatimLiteral(e)) verbatimLitBytes += nodeMeta(e.node).bytes ?? 0;
+    else mergedBytes += nodeMeta(e.node).bytes ?? 0;
   }
+  for (const e of groups.supersede) mergedBytes += nodeMeta(e.node).bytes ?? 0;
   let droppedBytes = 0;
   for (const e of groups.drop) droppedBytes += nodeMeta(e.node).bytes ?? 0;
   const pct = (n) => sourceBytes === 0 ? '0.0' : ((n / sourceBytes) * 100).toFixed(1);
@@ -64,7 +73,8 @@ export function generateReport({ root }) {
   L.push(`| moved/split (conserved by construction) | ${groups.move.length} move, ${groups.split.length} split |`);
   L.push(`| kept in place | ${groups.keep.length} files |`);
   L.push(`| **dropped** | ${groups.drop.length} (${pct(droppedBytes)}% of source bytes) |`);
-  L.push(`| **merged/superseded (replaced text — REVIEW)** | ${groups.merge.length + groups.supersede.length} (${pct(mergedBytes)}% of source bytes) |`);
+  L.push(`| **merged/superseded (REWRITTEN text — REVIEW)** | ${groups.merge.length + groups.supersede.length} (${pct(mergedBytes)}% of source bytes rewritten) |`);
+  L.push(`| verbatim-via-literal (cosmetic routing, byte-equivalent) | ${pct(verbatimLitBytes)}% of source bytes |`);
   L.push(`| out-of-scope rulings | ${groups.oos.length} |`);
   L.push(`| installed (kit templates/literals) | ${(manifest.installs ?? []).length} |`);
   L.push('');

@@ -35,6 +35,7 @@ merge: source-only keys preserved, kit template keys win. Bases live in
 { "file": ".claude/skills/ai-kit-check/references/rubric.md", "template": "ai-kit-check/references/rubric.md" }
 { "file": ".claude/ai-kit.json", "literal": "literals/marker.json" }
 { "file": ".claude/agents/README.md", "template": "agents-README.md" }   // whenever anything installs into .claude/agents (R-48)
+{ "file": ".claude/rules/README.md",  "template": "rules-README.md" }    // whenever any rules file is created (R-48)
 ```
 
 Marker literal content:

@@ -22,5 +22,5 @@
 
 <!-- ai-kit:slot:more-context -->
 
-For path-scoped rules see `.claude/rules/`. For on-demand knowledge see
-`.claude/skills/`. For specialized roles see `.claude/agents/`.
+For on-demand knowledge see `.claude/skills/`; for specialized roles see
+`.claude/agents/`; path-scoped rules, when present, live in `.claude/rules/`.

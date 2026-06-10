@@ -59,6 +59,8 @@ Same what+when standard as R-21, for the orchestrator's delegation decision.
 
 ## R-37 · Flat orchestration default
 Nesting only for genuine compositional need; review loops and human gates in the orchestrator.
+Note: judges agent DESIGN only — the `chat.subagents.allowInvocationsFromSubagents`
+setting mandated by R-45 enables the mechanism and is NOT an R-37 finding.
 
 ## Assembled-document coherence (adoption verify only)
 Generated AGENTS.md and reference files must read as coherent documents:
