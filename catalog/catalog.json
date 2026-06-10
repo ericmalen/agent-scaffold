@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "skills": {
+    "skill-creator": {
+      "path": "catalog/skills/skill-creator",
+      "description": "Anthropic's official skill-authoring meta-skill \u2014 create, modify, eval, and benchmark skills; optimize descriptions for triggering accuracy. Replaces ai-kit's former `new-skill`."
+    },
+    "new-agent": {
+      "path": "catalog/skills/new-agent",
+      "description": "Meta-skill: create a new agent conforming to ai-kit conventions (frontmatter, role statement, minimal tools, Never/Procedures sections)."
+    },
+    "git-conventions": {
+      "path": "catalog/skills/git-conventions",
+      "description": "Conventional Commits + team PR/branch conventions."
+    }
+  }
+}
