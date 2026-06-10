@@ -64,14 +64,104 @@ test('defect: dilution of the env-deny rule is caught (R-44)', () => {
   }
 });
 
-// ── check.mjs defects (Phase 1 — MUST be implemented before Phase 1 exits) ──
+// ── check.mjs defects (Phase 1 gates — the gates must FAIL these) ───────────
 
-test.todo('defect: manifest omits a node → check completeness exits non-zero');
-test.todo('defect: split ranges leave a gap → check tiling exits non-zero');
-test.todo('defect: hand-edited generated file → check reproducibility exits non-zero');
-test.todo('defect: manifest references a literal file that does not exist → check fails');
-test.todo('defect: ledger/commit cross-reference mismatch → check fails');
-test.todo('property: extract → all-keep-file manifest → materialize is byte-identical (Phase 1 exit criterion)');
+import { writeFileSync as wf, mkdtempSync as mkdtemp, readFileSync } from 'node:fs';
+import { runInventory as runInv } from '../scripts/inventory-extract.mjs';
+import { materialize } from '../scripts/materialize.mjs';
+import { check } from '../scripts/check.mjs';
+
+const EMPTY_TPL = mkdtemp(join(tmpdir(), 'aikit-sd-tpl-'));
+
+function adoptionSetup(fixture = 'claude-only') {
+  const repo = buildFixture(fixture);
+  const inv = runInv({ root: repo, outDir: '.adoption', allowDirty: false });
+  const entries = [];
+  for (const f of inv.files) for (const id of f.nodes) entries.push({ node: id, op: 'move', target: f.path });
+  for (const c of inv.sweepCandidates) entries.push({ file: c.file, op: 'out-of-scope', reason: 'test' });
+  return { repo, inv, entries };
+}
+
+function saveManifest(repo, entries, extra = {}) {
+  wf(join(repo, '.adoption', 'manifest.json'),
+    JSON.stringify({ schemaVersion: 1, entries, jsonMerges: [], ...extra }, null, 2));
+}
+
+const gates = (r) => [...new Set(check({ root: r, templatesDir: EMPTY_TPL }).violations.map((v) => v.gate))];
+
+test('defect: manifest omits a node → completeness fails', () => {
+  const { repo, entries } = adoptionSetup();
+  try {
+    saveManifest(repo, entries.slice(1)); // drop first disposition
+    assert.ok(gates(repo).includes('completeness'));
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('defect: duplicate disposition for one node → completeness fails', () => {
+  const { repo, entries } = adoptionSetup();
+  try {
+    saveManifest(repo, [...entries, entries[0]]);
+    assert.ok(gates(repo).includes('completeness'));
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('defect: sweep candidate without disposition → completeness fails', () => {
+  const { repo, entries } = adoptionSetup('mixed-messy'); // fixture WITH sweep candidates
+  try {
+    saveManifest(repo, entries.filter((e) => e.op !== 'out-of-scope'));
+    assert.ok(gates(repo).includes('completeness'));
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('defect: split ranges leave a gap → tiling fails', () => {
+  const { repo, inv, entries } = adoptionSetup();
+  try {
+    const f = inv.files.find((x) => x.path === 'CLAUDE.md');
+    const id = f.nodes[f.nodes.length - 1];
+    const filtered = entries.filter((e) => e.node !== id);
+    filtered.push({ node: id, op: 'split', ranges: [{ lines: [1, 1], target: 'docs/ai/x.md' }] }); // gap after line 1
+    saveManifest(repo, filtered);
+    assert.ok(gates(repo).includes('tiling'));
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('defect: hand-edited generated file → reproducibility fails', () => {
+  const { repo, entries } = adoptionSetup();
+  try {
+    saveManifest(repo, entries);
+    materialize({ root: repo, templatesDir: EMPTY_TPL });
+    assert.deepEqual(gates(repo), []); // clean before sabotage
+    const target = join(repo, 'CLAUDE.md');
+    wf(target, readFileSync(target, 'utf8').replace('SENTINEL-001-amber-falcon', 'SENTINEL-001-amber-falcon (weakened)'));
+    assert.ok(gates(repo).includes('reproducibility'), 'editing generated output around the system must be caught');
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('defect: merge references a missing literal → check fails', () => {
+  const { repo, inv, entries } = adoptionSetup();
+  try {
+    const f = inv.files.find((x) => x.path === 'CLAUDE.md');
+    const id = f.nodes[0];
+    const filtered = entries.filter((e) => e.node !== id);
+    filtered.push({ node: id, op: 'merge', literal: 'literals/ghost.md', target: 'docs/ai/x.md' });
+    saveManifest(repo, filtered);
+    assert.ok(gates(repo).includes('scope'));
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+test('defect: target outside AI-config surfaces → scope fails', () => {
+  const { repo, inv, entries } = adoptionSetup();
+  try {
+    const f = inv.files.find((x) => x.path === 'CLAUDE.md');
+    const id = f.nodes[0];
+    const filtered = entries.filter((e) => e.node !== id);
+    filtered.push({ node: id, op: 'move', target: 'src/index.js' });
+    saveManifest(repo, filtered);
+    assert.ok(gates(repo).includes('scope'));
+  } finally { rmSync(repo, { recursive: true, force: true }); }
+});
+
+// Round-trip property tests (the Phase 1 exit criterion) live in phase1.test.mjs.
 
 // ── verifier defects (Phase 3 — manual matrix, recorded per tool) ───────────
 // Sabotage runs: seed N known defects (unjustified drops, dilution rewrites in

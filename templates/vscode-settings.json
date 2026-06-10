@@ -1,0 +1,11 @@
+{
+  "chat.useAgentsMdFile": true,
+  "chat.useClaudeMdFile": false,
+  "chat.useCustomizationsInParentRepositories": true,
+  "chat.useAgentSkills": true,
+  "chat.useCustomAgentHooks": true,
+  "chat.subagents.allowInvocationsFromSubagents": true,
+  "chat.tools.terminal.enableAutoApprove": false,
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": { "AGENTS.md": "CLAUDE.md" }
+}
