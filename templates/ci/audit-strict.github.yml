@@ -1,0 +1,32 @@
+# audit-strict — adopted repos must stay conformant to the ai-kit target state.
+# Installed by adoption for repos with GitHub CI (alongside docs-impact).
+# Runs the kit's audit against this repo with --strict (every finding fails).
+#
+# The audit engine is NOT vendored into adopted repos (adopt-verify removes the
+# adoption tooling before merge), so CI shallow-clones the kit. The clone URL is
+# read from .claude/ai-kit.json (field "kitRepo"). For a PRIVATE kit repo, give
+# the job read access (e.g. a PAT in secrets.KIT_TOKEN; see the commented line).
+name: audit-strict
+on:
+  pull_request:
+    branches: ['**']
+  push:
+    branches: ['**']
+permissions:
+  contents: read
+jobs:
+  audit-strict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Clone ai-kit and audit (--strict)
+        run: |
+          set -euo pipefail
+          KIT_URL="$(node -e "process.stdout.write(require('./.claude/ai-kit.json').kitRepo)")"
+          # Private kit? prepend credentials, e.g.:
+          # KIT_URL="$(echo "$KIT_URL" | sed "s#https://#https://x-token:${{ secrets.KIT_TOKEN }}@#")"
+          git clone --depth 1 "$KIT_URL" "${RUNNER_TEMP}/ai-kit"
+          node "${RUNNER_TEMP}/ai-kit/scripts/audit.mjs" --root . --strict

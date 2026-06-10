@@ -1,6 +1,6 @@
 {
   "name": "ai-kit",
-  "version": "2.0.0-dev",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "test": "node --test 'test/**/*.test.mjs'",
-    "docs-consistency": "node scripts/docs-consistency.mjs"
+    "docs-consistency": "node scripts/docs-consistency.mjs",
+    "rule-check-map": "node scripts/rule-check-map.mjs"
   }
 }

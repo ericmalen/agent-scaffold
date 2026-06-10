@@ -6,9 +6,9 @@
 import { resolve, dirname, join } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { instantiate as instantiateTemplate } from './lib/template.mjs';
 
 const kitRoot = resolve(dirname(new URL(import.meta.url).pathname), '..');
-const SLOT_RE = /^[ \t]*<!--\s*ai-kit:slot:([a-z0-9-]+)\s*-->[ \t]*\r?\n?/gm;
 
 const [dir, ...flags] = process.argv.slice(2);
 if (!dir) {
@@ -22,7 +22,9 @@ if (existsSync(target) && readdirSync(target).length > 0) {
 }
 
 const tpl = (rel) => readFileSync(join(kitRoot, 'templates', rel), 'utf8');
-const instantiate = (rel) => tpl(rel).replace(SLOT_RE, '');
+// greenfield: no slot is filled → optional sections drop out, mandatory slots
+// instantiate empty (shared with materialize so the two stay byte-identical).
+const instantiate = (rel) => instantiateTemplate(tpl(rel));
 // ai-kit-check is a permanent baseline skill — its source of truth is .claude/skills/,
 // not templates/ (it ships verbatim, like docs/git-conventions).
 const skill = (rel) => readFileSync(join(kitRoot, '.claude/skills', rel), 'utf8');
@@ -39,6 +41,8 @@ const files = {
   '.claude/skills/README.md': tpl('skills-README.md'),
   '.claude/skills/ai-kit-check/SKILL.md': skill('ai-kit-check/SKILL.md'),
   '.claude/skills/ai-kit-check/references/rubric.md': skill('ai-kit-check/references/rubric.md'),
+  '.claude/skills/ai-kit-check/references/audit-hook.md': skill('ai-kit-check/references/audit-hook.md'),
+  '.claude/skills/ai-kit-check/scripts/audit-nudge.mjs': skill('ai-kit-check/scripts/audit-nudge.mjs'),
   '.claude/ai-kit.json': JSON.stringify({
     kit: kitSha,
     kitRepo: 'https://dev.azure.com/ericmalen/ai-kit/_git/ai-kit',

@@ -3,10 +3,12 @@
 <!-- ai-kit:slot:intro -->
 
 ## Overview
+<!-- ai-kit:optional -->
 
 <!-- ai-kit:slot:overview -->
 
 ## Architecture
+<!-- ai-kit:optional -->
 
 <!-- ai-kit:slot:architecture -->
 
@@ -19,6 +21,7 @@
 <!-- ai-kit:slot:do-not -->
 
 ## More Context
+<!-- ai-kit:optional -->
 
 <!-- ai-kit:slot:more-context -->
 

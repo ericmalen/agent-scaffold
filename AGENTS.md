@@ -17,8 +17,6 @@ unit-tested, shell-agnostic.
   restate a rule; reference its ID.
 - [`spec/target-layout.md`](./spec/target-layout.md) — what an adopted repo
   looks like.
-- [`docs/dev/V2-PLAN.md`](./docs/dev/V2-PLAN.md) — implementation plan
-  (extract → route → materialize).
 
 ## Repo zones
 
@@ -27,7 +25,7 @@ unit-tested, shell-agnostic.
 | `templates/` | Wiring skeletons materialized into every adopted repo (AGENTS.md/CLAUDE.md/settings skeletons + slot bases). |
 | `scripts/` + `test/` | The engine. Dual-role: dev tooling here AND copied into targets as `.claude/ai-kit-adoption/scripts/`. |
 | `.claude/` | This repo's live config AND the baseline shipped to every target. The `adopt-*` skills, `adoption-verifier` agent, and the baseline `ai-kit-check`, `docs`, `git-conventions`, `skill-creator`, `agent-creator` skills + `docs-auditor` agent are dual-role: loaded here AND installed path-for-path into targets (see `scripts/install-adoption.mjs`, the allowlist that decides what ships). `ai-kit-adopt` is the adoption entry point — run from this clone against a target path; deliberately NOT installed into targets. |
-| `docs/` | Consumer-facing guides; `docs/dev/` is kit-process material. |
+| `docs/` | Consumer-facing guides. |
 | `reports/` | Generated outputs (validation/audit reports). Gitignored. |
 
 ## Conventions

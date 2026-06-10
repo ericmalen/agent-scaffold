@@ -54,7 +54,7 @@ misparsed `copilot-only` and defaulted to mixed-messy — never repeat that.)
    per-fixture table (phases completed, gate loops, assert verdict, sentinel
    accounting, merged-bytes %), sabotage catch-rate, ALL escalations gathered
    for the human, environment (tool, model, kit SHA), and a plain-language
-   verdict against the pivot triggers (V2-PLAN §12). Honest caveat in the
+   verdict against the pivot triggers. Honest caveat in the
    header: this validates the Claude Code column; Copilot runs are manual.
 5. TEARDOWN: after the report is written to the kit's reports/ —
    - PASSING fixture dirs: `rm -rf` them.

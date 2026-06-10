@@ -43,7 +43,7 @@ Use strict mode everywhere.
 `,
   'CLAUDE.md': '@AGENTS.md\n',
   '.gitignore': '.claude/settings.local.json\n',
-  '.claude/ai-kit.json': '{ "kit": "2.0.0", "adoptedAt": "2026-06-10", "githubCodeReview": false }\n',
+  '.claude/ai-kit.json': '{ "kit": "1.0.0", "adoptedAt": "2026-06-10", "githubCodeReview": false }\n',
   '.claude/settings.json': `{
   "permissions": {
     "deny": ["Read(./.env)", "Read(./.env.*)"]
@@ -153,7 +153,7 @@ test('violations repo: expected rules fire', () => {
 test('R-09: codeReview=true requires copilot-instructions.md (short, pointing at AGENTS.md)', () => {
   const repo = makeRepo({
     ...CONFORMANT,
-    '.claude/ai-kit.json': '{ "kit": "2.0.0", "githubCodeReview": true }\n',
+    '.claude/ai-kit.json': '{ "kit": "1.0.0", "githubCodeReview": true }\n',
   });
   try {
     let report = audit({ root: repo });

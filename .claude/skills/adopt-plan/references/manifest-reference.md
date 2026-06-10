@@ -39,6 +39,18 @@ merge: source-only keys preserved, kit template keys win. Bases live in
 Note: `ai-kit-check` is NOT a manifest install — it is a permanent baseline
 skill copied verbatim by `install-adoption.mjs` (like `docs`/`git-conventions`).
 
+## CI gate templates (optional file copies, not manifest installs)
+
+When the target repo has CI, offer the drift gate alongside the docs-impact
+gate — copy the matching kit template, do not route it through the manifest:
+
+- `templates/ci/audit-strict.github.yml` → `.github/workflows/` (or
+  `audit-strict.ado.yml` for Azure DevOps) — runs `audit.mjs --root . --strict`
+  by shallow-cloning the kit at `kitRepo` (from the marker). Keeps an adopted
+  repo from drifting off the target state (R-IDs) after merge.
+- `templates/ci/docs-impact.{github,ado}.yml` — the docs-impact gate
+  (offered by the `docs` skill).
+
 Marker literal content:
 `{ "kit": "<version>", "kitRepo": "<ado clone url>", "adoptedAt": "<date>", "githubCodeReview": <bool> }`
 

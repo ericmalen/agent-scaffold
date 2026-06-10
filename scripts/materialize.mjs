@@ -23,9 +23,9 @@ import { join, resolve, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { loadManifest, loadInventory, validateShape, keepFiles } from './lib/manifest.mjs';
 import { stripJsonComments, splitLinesKeepEnds } from './lib/extract.mjs';
+import { SLOT_RE, OPTIONAL_RE, stripEmptyOptionalSections } from './lib/template.mjs';
 
 const sha = (t) => createHash('sha256').update(t).digest('hex');
-const SLOT_RE = /^[ \t]*<!--\s*ai-kit:slot:([a-z0-9-]+)\s*-->[ \t]*\r?\n?/gm;
 
 function fail(msg) {
   console.error(`materialize: ${msg}`);
@@ -134,11 +134,15 @@ export function materialize({ root, templatesDir, outRoot = null }) {
         }
         slotContent.set(slot, append(slotContent.get(slot) ?? '', c.text));
       }
+      // Drop optional sections whose slots got no content (R-08: no empty
+      // skeleton headings), then fill remaining slots. A filled slot is never
+      // in a dropped section, so the not-present check below still holds.
+      const pruned = stripEmptyOptionalSections(template, new Set(slotContent.keys()));
       const seen = new Set();
-      output = template.replace(SLOT_RE, (m, name) => {
+      output = pruned.replace(SLOT_RE, (m, name) => {
         seen.add(name);
         return slotContent.has(name) ? slotContent.get(name) : '';
-      });
+      }).replace(OPTIONAL_RE, '');
       for (const slot of slotContent.keys()) {
         if (!seen.has(slot)) throw new Error(`target ${target}: slot "${slot}" not present in template`);
       }
@@ -158,7 +162,10 @@ export function materialize({ root, templatesDir, outRoot = null }) {
     if (ins.template) {
       const p = join(templatesDir, ins.template);
       if (!existsSync(p)) throw new Error(`install template missing: ${ins.template}`);
-      text = readFileSync(p, 'utf8').replace(SLOT_RE, ''); // empty-slot instantiation
+      // greenfield: nothing fills slots → drop optional sections, then empty-
+      // slot instantiation (no skeleton headings, no leftover markers).
+      text = stripEmptyOptionalSections(readFileSync(p, 'utf8'), new Set())
+        .replace(SLOT_RE, '').replace(OPTIONAL_RE, '');
     } else {
       const p = join(adoptionDir, ins.literal);
       if (!existsSync(p)) throw new Error(`install literal missing: ${ins.literal}`);

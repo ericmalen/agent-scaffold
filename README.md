@@ -63,7 +63,7 @@ scripts/ test/   the engine (zero-dep Node ≥ 20) — also copied into targets
                  installed into targets — see scripts/install-adoption.mjs).
                  ai-kit-adopt is the adoption entry point: run from this
                  clone, never shipped
-docs/            consumer-facing guides; docs/dev/ = kit-process material
+docs/            consumer-facing guides
 reports/         generated outputs (gitignored)
 ADOPT.md         adoption instructions read by the ai-kit-adopt skill and
                  the one-prompt flow (path is load-bearing: <kit>/ADOPT.md)

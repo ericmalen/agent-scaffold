@@ -29,6 +29,13 @@ skill stays thin so checks never drift from the kit):
 - Re-run the audit after edits; repeat until clean. Show the user a summary of
   what changed and why (rule IDs included).
 
+## Optional Stop-hook
+
+For an in-session drift nudge, wire up [the audit hook](references/audit-hook.md)
+(opt-in; never blocks). It runs this same audit when a session ends and prints
+one line if the AI-config has drifted. CI's `audit-strict` gate stays the hard
+check.
+
 ## Judgment rules
 
 Mechanical findings are only half the conventions. For the judgment-level

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// docs-consistency.mjs — guards kit docs against vocabulary drift (V2-PLAN 4.5).
+// docs-consistency.mjs — guards kit docs against vocabulary drift.
 //
 // Two checks, zero dependencies:
 //   1. Banned terms: v1 CLI / dropped-surface vocabulary must not reappear in

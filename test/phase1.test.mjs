@@ -26,7 +26,7 @@ function setup(fixture) {
 
 function writeManifest(repo, manifest) {
   writeFileSync(join(repo, '.adoption', 'manifest.json'),
-    JSON.stringify({ schemaVersion: 1, kitVersion: '2.0.0-dev', jsonMerges: [], ...manifest }, null, 2));
+    JSON.stringify({ schemaVersion: 1, kitVersion: '1.0.0', jsonMerges: [], ...manifest }, null, 2));
 }
 
 // Identity manifest: every node moves back to its own source file, in order;
@@ -189,7 +189,7 @@ test('greenfield end-to-end: installs + jsonMerges ⇒ gates pass AND audit clea
   try {
     mkdirSync(join(repo, '.adoption', 'literals'), { recursive: true });
     writeFileSync(join(repo, '.adoption', 'literals', 'marker.json'),
-      '{ "kit": "2.0.0-dev", "adoptedAt": "2026-06-10", "githubCodeReview": false }\n');
+      '{ "kit": "1.0.0", "adoptedAt": "2026-06-10", "githubCodeReview": false }\n');
     writeManifest(repo, {
       entries: [],
       installs: [
