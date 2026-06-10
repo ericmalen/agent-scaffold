@@ -256,15 +256,27 @@ target ref with generated side-by-sides; extraction-first; risk-ordered report;
 micro-commit per ledger entry; seeded-defect tests targeting the matcher. The
 pivot costs one component, not the project.
 
-## 13. Open questions — resolve in Phase 0 (verify, don't assume)
+## 13. Open questions — resolution status (see docs/phase0-notes.md)
 
-1. Does the Claude-format `tools:` list actually restrict in current VS Code?
-   (Backstop stands regardless.)
-2. Current Copilot agent-mode iteration caps / continuation / terminal
-   auto-approval — capture in setup docs.
-3. `git diff --color-moved=zebra --find-copies-harder` behavior at fixture sizes.
-4. Node availability on the team's managed machines.
-5. Content-sweep marker list — tune against fixtures, recall first.
+1. VS Code `tools:` restriction mapping → Phase 3 runbook (backstop mandatory regardless).
+2. Copilot iteration caps / auto-approval → Phase 3 runbook + Phase 2 setup docs.
+3. `--color-moved` reviewer aid → verified on small diffs; re-verify on `large` in Phase 3.
+4. Node ≥ 20 on team machines → owner to confirm before rollout.
+5. Sweep marker list → tuned v1, all fixture plants caught; revisit after Phase 3.
+
+## 13b. Phase-boundary decisions (post-Phase-0, owner-approved)
+
+- **Assembly semantics:** template skeleton + manifest order. Structured targets
+  (AGENTS.md) get their heading skeleton from kit templates; manifest entries
+  attach nodes under a named heading, ordered by manifest sequence. Free-form
+  targets (reference files) are pure manifest-order concatenation.
+- **Hosting:** Azure DevOps is primary — catalog fetch URL, colleague-facing
+  setup docs, and kit CI target ADO; GitHub demoted to mirror/dev. (Standing
+  security note: revoke the PAT embedded in the current ado remote URL.)
+- **Catalog:** trimmed to essentials only; all other community skills deleted
+  in Phase 4 (proposed keep-list to be confirmed at that point).
+- **Phase 3 execution:** owner runs the full 8-fixture × 2-tool matrix from a
+  provided runbook + fixture builder.
 
 ## 14. Working agreements
 
