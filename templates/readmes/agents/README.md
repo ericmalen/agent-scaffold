@@ -8,3 +8,6 @@ statement opening the body; `description` saying what the agent does and when
 to delegate; an explicit `tools:` list (omitting it grants ALL tools); `##
 Procedures` and `## Never` sections; `## Documents` listing plain
 repo-root-relative paths (no Markdown links — agents lazy-load these).
+
+To author a new agent, run the `agent-creator` skill. Run the `ai-kit-check`
+skill to audit this folder against the full rule set.

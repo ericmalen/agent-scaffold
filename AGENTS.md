@@ -22,7 +22,7 @@ unit-tested, shell-agnostic.
 
 | Zone | Role |
 |---|---|
-| `templates/` | Wiring skeletons materialized into every adopted repo (AGENTS.md/CLAUDE.md/settings skeletons + slot bases). |
+| `templates/` | Payload materialized into every adopted repo: `instructions/` (AGENTS.md/CLAUDE.md skeletons + slot bases), `settings/`, `readmes/`, `ci/`, `gitignore`. |
 | `scripts/` + `test/` | The engine. Dual-role: dev tooling here AND copied into targets as `.claude/ai-kit-adoption/scripts/`. |
 | `.claude/` | This repo's live config AND the baseline shipped to every target. The `adopt-*` skills, `adoption-verifier` agent, and the baseline `ai-kit-check`, `docs`, `git-conventions`, `skill-creator`, `agent-creator` skills + `docs-auditor` agent are dual-role: loaded here AND installed path-for-path into targets (see `scripts/install-adoption.mjs`, the allowlist that decides what ships). `ai-kit-adopt` is the adoption entry point — run from this clone against a target path; deliberately NOT installed into targets. |
 | `docs/` | Consumer-facing guides. |
@@ -36,14 +36,30 @@ unit-tested, shell-agnostic.
   `.claude/ai-kit.json`).
 - Generated reports go to `reports/`, never committed.
 
+## Documentation
+
+Conventions: `.claude/skills/docs/SKILL.md` (standard, Diátaxis types, rules).
+Tier T3 (`.claude/docs-paths.json`). Docs live in `docs/` (consumer-facing
+how-to/reference/explanation), `spec/` (source-of-truth rules + target layout),
+`README.md` (entry point), and `AGENTS.md`/`CLAUDE.md` (agent
+instructions). Behavior-changing edits to `scripts/`, `templates/`, or `test/`
+update the affected docs in the same change. Verify doc claims against code;
+fix or flag stale content, never preserve it silently. No CHANGELOG.md or
+`docs/decisions/` — decisions live in commits/PRs, consumer changes in release
+notes.
+
 ## Do Not
 
 - Do not add payload to `.claude/` unless it is also wanted while developing
   the kit — everything there auto-loads here (v1's mistake; see dropped rules
   in spec). The installer allowlist (`scripts/install-adoption.mjs`) decides
   what ships to targets; `ai-kit-adopt` stays kit-only.
-- Do not move `ADOPT.md` or rename `scripts/`, `templates/` — paths are
-  load-bearing (`ai-kit-adopt` skill, `materialize.mjs`, `install-adoption.mjs`).
+- Do not move `.claude/skills/ai-kit-adopt/` or rename `scripts/`,
+  `templates/` — paths are load-bearing (one-prompt flow in
+  `docs/adoption-guide.md`, `materialize.mjs`, `install-adoption.mjs`).
+  Within `templates/`: `instructions/` is resolved by target path during
+  slot assembly (`materialize.mjs`), and `gitignore` is dotless so it is
+  never live — neither here nor when copied into targets.
 - Do not edit installed-asset copies in a target repo by hand during adoption —
   manifest + literals only (reproducibility gate).
 - No secrets in code; no new dependencies without discussion.

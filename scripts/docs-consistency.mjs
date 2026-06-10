@@ -37,7 +37,7 @@ export const ALLOW = new Set([
 ]);
 
 const SCAN_DIRS = ["docs", "templates", ".claude"];
-const SCAN_FILES = ["README.md", "AGENTS.md", "ADOPT.md", "CLAUDE.md"];
+const SCAN_FILES = ["README.md", "AGENTS.md", "CLAUDE.md"];
 const LINK_EXTRA_DIRS = ["spec"]; // link-checked but exempt from banned terms
 
 function isVendored(dir) {

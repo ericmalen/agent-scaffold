@@ -21,7 +21,7 @@ and Copilot read.
    3. **Does it need to execute terminal commands?**
    4. **What docs should it consult?**
 2. Determine the `tools` list by starting from the tiers in
-   [`conventions.md`](../../../docs/conventions.md#minimal-tool-lists) —
+   [tool-tiers](./references/tool-tiers.md) —
    read-only, editor, executor, orchestrator — and grant the minimum set. Do
    not add tools "just in case." Use **Claude tool names** (`Read, Grep, Glob,
    Bash, Edit, Write`) as a comma-separated list; Copilot maps them to its own
@@ -66,5 +66,4 @@ chaining it under another specialist.
 ## References
 
 - [Custom agents in ai-kit](../../agents/README.md)
-- [Cross-tool setup](../../../docs/cross-tool-setup.md)
-- [Tool tiers in conventions](../../../docs/conventions.md#minimal-tool-lists)
+- [Tool tiers](./references/tool-tiers.md)

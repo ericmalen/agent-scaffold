@@ -53,8 +53,9 @@ against the conventions and fix findings by rule ID.
 
 ```
 spec/            the standard: rules.md (R-IDs, source of truth) + target-layout.md
-templates/       wiring skeletons materialized into every adopted repo
-                 (AGENTS.md/CLAUDE.md/settings skeletons + slot bases)
+templates/       payload materialized into every adopted repo: instructions/
+                 (AGENTS.md/CLAUDE.md skeletons + slot bases), settings/,
+                 readmes/ (R-48 stubs), ci/, gitignore
 scripts/ test/   the engine (zero-dep Node ≥ 20) — also copied into targets
                  during adoption as .claude/ai-kit-adoption/
 .claude/         this repo's own live config; the adopt-* skills, baseline
@@ -62,11 +63,11 @@ scripts/ test/   the engine (zero-dep Node ≥ 20) — also copied into targets
                  agent-creator) and agents are dual-role (used here AND
                  installed into targets — see scripts/install-adoption.mjs).
                  ai-kit-adopt is the adoption entry point: run from this
-                 clone, never shipped
+                 clone (or followed directly by the one-prompt flow), never
+                 shipped (path is load-bearing:
+                 <kit>/.claude/skills/ai-kit-adopt/SKILL.md)
 docs/            consumer-facing guides
 reports/         generated outputs (gitignored)
-ADOPT.md         adoption instructions read by the ai-kit-adopt skill and
-                 the one-prompt flow (path is load-bearing: <kit>/ADOPT.md)
 ```
 
 Why `templates/` is *not* under `.claude/`: anything in `.claude/` auto-loads

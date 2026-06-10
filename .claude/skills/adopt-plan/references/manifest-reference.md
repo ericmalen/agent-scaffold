@@ -16,7 +16,7 @@ Schema v1. Top level: `{ schemaVersion: 1, kitVersion, entries: [], jsonMerges: 
 
 ## jsonMerges
 
-`{ file: ".vscode/settings.json", base: "vscode-settings.json" }` — key-level
+`{ file: ".vscode/settings.json", base: "settings/vscode/settings.json" }` — key-level
 merge: source-only keys preserved, kit template keys win. Bases live in
 `.claude/ai-kit-adoption/templates/`.
 
@@ -26,14 +26,14 @@ merge: source-only keys preserved, kit template keys win. Bases live in
 `{ file, literal }` (from `.adoption/literals/`). Standard set:
 
 ```json
-{ "file": "AGENTS.md",  "template": "AGENTS.md" }            // greenfield only — brownfield assembles via slots
-{ "file": "CLAUDE.md",  "template": "CLAUDE.md" }
+{ "file": "AGENTS.md",  "template": "instructions/AGENTS.md" }            // greenfield only — brownfield assembles via slots
+{ "file": "CLAUDE.md",  "template": "instructions/CLAUDE.md" }
 { "file": ".gitignore", "template": "gitignore" }            // greenfield only — brownfield: keep-file or merge
-{ "file": ".claude/settings.json", "template": "claude-settings.json" }   // or jsonMerges when one exists
-{ "file": ".claude/skills/README.md", "template": "skills-README.md" }
+{ "file": ".claude/settings.json", "template": "settings/claude/settings.json" }   // or jsonMerges when one exists
+{ "file": ".claude/skills/README.md", "template": "readmes/skills/README.md" }
 { "file": ".claude/ai-kit.json", "literal": "literals/marker.json" }
-{ "file": ".claude/agents/README.md", "template": "agents-README.md" }   // whenever anything installs into .claude/agents (R-48)
-{ "file": ".claude/rules/README.md",  "template": "rules-README.md" }    // whenever any rules file is created (R-48)
+{ "file": ".claude/agents/README.md", "template": "readmes/agents/README.md" }   // whenever anything installs into .claude/agents (R-48)
+{ "file": ".claude/rules/README.md",  "template": "readmes/rules/README.md" }    // whenever any rules file is created (R-48)
 ```
 
 Note: `ai-kit-check` is NOT a manifest install — it is a permanent baseline
@@ -45,11 +45,13 @@ When the target repo has CI, offer the drift gate alongside the docs-impact
 gate — copy the matching kit template, do not route it through the manifest:
 
 - `templates/ci/audit-strict.github.yml` → `.github/workflows/` (or
-  `audit-strict.ado.yml` for Azure DevOps) — runs `audit.mjs --root . --strict`
-  by shallow-cloning the kit at `kitRepo` (from the marker). Keeps an adopted
-  repo from drifting off the target state (R-IDs) after merge.
+  `audit-strict.ado.yml` → `.azuredevops/` for Azure DevOps) — runs
+  `audit.mjs --root . --strict` by shallow-cloning the kit at `kitRepo` (from
+  the marker). Keeps an adopted repo from drifting off the target state
+  (R-IDs) after merge.
 - `templates/ci/docs-impact.{github,ado}.yml` — the docs-impact gate
-  (offered by the `docs` skill).
+  (offered by the `docs` skill); GitHub → `.github/workflows/`, ADO →
+  `.azuredevops/`.
 
 Marker literal content:
 `{ "kit": "<version>", "kitRepo": "<ado clone url>", "adoptedAt": "<date>", "githubCodeReview": <bool> }`

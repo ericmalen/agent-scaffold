@@ -122,7 +122,8 @@ export function materialize({ root, templatesDir, outRoot = null }) {
   };
 
   for (const [target, targetChunks] of byTarget) {
-    const templatePath = join(templatesDir, target);
+    // structured instruction skeletons live under templates/instructions/<target-path>
+    const templatePath = join(templatesDir, 'instructions', target);
     let output;
     if (existsSync(templatePath)) {
       const template = readFileSync(templatePath, 'utf8');

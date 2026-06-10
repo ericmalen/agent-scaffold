@@ -23,7 +23,7 @@ the target state. Fill in AGENTS.md and you're done. No AI session required.
 Open Claude Code or Copilot (agent mode) in your repo and paste ONE prompt:
 
 > Clone https://dev.azure.com/&lt;org&gt;/ai-kit/_git/ai-kit into a temp folder
-> and follow its ADOPT.md to set up this repository.
+> and follow its .claude/skills/ai-kit-adopt/SKILL.md to set up this repository.
 
 That's the whole setup. The AI installs the tooling, commits it, and starts
 the four-phase flow below. Everything except the permanent `ai-kit-check`

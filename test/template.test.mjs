@@ -52,7 +52,7 @@ test('no optional markers → text is returned unchanged', () => {
 });
 
 test('greenfield AGENTS template drops Overview/Architecture/More Context, keeps Do Not', () => {
-  const tpl = readFileSync(join(KIT_ROOT, 'templates', 'AGENTS.md'), 'utf8');
+  const tpl = readFileSync(join(KIT_ROOT, 'templates', 'instructions', 'AGENTS.md'), 'utf8');
   const out = instantiate(tpl); // greenfield: nothing filled
   for (const gone of ['## Overview', '## Architecture', '## More Context']) {
     assert.ok(!out.includes(gone), `${gone} should be removed in greenfield`);

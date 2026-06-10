@@ -102,7 +102,7 @@ test('slot assembly: nodes land under template headings, markers vanish, source 
     for (const c of inv.sweepCandidates) entries.push({ file: c.file, op: 'out-of-scope', reason: 'test' });
     writeManifest(repo, {
       entries,
-      jsonMerges: [{ file: '.vscode/settings.json', base: 'vscode-settings.json' }],
+      jsonMerges: [{ file: '.vscode/settings.json', base: 'settings/vscode/settings.json' }],
     });
 
     materialize({ root: repo, templatesDir: KIT_TEMPLATES });
@@ -140,7 +140,7 @@ test('json key-merge preserves source-only keys, kit keys win', () => {
     for (const c of inv.sweepCandidates) entries.push({ file: c.file, op: 'out-of-scope', reason: 'test' });
     writeManifest(repo, {
       entries,
-      jsonMerges: [{ file: '.vscode/settings.json', base: 'vscode-settings.json' }],
+      jsonMerges: [{ file: '.vscode/settings.json', base: 'settings/vscode/settings.json' }],
     });
     materialize({ root: repo, templatesDir: KIT_TEMPLATES });
     const vs = JSON.parse(readFileSync(join(repo, '.vscode/settings.json'), 'utf8'));
@@ -193,14 +193,14 @@ test('greenfield end-to-end: installs + jsonMerges ⇒ gates pass AND audit clea
     writeManifest(repo, {
       entries: [],
       installs: [
-        { file: 'AGENTS.md', template: 'AGENTS.md' },
-        { file: 'CLAUDE.md', template: 'CLAUDE.md' },
+        { file: 'AGENTS.md', template: 'instructions/AGENTS.md' },
+        { file: 'CLAUDE.md', template: 'instructions/CLAUDE.md' },
         { file: '.gitignore', template: 'gitignore' },
-        { file: '.claude/settings.json', template: 'claude-settings.json' },
-        { file: '.claude/skills/README.md', template: 'skills-README.md' },
+        { file: '.claude/settings.json', template: 'settings/claude/settings.json' },
+        { file: '.claude/skills/README.md', template: 'readmes/skills/README.md' },
         { file: '.claude/ai-kit.json', literal: 'literals/marker.json' },
       ],
-      jsonMerges: [{ file: '.vscode/settings.json', base: 'vscode-settings.json' }],
+      jsonMerges: [{ file: '.vscode/settings.json', base: 'settings/vscode/settings.json' }],
     });
     materialize({ root: repo, templatesDir: KIT_TEMPLATES });
 

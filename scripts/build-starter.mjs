@@ -33,12 +33,12 @@ const kitSha = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: kitRoot
   .stdout?.trim() || 'unknown';
 
 const files = {
-  'AGENTS.md': instantiate('AGENTS.md'),
-  'CLAUDE.md': tpl('CLAUDE.md'),
+  'AGENTS.md': instantiate('instructions/AGENTS.md'),
+  'CLAUDE.md': tpl('instructions/CLAUDE.md'),
   '.gitignore': tpl('gitignore'),
-  '.claude/settings.json': tpl('claude-settings.json'),
-  '.vscode/settings.json': tpl('vscode-settings.json'),
-  '.claude/skills/README.md': tpl('skills-README.md'),
+  '.claude/settings.json': tpl('settings/claude/settings.json'),
+  '.vscode/settings.json': tpl('settings/vscode/settings.json'),
+  '.claude/skills/README.md': tpl('readmes/skills/README.md'),
   '.claude/skills/ai-kit-check/SKILL.md': skill('ai-kit-check/SKILL.md'),
   '.claude/skills/ai-kit-check/references/rubric.md': skill('ai-kit-check/references/rubric.md'),
   '.claude/skills/ai-kit-check/references/audit-hook.md': skill('ai-kit-check/references/audit-hook.md'),

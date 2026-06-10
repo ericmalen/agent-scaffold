@@ -51,6 +51,10 @@ Agents only get the tools they need. Use Claude tool names (Copilot maps them):
 - Orchestrator: also allow delegating to subagents (`Task` in Claude Code;
   Copilot maps it to `agent/runSubagent`)
 
+The copy shipped into targets lives in
+[`agent-creator/references/tool-tiers.md`](../.claude/skills/agent-creator/references/tool-tiers.md)
+(kit docs are not installed) — keep the two in sync.
+
 ## File-naming conventions
 
 | Asset type | Pattern                          | Example                 |
