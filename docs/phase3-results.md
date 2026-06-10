@@ -74,3 +74,36 @@ the escalation channel isn't noise.
 
 Sandbox recommendation: architecture validated; proceed to Phase 4 pending
 owner's interactive confirmation.
+
+## Copilot column (2026-06-10, owner run via Copilot CLI) — PHASE 3 CLOSED
+
+`/validate-adoption` invoked in Copilot CLI from the kit repo: skill loaded
+and triggered ✅, all four phases ran via subagent orchestration ✅, gates
+converged (check/audit exit 0) ✅, 7/7 sentinels accounted, scope clean,
+assertion PASS — on `mixed-messy`, the hardest fixture (see finding below).
+The design review's "don't depend on Copilot subagent orchestration" caution
+is empirically retired: orchestration-first is now the documented behavior
+for both tools (bootstrap skill updated accordingly).
+
+Findings from the run, both fixed:
+- **Skill argument fumble:** `copilot-only` argument was misparsed; the skill
+  asked "how to proceed" and defaulted to mixed-messy. Explicit ARGUMENT RULE
+  added to validate-adoption. (Net effect favorable — hardest fixture ran on
+  the Copilot stack — but the fumble was real.)
+- **Harness regex stale:** validate-assert's merged-bytes regex predated the
+  F-3 headline rewording → `mergedBytesPct: null`. Regex now matches both.
+
+Disposition variance worth noting: this run KEPT both sides of the planted
+tabs-vs-spaces contradiction and escalated adjudication to the human, rather
+than dropping the older rule with reason as earlier runs did. Both
+dispositions are legitimate; the escalation channel carried it.
+
+Residual untested (accepted, low risk): the copilot-only fixture's specific
+content under Copilot drive (content fully validated in the sandbox column;
+R-09 branching is tool-independent script logic), VS Code chat-frontend UX
+(CLI shares the engine), and the explicit tool-restriction probe (the
+verifier ran read-only in-flow; the clean-tree backstop remains mandatory by
+design regardless).
+
+**Final Phase 3 verdict: all columns pass, no pivot trigger fired, zero
+silent losses anywhere. GO for Phase 4.**

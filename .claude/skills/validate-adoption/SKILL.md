@@ -13,6 +13,11 @@ Arguments (parse from the user's message): fixture names, `all` (default:
 ALL work dirs), `--parallel N` (run up to N fixtures concurrently),
 `--repeat N` (run the SAME fixture N times concurrently — measures judgment
 variance; report per-run divergence).
+ARGUMENT RULE: any non-flag token that matches a fixture name in
+test/fixtures/defs.mjs IS the fixture selection — run it directly. Do NOT
+ask the user "how to proceed" when a valid fixture name was given; ask only
+when no recognizable fixture/flag is present. (Copilot run 2026-06-10
+misparsed `copilot-only` and defaulted to mixed-messy — never repeat that.)
 
 ## Procedure
 

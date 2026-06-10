@@ -75,7 +75,7 @@ for (const s of def.sentinels) {
 }
 
 // 3. Merged-bytes % from report headline (tripwire metric)
-const mb = reportText.match(/merged\/superseded[^|]*\|\s*\d+\s*\((\d+(?:\.\d+)?)% of source bytes\)/);
+const mb = reportText.match(/merged\/superseded[^|]*\|\s*\d+\s*\((\d+(?:\.\d+)?)% of source bytes(?: rewritten)?\)/);
 results.mergedBytesPct = mb ? Number(mb[1]) : null;
 
 // 4. Branch + scope sanity: only AI-config / .adoption paths differ from main
