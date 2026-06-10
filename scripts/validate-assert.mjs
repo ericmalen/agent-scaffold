@@ -1,0 +1,91 @@
+#!/usr/bin/env node
+// validate-assert — mechanical post-adoption assertions for one fixture run.
+// The validation orchestrator calls this after the phases complete; it turns
+// "did it work" into exit codes and JSON, not judgment.
+//
+// Usage: node scripts/validate-assert.mjs --fixture <name> --dir <repoDir> [--json]
+// Exit: 0 = all assertions pass · 1 = failures (listed)
+
+import { resolve, join, dirname } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { fixtures } from '../test/fixtures/defs.mjs';
+
+const kitRoot = resolve(dirname(new URL(import.meta.url).pathname), '..');
+
+const args = process.argv.slice(2);
+const opt = { fixture: null, dir: null, json: false };
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--fixture') opt.fixture = args[++i];
+  else if (args[i] === '--dir') opt.dir = args[++i];
+  else if (args[i] === '--json') opt.json = true;
+}
+if (!opt.fixture || !opt.dir || !fixtures[opt.fixture]) {
+  console.error(`usage: validate-assert --fixture <${Object.keys(fixtures).join('|')}> --dir <repo>`);
+  process.exit(2);
+}
+const dir = resolve(opt.dir);
+const def = fixtures[opt.fixture];
+const failures = [];
+const results = { fixture: opt.fixture, dir };
+
+const run = (cmd, cmdArgs, cwd = dir) => spawnSync(cmd, cmdArgs, { cwd, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 });
+
+// 1. Gates: check + audit exit 0 (skip for pure-greenfield with no .adoption)
+const hasAdoption = existsSync(join(dir, '.adoption'));
+if (hasAdoption) {
+  const check = run(process.execPath, [join(dir, '.claude/ai-kit-adoption/scripts/check.mjs'), '--root', dir,
+    '--templates', join(dir, '.claude/ai-kit-adoption/templates')]);
+  results.checkExit = check.status;
+  if (check.status !== 0) failures.push(`check.mjs exit ${check.status}: ${check.stdout.trim().slice(0, 400)}`);
+  const audit = run(process.execPath, [join(dir, '.claude/ai-kit-adoption/scripts/audit.mjs'), '--root', dir]);
+  results.auditExit = audit.status;
+  if (audit.status !== 0) failures.push(`audit.mjs exit ${audit.status}: ${audit.stdout.trim().slice(0, 400)}`);
+} else {
+  results.note = 'no .adoption dir (greenfield path or already merged)';
+  const audit = run(process.execPath, [join(kitRoot, 'scripts/audit.mjs'), '--root', dir]);
+  results.auditExit = audit.status;
+  if (audit.status !== 0) failures.push(`audit.mjs exit ${audit.status}`);
+}
+
+// 2. Sentinel accounting: each sentinel present in working tree OR covered in
+//    the report's drop / out-of-scope sections. Silent loss = hard failure.
+const reportText = existsSync(join(dir, '.adoption/report.md'))
+  ? readFileSync(join(dir, '.adoption/report.md'), 'utf8') : '';
+const grep = run('grep', ['-rl', '--exclude-dir=.git', '--exclude-dir=.adoption',
+  '--exclude-dir=node_modules', '-e', 'SENTINEL-', '.'], dir);
+const treeHits = grep.stdout ?? '';
+results.sentinels = {};
+for (const s of def.sentinels) {
+  const inTree = run('grep', ['-rq', '--exclude-dir=.git', '--exclude-dir=.adoption', s, '.'], dir).status === 0;
+  const inReport = reportText.includes(s);
+  results.sentinels[s] = inTree ? 'in-output' : inReport ? 'accounted-in-report' : 'SILENT-LOSS';
+  if (!inTree && !inReport) failures.push(`SILENT LOSS: ${s} absent from output AND report`);
+}
+
+// 3. Merged-bytes % from report headline (tripwire metric)
+const mb = reportText.match(/merged\/superseded[^|]*\|\s*\d+\s*\((\d+(?:\.\d+)?)% of source bytes\)/);
+results.mergedBytesPct = mb ? Number(mb[1]) : null;
+
+// 4. Branch + scope sanity: only AI-config / .adoption paths differ from main
+const diff = run('git', ['diff', '--name-only', 'main...HEAD']);
+if (diff.status === 0) {
+  const offScope = (diff.stdout || '').split('\n').filter(Boolean).filter((p) =>
+    !/^(AGENTS\.md|CLAUDE\.md|\.gitignore|\.claude\/|\.vscode\/|\.github\/|docs\/ai\/|\.adoption\/|.*\/(AGENTS|CLAUDE)\.md$)/.test(p)
+    && !(p in def.files && existsSync(join(dir, p)) === false) // deleted sources
+    && !Object.keys(def.files).includes(p)); // reassembled mixed files
+  results.offScopeDiff = offScope;
+  if (offScope.length) failures.push(`diff outside AI surfaces: ${offScope.join(', ')}`);
+}
+
+results.pass = failures.length === 0;
+results.failures = failures;
+
+if (opt.json) console.log(JSON.stringify(results, null, 2));
+else {
+  console.log(`validate-assert [${opt.fixture}]: ${results.pass ? 'PASS' : 'FAIL'}`);
+  for (const f of failures) console.log(`  ✗ ${f}`);
+  console.log(`  sentinels: ${Object.values(results.sentinels).filter((v) => v !== 'SILENT-LOSS').length}/${def.sentinels.length} accounted` +
+    (results.mergedBytesPct != null ? ` · merged-bytes ${results.mergedBytesPct}%` : ''));
+}
+process.exit(results.pass ? 0 : 1);
