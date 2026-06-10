@@ -6,29 +6,37 @@ Claude Code and VS Code Copilot, using the adoption tooling.
 ## What you need
 
 - The repo in **git**, with a **clean working tree**
-- **Node ≥ 20** on your machine
+- **Node ≥ 20** present on your machine (the AI runs it — you never will)
 - Claude Code, or VS Code Copilot in **agent mode** (skills do not load in
   Ask/Edit modes)
-- A clone of the ai-kit repo (Azure DevOps)
 
-## Setup (one command)
+You never type a terminal command. The AI clones the kit, installs the
+tooling, and runs every script itself.
 
-```sh
-git clone <ado-ai-kit-url> ~/tools/ai-kit          # once
-node ~/tools/ai-kit/scripts/install-adoption.mjs /path/to/your-repo
-cd /path/to/your-repo
-git add -A && git commit -m "chore: ai-kit adoption tooling"
-```
+## Starting a NEW project (zero setup)
 
-This copies the adoption skills, the verifier agent, and the scripts/templates
-into your repo. Everything except the permanent `ai-kit-check` skill is
-removed again before merge.
+Clone/import the **ai-kit starter repo** (published from this kit) — it IS
+the target state. Fill in AGENTS.md and you're done. No AI session required.
 
-**Copilot users:** to avoid approving every script call, consider allowlisting
-in workspace settings → `chat.tools.terminal.autoApprove`: the commands
-`node .claude/ai-kit-adoption/scripts/*` and read-only git verbs
-(`git status`, `git diff`, `git log`). Review the list yourself — that is the
-point of it.
+## Setting up an EXISTING repo (or a new one, equivalently)
+
+Open Claude Code or Copilot (agent mode) in your repo and paste ONE prompt:
+
+> Clone https://dev.azure.com/&lt;org&gt;/ai-kit/_git/ai-kit into a temp folder
+> and follow its ADOPT.md to set up this repository.
+
+That's the whole setup. The AI installs the tooling, commits it, and starts
+the four-phase flow below. Everything except the permanent `ai-kit-check`
+skill is removed again before merge.
+
+**Repeat users:** install the one-time personal skill instead — ask your AI:
+"Copy `bootstrap/ai-kit-adopt` from the ai-kit repo into `~/.claude/skills/`."
+From then on, in any repo, just say `/ai-kit-adopt`.
+
+**Copilot users:** Copilot will ask approval when the AI runs git/node — to
+reduce prompts, allowlist `node .claude/ai-kit-adoption/scripts/*` and
+read-only git verbs in `chat.tools.terminal.autoApprove`. Review the list
+yourself — that is the point of it.
 
 ## The flow — four skills, four fresh sessions
 
