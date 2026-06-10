@@ -9,8 +9,10 @@ One command, zero choreography. Run FROM the ai-kit repo (this clone is the
 kit). The user only reads the final report.
 
 Arguments (parse from the user's message): fixture names, `all` (default:
-`mixed-messy`), `--sabotage` (default ON for mixed-messy), `--keep` (don't
-delete work dirs).
+`mixed-messy`), `--sabotage` (default ON for mixed-messy), `--keep` (retain
+ALL work dirs), `--parallel N` (run up to N fixtures concurrently),
+`--repeat N` (run the SAME fixture N times concurrently — measures judgment
+variance; report per-run divergence).
 
 ## Procedure
 
@@ -31,6 +33,14 @@ delete work dirs).
       `node <kit>/scripts/validate-assert.mjs --fixture <name> --dir $WORK/fx-<name> --json`
    e. On assertion failure: capture details, continue with remaining fixtures
       (never abort the matrix for one failure).
+
+   PARALLELISM: fixtures are independent throwaway repos — with `--parallel N`
+   (or `--repeat N`) dispatch up to N fixture pipelines concurrently, each as
+   its own subagent chain. HARD RULES: phases WITHIN a fixture are always
+   sequential (they depend on each other); never two agents writing in the
+   same fixture dir; sabotage only after mixed-messy's clean run completes.
+   Collect per-fixture result JSON + summaries and merge into the one report
+   exactly as in sequential mode. Default is sequential (easiest to debug).
 3. Sabotage (mixed-messy only, after its clean run): follow
    [sabotage procedure](references/sabotage.md) — 3 seeded defects, fresh
    verifier subagent per defect, record caught/missed. Catch-rate = n/3.
@@ -40,7 +50,15 @@ delete work dirs).
    for the human, environment (tool, model, kit SHA), and a plain-language
    verdict against the pivot triggers (V2-PLAN §12). Honest caveat in the
    header: this validates the Claude Code column; Copilot runs are manual.
-5. Cleanup work dirs unless `--keep`. Present the report to the user.
+5. TEARDOWN: after the report is written to the kit's docs/ —
+   - PASSING fixture dirs: `rm -rf` them.
+   - FAILING fixture dirs: keep automatically for forensics; list their paths
+     in the report so the user can inspect, then delete when done.
+   - `--keep`: retain everything (paths in report).
+   - Remove `$WORK` entirely when empty. Fixtures are self-contained repos —
+     deleting the dir is always complete cleanup (no worktrees, no branches,
+     no global git state touched).
+6. Present the report to the user.
 
 ## Never
 
