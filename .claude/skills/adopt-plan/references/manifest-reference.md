@@ -31,12 +31,13 @@ merge: source-only keys preserved, kit template keys win. Bases live in
 { "file": ".gitignore", "template": "gitignore" }            // greenfield only — brownfield: keep-file or merge
 { "file": ".claude/settings.json", "template": "claude-settings.json" }   // or jsonMerges when one exists
 { "file": ".claude/skills/README.md", "template": "skills-README.md" }
-{ "file": ".claude/skills/ai-kit-check/SKILL.md", "template": "ai-kit-check/SKILL.md" }
-{ "file": ".claude/skills/ai-kit-check/references/rubric.md", "template": "ai-kit-check/references/rubric.md" }
 { "file": ".claude/ai-kit.json", "literal": "literals/marker.json" }
 { "file": ".claude/agents/README.md", "template": "agents-README.md" }   // whenever anything installs into .claude/agents (R-48)
 { "file": ".claude/rules/README.md",  "template": "rules-README.md" }    // whenever any rules file is created (R-48)
 ```
+
+Note: `ai-kit-check` is NOT a manifest install — it is a permanent baseline
+skill copied verbatim by `install-adoption.mjs` (like `docs`/`git-conventions`).
 
 Marker literal content:
 `{ "kit": "<version>", "kitRepo": "<ado clone url>", "adoptedAt": "<date>", "githubCodeReview": <bool> }`

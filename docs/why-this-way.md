@@ -20,14 +20,16 @@ This repo targets both GitHub Copilot and Claude Code. One directory is read
 natively by both for agents and skills: `.claude/`. Copilot's default search
 paths include `.claude/skills/` and `.claude/agents/`; Claude Code reads nothing
 under `.github/`. So agents and skills live in `.claude/` — one copy, both
-tools, no symlinks, no drift. (`.claude/settings.json` is the exception: Claude
-Code only — Copilot uses `.vscode/settings.json`.) `.github/` keeps only the
-Copilot-only `prompts/` surface. See [`cross-tool-setup.md`](./cross-tool-setup.md).
+tools, no symlinks, no drift. (One nuance: in `.claude/settings.json`, the
+`hooks` block is read by both tools, but `permissions` is Claude-Code-only —
+Copilot's equivalents live in `.vscode/settings.json`.) `.github/` exists only
+when GitHub-side code review is in use (R-09/R-49). See
+[`cross-tool-setup.md`](./cross-tool-setup.md).
 
 ## Why meta-skills
 
-The headline feature of ai-kit is **skills-as-tooling**. Three meta-skills
-— `skill-creator`, `new-agent`, `layer-agents` — walk you through
+The headline feature of ai-kit is **skills-as-tooling**. Two meta-skills
+— `skill-creator` and `agent-creator` — walk you through
 producing new assets that conform to the conventions. (`skill-creator` is
 Anthropic's official skill-authoring tool, shipped here as a base skill.)
 
@@ -55,8 +57,8 @@ Per-asset READMEs sprawl quickly. A folder with 15 agents and 15 READMEs
 duplicates the same framing 15 times — and drifts when conventions change.
 
 One README per asset-type folder covers the same ground with less maintenance.
-The READMEs explain the pattern. The `_example` files show what good looks
-like. Individual assets stay lean.
+The READMEs explain the pattern. The annotated example assets (like
+`example-reviewer`) show what good looks like. Individual assets stay lean.
 
 ## Why annotated examples instead of blank templates
 
@@ -64,9 +66,9 @@ A blank template with TODOs tells you where to type. An annotated example shows
 you what to type and why it belongs there.
 
 The meta-skills provide the templates (paste-ready, stub content). The
-`_example.*.md` files provide the annotated versions with inline comments
-explaining the non-obvious choices. Together they cover both modes — "I just
-need a starting point" and "I want to see a real one."
+example assets (like `example-reviewer.md`) provide the annotated versions with
+inline comments explaining the non-obvious choices. Together they cover both
+modes — "I just need a starting point" and "I want to see a real one."
 
 ## Why flat orchestration (by default)
 
@@ -83,7 +85,7 @@ calls every specialist directly. Reasons:
 - Harder to accidentally make recursive — flat agents can't chain into a
   five-deep loop.
 
-ai-kit does not ship an orchestration layer in v1. When you add one,
+ai-kit does not ship an orchestration layer. When you add one,
 review loops and human gates go in the orchestrator, not between specialists.
 Nesting is available when a specialist legitimately needs its own helpers —
 treat it as a deliberate choice, not the default.

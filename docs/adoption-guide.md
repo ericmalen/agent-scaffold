@@ -8,7 +8,7 @@ Claude Code and VS Code Copilot, using the adoption tooling.
 - The repo in **git**, with a **clean working tree**
 - **Node ≥ 20** present on your machine (the AI runs it — you never will)
 - Claude Code, or VS Code Copilot in **agent mode** (skills do not load in
-  Ask/Edit modes)
+  non-agent modes such as Ask)
 
 You never type a terminal command. The AI clones the kit, installs the
 tooling, and runs every script itself.
@@ -29,9 +29,10 @@ That's the whole setup. The AI installs the tooling, commits it, and starts
 the four-phase flow below. Everything except the permanent `ai-kit-check`
 skill is removed again before merge.
 
-**Repeat users:** install the one-time personal skill instead — ask your AI:
-"Copy `bootstrap/ai-kit-adopt` from the ai-kit repo into `~/.claude/skills/`."
-From then on, in any repo, just say `/ai-kit-adopt`.
+**Repeat users:** keep a kit clone (`git clone <url> ~/tools/ai-kit`), open
+it in your tool, and say `/ai-kit-adopt /path/to/repo`. The skill freshens
+the clone, installs the tooling into the target, and orchestrates all four
+phases from there.
 
 **Copilot users:** Copilot will ask approval when the AI runs git/node — to
 reduce prompts, allowlist `node .claude/ai-kit-adoption/scripts/*` and

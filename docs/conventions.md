@@ -30,7 +30,9 @@ its sections rather than restating them.
 
 - Agents have one role.
 - Skills have one workflow.
-- Nested `AGENTS.md` files have one scope — the subtree they sit in.
+- Rules files have one scope — one `.claude/rules/<scope>.md` per concern (R-52).
+- Nested `AGENTS.md` files (compat variant) have one scope — the subtree they
+  sit in.
 
 No "do everything" assets. If a file is doing two jobs, split it.
 
@@ -46,43 +48,37 @@ Agents only get the tools they need. Use Claude tool names (Copilot maps them):
 - Read-only: `Read, Grep, Glob`
 - Editor: add `Edit, Write`
 - Executor: add `Bash`
-- Orchestrator: also allow delegating to sub-agents
-
-## Prompts that route to agents omit `model` and `tools` (Copilot-only)
-
-When a Copilot prompt has `agent:` in frontmatter, the agent is the source of
-truth for model and tools. Duplicating them is a code smell — drift is
-inevitable. (Prompts are a Copilot-only surface — see `.github/prompts/README.md`.)
+- Orchestrator: also allow delegating to subagents (`Task` in Claude Code;
+  Copilot maps it to `agent/runSubagent`)
 
 ## File-naming conventions
 
-| Asset type        | Pattern                      | Example                 |
-| ----------------- | ---------------------------- | ----------------------- |
-| Agents            | `{name}.md` in `.claude/agents/` | `code-reviewer.md`  |
-| Skills            | `{kebab-case-name}/SKILL.md`  | `tdd-workflow/SKILL.md` |
-| Prompts (Copilot) | `{command}.prompt.md`         | `review-file.prompt.md` |
-| Examples / meta   | prefix with `_`               | `_example.prompt.md`    |
-
-The underscore prefix sorts teaching material first in file listings and
-visually separates it from real assets.
+| Asset type | Pattern                          | Example                 |
+| ---------- | -------------------------------- | ----------------------- |
+| Agents     | `{name}.md` in `.claude/agents/` | `code-reviewer.md`      |
+| Skills     | `{kebab-case-name}/SKILL.md`     | `tdd-workflow/SKILL.md` |
+| Rules      | `{scope}.md` in `.claude/rules/` | `tests.md`              |
 
 To add a new skill or agent to ai-kit and have the CLI distribute it,
 see the "Adding skills" and "Adding agents" sections in
 [`.claude/skills/README.md`](../.claude/skills/README.md) and
 [`.claude/agents/README.md`](../.claude/agents/README.md).
 
-Directory-scoped conventions go in a nested `AGENTS.md` (plus a sibling
-`CLAUDE.md` that imports it, for Claude Code) placed in that directory — no
-special filename, no frontmatter. See
-[`cross-tool-setup.md#nested-scoping`](./cross-tool-setup.md#nested-scoping).
+Directory- or layer-scoped conventions go in a path-scoped rules file at
+`.claude/rules/<scope>.md` with `paths:` glob frontmatter (R-52) — the default
+mechanism. Repos that opted into the nested-AGENTS.md compat variant use a
+nested `AGENTS.md` (plus a sibling `CLAUDE.md` shim) instead — one mechanism
+per repo, never both (R-53). See
+[`cross-tool-setup.md#path-scoped-instructions`](./cross-tool-setup.md#path-scoped-instructions).
 
 ## One README per asset folder, not per asset
 
-`.claude/agents/`, `.claude/skills/`, and `.github/prompts/` each have a single
-`README.md` that explains the pattern. Individual asset files stay lean.
+`.claude/agents/`, `.claude/skills/`, and `.claude/rules/` (when present) each
+have a single `README.md` that explains the pattern (R-48). Individual asset
+files stay lean.
 
 ## Checking conformance
 
-Run `ai-kit audit` at any time to lint installed assets against these
-conventions. See [`docs/optimization.md`](./optimization.md) for what it
-checks and how to fix findings automatically with `/optimize`.
+Run the `ai-kit-check` skill at any time to audit the repo's AI configuration
+against these conventions (it runs `node <kit>/scripts/audit.mjs --root .` and
+fixes findings by rule ID).

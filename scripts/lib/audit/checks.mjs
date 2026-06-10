@@ -5,7 +5,7 @@
 import { join, relative, dirname, basename } from 'node:path';
 import {
   readSafe, exists, isDir, walk, parseFrontmatter, frontmatterKeys,
-  nonBlankLines, stripFences, lineOf, parseJsonc, finding as F, isAdoptionTooling,
+  nonBlankLines, stripFences, lineOf, parseJsonc, finding as F, isAdoptionTooling, isVendored,
 } from './util.mjs';
 
 // ── R-01..R-09: root instructions ───────────────────────────────────────────
@@ -183,6 +183,8 @@ export function checkSkills(ctx) {
     if (desc.length > 1024) {
       out.push(F('R-19', 'error', rel, `Description is ${desc.length} chars (cap: 1,024).`));
     }
+    // Vendored (UPSTREAM marker): upstream's conventions govern style — stop here.
+    if (isVendored(root, rel)) continue;
     const lineCount = text.split('\n').length;
     if (lineCount > 200) {
       out.push(F('R-20', 'warning', rel, `SKILL.md is ${lineCount} lines (cap: 200) — move depth to references/.`));

@@ -76,8 +76,9 @@ cloud coding agent reads AGENTS.md natively.
 ## 2. CLAUDE.md shim
 
 **R-10 · Root CLAUDE.md present** · mechanical · audit, warning
-Root `CLAUDE.md` exists. Claude Code reads only CLAUDE.md — no AGENTS.md fallback
-(verified June 2026; Anthropic docs recommend exactly this shim pattern).
+Root `CLAUDE.md` exists. Claude Code reads CLAUDE.md, not AGENTS.md — do not
+rely on any AGENTS.md fallback (reports of one are contested/unconfirmed; the
+shim makes it moot, and Anthropic docs recommend exactly this shim pattern).
 
 **R-11 · Shim imports AGENTS.md first** · mechanical · audit, warning → error
 The first line of root CLAUDE.md is exactly `@AGENTS.md`.
@@ -160,6 +161,13 @@ Frontmatter uses the portable core (`name`, `description`, `argument-hint`,
 `compatibility`, `metadata`). Tool-specific extras (`model`, `context`, `hooks`,
 `allowed-tools`, `paths`, …) are permitted but the skill must not depend on them to
 be usable in the other tool. `infer` is prohibited (deprecated).
+
+**Vendored exemption** — a skill directory containing an `UPSTREAM` provenance
+marker (vendored verbatim from a third party, e.g. Anthropic's `skill-creator`)
+is held to upstream's conventions: the audit skips style rules R-20–R-25 for
+it. Load-critical rules (R-17 name match, R-18 kebab-case, R-19 description
+cap, R-26 placement) still apply. Never edit vendored skills — re-sync from the
+upstream commit pinned in the marker.
 
 **R-26 · Flat skill layout** · mechanical · audit, error
 Skills sit at `.claude/skills/<id>/SKILL.md` — exactly one level. Neither tool

@@ -3,11 +3,21 @@
 // repo. Run FROM the kit clone:
 //   node <kit>/scripts/install-adoption.mjs /path/to/target-repo
 //
-// Installs (all removable; adopt-verify removes them before merge):
+// Adoption-time tooling (removable; adopt-verify removes it before merge):
 //   .claude/ai-kit-adoption/scripts/      (extractor, check, materialize, audit, report)
 //   .claude/ai-kit-adoption/templates/    (target skeletons + wiring bases)
 //   .claude/skills/adopt-{inventory,plan,materialize,verify}/
 //   .claude/agents/adoption-verifier.md
+//
+// Permanent baseline content (kept on merge):
+//   .claude/skills/ai-kit-check/           (required maintenance/audit skill)
+//   .claude/skills/docs/                   (baseline docs standard)
+//   .claude/skills/git-conventions/        (baseline commit/PR conventions)
+//   .claude/skills/skill-creator/          (baseline skill authoring, vendored from Anthropic)
+//   .claude/skills/agent-creator/          (baseline agent authoring)
+//   .claude/agents/docs-auditor.md         (baseline docs auditor)
+//
+// Deliberately NOT installed: .claude/skills/ai-kit-adopt (kit-side entry point).
 
 import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
@@ -43,6 +53,12 @@ const copies = [
   ['.claude/skills/adopt-materialize', '.claude/skills/adopt-materialize'],
   ['.claude/skills/adopt-verify', '.claude/skills/adopt-verify'],
   ['.claude/agents/adoption-verifier.md', '.claude/agents/adoption-verifier.md'],
+  ['.claude/skills/ai-kit-check', '.claude/skills/ai-kit-check'],
+  ['.claude/skills/docs', '.claude/skills/docs'],
+  ['.claude/skills/git-conventions', '.claude/skills/git-conventions'],
+  ['.claude/skills/skill-creator', '.claude/skills/skill-creator'],
+  ['.claude/skills/agent-creator', '.claude/skills/agent-creator'],
+  ['.claude/agents/docs-auditor.md', '.claude/agents/docs-auditor.md'],
 ];
 
 for (const [src, dst] of copies) {

@@ -23,6 +23,9 @@ if (existsSync(target) && readdirSync(target).length > 0) {
 
 const tpl = (rel) => readFileSync(join(kitRoot, 'templates', rel), 'utf8');
 const instantiate = (rel) => tpl(rel).replace(SLOT_RE, '');
+// ai-kit-check is a permanent baseline skill — its source of truth is .claude/skills/,
+// not templates/ (it ships verbatim, like docs/git-conventions).
+const skill = (rel) => readFileSync(join(kitRoot, '.claude/skills', rel), 'utf8');
 
 const kitSha = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: kitRoot, encoding: 'utf8' })
   .stdout?.trim() || 'unknown';
@@ -34,8 +37,8 @@ const files = {
   '.claude/settings.json': tpl('claude-settings.json'),
   '.vscode/settings.json': tpl('vscode-settings.json'),
   '.claude/skills/README.md': tpl('skills-README.md'),
-  '.claude/skills/ai-kit-check/SKILL.md': tpl('ai-kit-check/SKILL.md'),
-  '.claude/skills/ai-kit-check/references/rubric.md': tpl('ai-kit-check/references/rubric.md'),
+  '.claude/skills/ai-kit-check/SKILL.md': skill('ai-kit-check/SKILL.md'),
+  '.claude/skills/ai-kit-check/references/rubric.md': skill('ai-kit-check/references/rubric.md'),
   '.claude/ai-kit.json': JSON.stringify({
     kit: kitSha,
     kitRepo: 'https://dev.azure.com/ericmalen/ai-kit/_git/ai-kit',

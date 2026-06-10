@@ -4,7 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, mkdtempSync,
+  readFileSync, writeFileSync, mkdirSync, rmSync, existsSync, mkdtempSync, cpSync,
 } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -198,13 +198,17 @@ test('greenfield end-to-end: installs + jsonMerges ⇒ gates pass AND audit clea
         { file: '.gitignore', template: 'gitignore' },
         { file: '.claude/settings.json', template: 'claude-settings.json' },
         { file: '.claude/skills/README.md', template: 'skills-README.md' },
-        { file: '.claude/skills/ai-kit-check/SKILL.md', template: 'ai-kit-check/SKILL.md' },
-        { file: '.claude/skills/ai-kit-check/references/rubric.md', template: 'ai-kit-check/references/rubric.md' },
         { file: '.claude/ai-kit.json', literal: 'literals/marker.json' },
       ],
       jsonMerges: [{ file: '.vscode/settings.json', base: 'vscode-settings.json' }],
     });
     materialize({ root: repo, templatesDir: KIT_TEMPLATES });
+
+    // ai-kit-check is a permanent baseline skill shipped verbatim from
+    // .claude/skills/ (by install-adoption / build-starter), not the manifest.
+    // Mirror that here so the R-50 presence check stays satisfied.
+    cpSync(join(process.cwd(), '.claude/skills/ai-kit-check'),
+      join(repo, '.claude/skills/ai-kit-check'), { recursive: true });
 
     const agents = readFileSync(join(repo, 'AGENTS.md'), 'utf8');
     assert.ok(!agents.includes('ai-kit:slot'), 'install strips slot markers');

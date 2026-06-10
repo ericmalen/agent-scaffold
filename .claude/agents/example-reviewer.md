@@ -14,7 +14,7 @@ Never modifies files.
 ## Procedures
 
 1. Read all changed files listed by the user.
-2. Check each against the conventions in `AGENTS.md` and any applicable nested `AGENTS.md`.
+2. Check each against the conventions in `AGENTS.md` and any applicable path-scoped rules (or nested `AGENTS.md` on compat repos).
 3. Return a verdict: PASS or NEEDS_FIX, with specific findings and file:line references.
 
 ## Never

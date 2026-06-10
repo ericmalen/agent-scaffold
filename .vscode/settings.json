@@ -25,7 +25,7 @@
   "chat.useAgentSkills": true,
 
   // ===== Agents / subagents =====
-  // Custom agents live in .claude/agents/ (Claude sub-agent format). Copilot
+  // Custom agents live in .claude/agents/ (Claude subagent format). Copilot
   // detects them there and maps Claude tool names automatically.
   // Enable lifecycle hooks (SessionStart, PostToolUse, Stop, …) defined in a
   // specific agent's frontmatter.

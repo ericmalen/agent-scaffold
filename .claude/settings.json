@@ -14,10 +14,7 @@
       "Write(./.vscode/settings.json)",
       "Edit(./.claude/settings.json)",
       "Edit(./.claude/ai-kit.json)",
-      "Write(./.claude/ai-kit.json)",
-      "Write(./.ai-kit-migration-routing.json)",
-      "Bash(node bin/ai-kit.mjs migrate*)",
-      "Bash(node */bin/ai-kit.mjs migrate*)"
+      "Write(./.claude/ai-kit.json)"
     ],
     "ask": [],
     "deny": [

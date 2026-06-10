@@ -15,7 +15,8 @@
 //   jsonMerges: [ { file, base } ]                  — key-level merge against kit template
 //   installs:   [ { file, template } | { file, literal } ]
 //     — static file instantiation (greenfield wiring: shim, settings, marker,
-//       ai-kit-check). Template slot markers are stripped. Output-side only.
+//       READMEs). Template slot markers are stripped. Output-side only.
+//       (ai-kit-check is NOT installed here — it ships via install-adoption.)
 //
 // Future maintainers: dispositions only. NEVER add input-classification ops.
 

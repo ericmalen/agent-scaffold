@@ -85,6 +85,28 @@ test('conformant repo produces zero findings', () => {
   }
 });
 
+// ── Vendored skills (UPSTREAM marker): style rules suppressed ───────────────
+
+test('vendored skill: style rules suppressed, load-critical still fire', () => {
+  const body = Array.from({ length: 250 }, (_, i) => `line ${i}`).join('\n');
+  const repo = makeRepo({
+    '.claude/skills/vendored-skill/UPSTREAM': 'https://github.com/example/skills @ abc123\n',
+    '.claude/skills/vendored-skill/SKILL.md':
+      `---\nname: wrong-name\ndescription: vendored, used when testing\nbogus-key: 1\n---\n${body}\nreferences/x.md\n`,
+  });
+  try {
+    const report = audit({ root: repo });
+    const skillFindings = report.findings.filter((f) => (f.file ?? '').includes('vendored-skill'));
+    const fired = skillFindings.map((f) => f.rule);
+    assert.ok(fired.includes('R-17'), `R-17 must still fire; fired: ${fired.join(', ')}`);
+    for (const suppressed of ['R-20', 'R-23', 'R-25']) {
+      assert.ok(!fired.includes(suppressed), `${suppressed} must be suppressed; fired: ${fired.join(', ')}`);
+    }
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 // ── Kitchen-sink violations repo: every expected rule fires ─────────────────
 
 test('violations repo: expected rules fire', () => {

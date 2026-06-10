@@ -3,10 +3,15 @@
 Specialized personas invoked deliberately — for a specific role, with a defined
 procedure and an explicit tool boundary.
 
-This folder uses the **Claude sub-agent format** (`.claude/agents/{name}.md`).
+This folder uses the **Claude subagent format** (`.claude/agents/{name}.md`).
 Claude Code reads it natively; VS Code Copilot also detects `.md` files here and
 maps Claude tool names to its own. One folder, both tools — see
 [`docs/cross-tool-setup.md`](../../docs/cross-tool-setup.md).
+
+Vocabulary: an **agent** is the definition file/persona in this folder; a
+**subagent** is that agent invoked as a delegated, fresh-context worker. In
+Copilot the same file also appears as a top-level persona in the agent picker;
+in Claude Code it is always invoked as a subagent.
 
 ## When to create an agent
 
@@ -51,7 +56,7 @@ Markdown links for progressive disclosure).
 ## Flat orchestration (preferred default)
 
 ai-kit prefers flat orchestration: orchestrators call every specialist
-directly. Nesting (a sub-agent invoking sub-agents) is possible in both tools
+directly. Nesting (a subagent invoking subagents) is possible in both tools
 but compounds token cost and is harder to debug — reach for it only when a
 specialist genuinely needs its own helpers. See
 [`docs/why-this-way.md`](../../docs/why-this-way.md) for the rationale.
@@ -66,27 +71,16 @@ reviewer showing correct frontmatter, a tight tools list, and a lazy-load
 
 New agents live in this same folder. The steps mirror the skills workflow:
 
-1. **Author** — run `/new-agent` in chat. The meta-skill walks you through
+1. **Author** — run `/agent-creator` in chat. The meta-skill walks you through
    the role statement, procedures, tool list, and lazy-load `## Documents`
    section.
 
-2. **Register** — an agent file in `.claude/agents/` is **not shipped** by the
-   CLI unless it is registered in `ai-kit.config.json`. Two surfaces:
+2. **Check** — run the `ai-kit-check` skill; agent conventions are enforced
+   by rule ID (R-27..R-37).
 
-   | Surface | Where in `ai-kit.config.json` | When it ships |
-   |---|---|---|
-   | Always-installed | `base.agents` string array | Every `init` and `update` |
-   | Opt-in | `agents` map — `{ path, description }` | `init --agents <name>` (or interactive prompt) |
-
-   The `example-reviewer` entry in the `agents` map is the canonical template
-   for an opt-in agent. `path` points to the agent's `.md` file;
-   `description` is the one-liner shown in the interactive selector.
-
-3. **Consume** — same hash-tracking and conflict-resolution flow as skills.
-   On `ai-kit update`, registered agents are overwritten when upstream changes
-   and the consumer hasn't edited them; both-sides conflicts offer
-   `sidecar` / `keep` / `take-upstream` — see
-   [`docs/migration.md`](../../docs/migration.md).
+In the kit repo itself, agents in this folder are dual-role: loaded while
+developing the kit AND installed path-for-path into adopted repos by
+`scripts/install-adoption.mjs`.
 
 ## Filename convention
 

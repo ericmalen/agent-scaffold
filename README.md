@@ -24,15 +24,14 @@ first-time setup or bringing existing AI config up to the team standard.
 
 ### Adopt a repo (recommended)
 
-One-time: install the bootstrap skill to your user-level skills folder.
+One-time: clone the kit.
 
 ```sh
 git clone <this-repo-url> ~/tools/ai-kit
-cp -r ~/tools/ai-kit/bootstrap/ai-kit-adopt ~/.claude/skills/
 ```
 
-Then, from any repo you want to set up, run `/ai-kit-adopt` in Claude Code (or
-Copilot agent mode). It asks two questions (GitHub code review? path-scoping
+Then open the kit clone in Claude Code (or Copilot agent mode) and run
+`/ai-kit-adopt /path/to/repo-to-set-up`. It asks two questions (GitHub code review? path-scoping
 mechanism?), runs the four phases in fresh contexts, and stops at two human
 approval gates. Details: [`docs/adoption-guide.md`](./docs/adoption-guide.md).
 
@@ -53,24 +52,24 @@ against the conventions and fix findings by rule ID.
 
 ```
 spec/            the standard: rules.md (R-IDs, source of truth) + target-layout.md
-catalog/         optional skills/agents installed into consumer repos (catalog.json)
-templates/       mandatory wiring materialized into every adopted repo
-                 (file skeletons + the required ai-kit-check skill)
-bootstrap/       the user-level /ai-kit-adopt entry-point skill
+templates/       wiring skeletons materialized into every adopted repo
+                 (AGENTS.md/CLAUDE.md/settings skeletons + slot bases)
 scripts/ test/   the engine (zero-dep Node ≥ 20) — also copied into targets
                  during adoption as .claude/ai-kit-adoption/
-.claude/         this repo's own live config; the adopt-* skills and
-                 adoption-verifier agent are dual-role (used here AND
-                 installed into targets — see scripts/install-adoption.mjs)
+.claude/         this repo's own live config; the adopt-* skills, baseline
+                 skills (ai-kit-check, docs, git-conventions, skill-creator,
+                 agent-creator) and agents are dual-role (used here AND
+                 installed into targets — see scripts/install-adoption.mjs).
+                 ai-kit-adopt is the adoption entry point: run from this
+                 clone, never shipped
 docs/            consumer-facing guides; docs/dev/ = kit-process material
 reports/         generated outputs (gitignored)
-ADOPT.md         bootstrap instructions read by the adoption skill (path is
-                 load-bearing: ~/tools/ai-kit/ADOPT.md)
+ADOPT.md         adoption instructions read by the ai-kit-adopt skill and
+                 the one-prompt flow (path is load-bearing: <kit>/ADOPT.md)
 ```
 
-Why `catalog/` and `templates/` are *not* under `.claude/`: anything in
-`.claude/` auto-loads while working on the kit itself. Payload is cargo, not
-config. Rationale: [`docs/why-this-way.md`](./docs/why-this-way.md).
+Why `templates/` is *not* under `.claude/`: anything in `.claude/` auto-loads
+while working on the kit itself. Payload is cargo, not config. Rationale: [`docs/why-this-way.md`](./docs/why-this-way.md).
 
 ## Next steps
 

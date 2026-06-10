@@ -2,7 +2,8 @@
 
 You are an AI assistant (Claude Code, or VS Code Copilot in agent mode) that
 was asked to set up a repository with ai-kit. This kit clone provides the
-tooling; the TARGET repo is the user's current working directory (verify:
+tooling; the TARGET repo is the user's current working directory (one-prompt
+flow) or the path handed over by the `ai-kit-adopt` skill (verify either way:
 it must be a git repository and must NOT be this kit clone itself).
 
 Follow these steps exactly. Run all commands yourself via your shell tool —

@@ -1,7 +1,7 @@
 // Shared helpers for the v2 audit. Zero-dep, pure where possible.
 
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { stripJsonComments } from '../extract.mjs';
 
 export function readSafe(p) {
@@ -29,6 +29,13 @@ const TOOLING_RE = [
 ];
 export function isAdoptionTooling(rel) {
   return TOOLING_RE.some((re) => re.test(rel));
+}
+
+// Vendored third-party assets — an UPSTREAM provenance marker beside SKILL.md
+// means the skill is held to upstream's conventions, not the kit's. The audit
+// skips style rules (R-20..R-25) for these; load-critical rules still apply.
+export function isVendored(root, rel) {
+  return existsSync(join(root, dirname(rel), 'UPSTREAM'));
 }
 
 // Recursive walk yielding absolute file paths; skips junk dirs.

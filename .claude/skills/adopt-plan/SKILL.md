@@ -38,7 +38,8 @@ for schema and worked examples before authoring.
    - Duplicates: route ONE instance; `drop` the rest as "duplicate of <node>"
      only after verifying byte-identity.
    - Settings files: `jsonMerges` — never hand-merge JSON.
-   - Wiring (shim, .gitignore, marker, ai-kit-check, READMEs): `installs`.
+   - Wiring (shim, .gitignore, marker, READMEs): `installs`. (ai-kit-check
+     is a permanent baseline skill installed by install-adoption, not the manifest.)
 5. **Validate:** `node .claude/ai-kit-adoption/scripts/check.mjs --root . --skip-repro`
    Fix violations by editing the manifest. Loop until exit 0.
 6. **Report:** `node .claude/ai-kit-adoption/scripts/report.mjs --root .`

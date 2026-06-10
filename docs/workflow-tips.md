@@ -14,7 +14,7 @@ conventions.
   disproportionately from reasoning depth; implementation is often mechanical
   once the plan exists. Set `chat.planAgent.defaultModel` for the Plan agent
   and `github.copilot.chat.implementAgent.model` for the handoff target.
-- **Pin models in prompt and agent frontmatter when stability matters.**
+- **Pin models in agent and skill frontmatter when stability matters.**
   Specify `model:` in the asset if its behavior is sensitive to model drift.
 - **Adjust thinking effort for reasoning models.** Use the thinking-effort
   submenu in the model picker — turn it up for complex tasks, down for trivial
@@ -116,15 +116,9 @@ conventions.
 
 ## Using the meta-skills in ai-kit
 
-- **Picking opt-in skills at install.** `ai-kit init` shows a category-first
-  picker (terraform, kubernetes, git, ...) with an "(advanced) pick
-  individual skills" escape hatch. On the CLI, `--skills <name>` accepts both
-  category names (expand to all skills in that folder) and individual IDs:
-  `--skills terraform,prompt-engineer` installs all 5 terraform skills plus
-  prompt-engineer.
-- **Start with `/skill-creator`, `/new-agent`,
-  `/layer-agents`.** The meta-skills encode the conventions
-  operationally; using them gives you a correct starting point.
+- **Start with `/skill-creator` and `/agent-creator`.** The meta-skills
+  encode the conventions operationally; using them gives you a correct
+  starting point.
 - **Review what the meta-skill produces before committing.** Meta-skills are
   a starting point, not a rubber stamp. Tweak frontmatter descriptions and
   trim where needed.
