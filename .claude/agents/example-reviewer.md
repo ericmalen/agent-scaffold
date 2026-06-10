@@ -1,6 +1,6 @@
 ---
 name: example-reviewer
-description: Read-only reviewer that checks code against project conventions. Never modifies files.
+description: Read-only reviewer that checks code changes against project conventions. Use after edits land or before a PR, when a conformance verdict is needed. Never modifies files.
 tools: Read, Grep, Glob
 ---
 

@@ -2,133 +2,87 @@
 
 ## What this is
 
-ai-kit for adding AI-coding customization to internal repos, wired for
-**both GitHub Copilot and Claude Code** from one set of files. Ships the folder
-structure, conventions, annotated `_example` files, and three meta-skills
-(`new-skill`, `new-agent`, `layer-agents`) that create new
-assets to match the conventions.
-
-Three lifecycle verbs cover the full journey: **CREATE** new conformant assets,
-**MIGRATE** brownfield repos with pre-existing AI config, and **OPTIMIZE** installed
-assets that have drifted from conventions.
+ai-kit sets up repositories for AI-assisted coding, wired for **both GitHub
+Copilot and Claude Code** from one set of files. It ships a rule catalog
+([`spec/rules.md`](./spec/rules.md)), a four-phase adoption pipeline
+(inventory → plan → materialize → verify) that brings any repo — greenfield or
+brownfield — to the target state, and a catalog of installable skills/agents.
 
 No stack-specific or domain-specific content — you add those on top.
 
-Shared agents and skills live in `.claude/agents/` and `.claude/skills/` — both
-tools read those folders natively. `AGENTS.md` at the repo root is the canonical
-instructions file;
-`CLAUDE.md` imports it so Claude Code reads the same content. See
-[`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md) for how the dual-tool
-wiring works.
-
-> Note: GitHub.com's Copilot code review and cloud coding agent read
-> `.github/copilot-instructions.md` and `.github/instructions/` most reliably.
-> If your team leans on those, keep a root `.github/copilot-instructions.md`
-> alongside `AGENTS.md` — see [`docs/copilot-customization-reference.md`](./docs/copilot-customization-reference.md).
+> **This repo is the factory, not the house.** Nobody starts a project by
+> cloning ai-kit. Adoption runs *from your repo* against a shared clone of
+> this kit, and installs only what belongs in your repo (see
+> [`spec/target-layout.md`](./spec/target-layout.md) for what you end up with).
 
 ## Who it's for
 
-Developers setting up GitHub Copilot and/or Claude Code in a project for the
-first time.
+Developers setting up GitHub Copilot and/or Claude Code in a project —
+first-time setup or bringing existing AI config up to the team standard.
 
 ## Quick start
 
-### Via CLI (recommended)
+### Adopt a repo (recommended)
 
-Clone this repo once to a shared tools location, then run `init` from any
-project you want to set up:
+One-time: install the bootstrap skill to your user-level skills folder.
 
 ```sh
 git clone <this-repo-url> ~/tools/ai-kit
-cd /path/to/my-project
-node ~/tools/ai-kit/bin/ai-kit.mjs init --skills git,terraform --yes
+cp -r ~/tools/ai-kit/bootstrap/ai-kit-adopt ~/.claude/skills/
 ```
 
-`--skills` accepts both individual skill IDs and category names. Categories
-expand to every skill in the folder (`git` → all 6 git/* skills,
-`terraform` → all 5 terraform/* skills, etc.). Run `init` interactively
-(no `--yes`) for a category-first picker with an "(advanced) pick individual
-skills" escape hatch.
+Then, from any repo you want to set up, run `/ai-kit-adopt` in Claude Code (or
+Copilot agent mode). It asks two questions (GitHub code review? path-scoping
+mechanism?), runs the four phases in fresh contexts, and stops at two human
+approval gates. Details: [`docs/adoption-guide.md`](./docs/adoption-guide.md).
 
-The CLI detects whether you have existing AI resources (**brownfield**) or a
-fresh repo (**greenfield**) and handles both correctly. Re-running with
-`update` brings in changes without overwriting your edits.
+### Greenfield starter
+
+For a brand-new repo, emit the clean target state directly:
 
 ```sh
-# See what's installed and whether anything has drifted
-node ~/tools/ai-kit/bin/ai-kit.mjs status
-
-# Lint installed AI assets for convention violations
-node ~/tools/ai-kit/bin/ai-kit.mjs audit
-
-# Pull latest ai-kit version (asks before overwriting locally modified files)
-node ~/tools/ai-kit/bin/ai-kit.mjs update
+node ~/tools/ai-kit/scripts/build-starter.mjs /path/to/new-repo --git
 ```
 
-### Manual (alternative)
+### Check for drift later
 
-Copy `.claude/`, `.github/`, `.vscode/`, `AGENTS.md`, and `CLAUDE.md` into an
-existing repo by hand.
+Adopted repos get a permanent `ai-kit-check` skill — run it any time to audit
+against the conventions and fix findings by rule ID.
 
-### After installing
-
-1. Fill in the TODO sections of [`AGENTS.md`](./AGENTS.md). Leave `CLAUDE.md`
-   unless you have Claude-specific notes — it imports `AGENTS.md`.
-2. Open the repo in VS Code (Copilot extension) or Claude Code.
-3. Try `/new-skill` to walk through creating your first skill.
-4. Read [`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md) and
-   [`docs/conventions.md`](./docs/conventions.md) when ready to go deeper.
-
-## What's inside
+## Repo layout (this repo)
 
 ```
-AGENTS.md                       — repo-wide instructions (TODO placeholder)
-CLAUDE.md                       — imports AGENTS.md for Claude Code
-.vscode/settings.json           — Copilot editor feature flags
-.claude/
-  settings.json                 — permissions/hooks (Claude Code only)
-  agents/
-    README.md                   — agent conventions + field reference
-    example-reviewer.md         — annotated example agent
-    migrator.md                 — resolves brownfield .ai-kit sidecars
-    optimizer.md                — audits and fixes convention violations
-  skills:
-    README.md
-    new-skill/             — meta-skill: create a new skill
-    new-agent/             — meta-skill: create a new agent
-    layer-agents/  — meta-skill: create a nested AGENTS.md
-    migrate/               — skill: finish a brownfield migration
-    optimize/              — skill: audit and fix convention violations
-    git-conventions/            — a finished skill, as a reference
-.github/
-  prompts/
-    README.md                   — Copilot-only prompt file guide
-    _example.prompt.md          — annotated example prompt
-docs/
-  cross-tool-setup.md                  — how Copilot + Claude Code share this repo
-  copilot-customization-reference.md   — authoritative Copilot reference
-  conventions.md                       — ai-kit's conventions
-  built-in-reference.md                — what ships out of the box with VS Code
-  workflow-tips.md                     — working effectively with this system
-  why-this-way.md                      — design rationale (optional reading)
-  migration.md                         — how brownfield migration works
-  optimization.md                      — how the audit + optimize verb works
+spec/            the standard: rules.md (R-IDs, source of truth) + target-layout.md
+catalog/         optional skills/agents installed into consumer repos (catalog.json)
+templates/       mandatory wiring materialized into every adopted repo
+                 (file skeletons + the required ai-kit-check skill)
+bootstrap/       the user-level /ai-kit-adopt entry-point skill
+scripts/ test/   the engine (zero-dep Node ≥ 20) — also copied into targets
+                 during adoption as .claude/ai-kit-adoption/
+.claude/         this repo's own live config; the adopt-* skills and
+                 adoption-verifier agent are dual-role (used here AND
+                 installed into targets — see scripts/install-adoption.mjs)
+docs/            consumer-facing guides; docs/dev/ = kit-process material
+reports/         generated outputs (gitignored)
+ADOPT.md         bootstrap instructions read by the adoption skill (path is
+                 load-bearing: ~/tools/ai-kit/ADOPT.md)
 ```
 
-Each asset-type folder has a `README.md` explaining the pattern and an example
-file showing what "good" looks like.
+Why `catalog/` and `templates/` are *not* under `.claude/`: anything in
+`.claude/` auto-loads while working on the kit itself. Payload is cargo, not
+config. Rationale: [`docs/why-this-way.md`](./docs/why-this-way.md).
 
 ## Next steps
 
+- [`docs/adoption-guide.md`](./docs/adoption-guide.md) — adopting a repo.
 - [`docs/cross-tool-setup.md`](./docs/cross-tool-setup.md) — how one set of
   files serves both tools.
 - [`docs/conventions.md`](./docs/conventions.md) — the do's and don'ts.
 - [`docs/copilot-customization-reference.md`](./docs/copilot-customization-reference.md)
   — authoritative reference for Copilot concepts.
-- [`docs/built-in-reference.md`](./docs/built-in-reference.md) — what's
-  available out of the box with VS Code + Copilot.
-- [`docs/workflow-tips.md`](./docs/workflow-tips.md) — practical tips for
-  working with this system effectively.
+- [`docs/built-in-reference.md`](./docs/built-in-reference.md) — what ships out
+  of the box with VS Code + Copilot.
+- [`docs/workflow-tips.md`](./docs/workflow-tips.md) — practical tips.
 - [`docs/why-this-way.md`](./docs/why-this-way.md) — design rationale.
 
 ## License

@@ -49,13 +49,14 @@ misparsed `copilot-only` and defaulted to mixed-messy — never repeat that.)
 3. Sabotage (mixed-messy only, after its clean run): follow
    [sabotage procedure](references/sabotage.md) — 3 seeded defects, fresh
    verifier subagent per defect, record caught/missed. Catch-rate = n/3.
-4. Report → `<kit>/docs/validation-report-<date>.md`:
+4. Report → `<kit>/reports/validation-report-<date>.md` (create `reports/`
+   if missing; it is gitignored — reports are working outputs, never committed):
    per-fixture table (phases completed, gate loops, assert verdict, sentinel
    accounting, merged-bytes %), sabotage catch-rate, ALL escalations gathered
    for the human, environment (tool, model, kit SHA), and a plain-language
    verdict against the pivot triggers (V2-PLAN §12). Honest caveat in the
    header: this validates the Claude Code column; Copilot runs are manual.
-5. TEARDOWN: after the report is written to the kit's docs/ —
+5. TEARDOWN: after the report is written to the kit's reports/ —
    - PASSING fixture dirs: `rm -rf` them.
    - FAILING fixture dirs: keep automatically for forensics; list their paths
      in the report so the user can inspect, then delete when done.
