@@ -167,6 +167,12 @@ Per DD-12, every acceptance below runs against **two targets**: `test/fixtures/m
 
 **Phase D done when:** all three seeded tasks shipped through the loop with logs, commits, and human-gated merges.
 
+> **D7 findings (2026-06-11):** `model`, `turns_used`, `turn_limit` captured
+> successfully in every Claude Code dispatch across the D3 (subagent) and D4
+> (team) runs. Copilot capture remains unverified, so the fields stay
+> **optional** in the A5 schema and `log-report` keeps its `n/a` degradation.
+> Revisit if a Copilot run confirms capture.
+
 ---
 
 ## Phase E — Quality flywheel
