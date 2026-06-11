@@ -66,3 +66,38 @@ test('install-adoption ships only the five adoption scripts + lib, no kit-dev to
     rmSync(target, { recursive: true, force: true });
   }
 });
+
+test('install-adoption ships orchestration lifecycle skills, keeps discovery/generation kit-only', () => {
+  const target = makeGitRepo();
+  try {
+    const r = spawnSync(process.execPath,
+      [join(KIT, 'scripts/install-adoption.mjs'), target], { encoding: 'utf8' });
+    assert.equal(r.status, 0, `install-adoption failed: ${r.stderr}`);
+
+    // Lifecycle skills ship verbatim (invoked in the target's life post-generation).
+    for (const id of ['retro', 'log-report', 'eval-runner']) {
+      const skill = `.claude/skills/${id}/SKILL.md`;
+      assert.ok(existsSync(join(target, skill)), `${id} SKILL.md installed`);
+      assert.equal(readFileSync(join(target, skill), 'utf8'),
+        readFileSync(join(KIT, skill), 'utf8'), `${id} matches kit source`);
+    }
+    // Discovery/generation meta-skills run FROM the kit clone and stay home.
+    for (const id of ['structure-detector', 'dependency-mapper', 'convention-detector',
+      'interview-guide', 'blueprint-generator', 'handoff-validator',
+      'agent-instantiator', 'skill-instantiator', 'drift-checker']) {
+      assert.ok(!existsSync(join(target, `.claude/skills/${id}`)), `${id} must NOT ship`);
+    }
+    // Same for the orchestration meta-agents.
+    for (const a of ['repo-analyst', 'requirements-interviewer', 'plan-synthesizer',
+      'scaffolder', 'evaluator']) {
+      assert.ok(!existsSync(join(target, `.claude/agents/${a}.md`)), `${a} must NOT ship`);
+    }
+    // Orchestration engine + templates ride along with the wholesale copies.
+    assert.ok(existsSync(join(target, '.claude/ai-kit-adoption/scripts/lib/orchestration/schemas.mjs')),
+      'scripts/lib/orchestration rides along');
+    assert.ok(existsSync(join(target, '.claude/ai-kit-adoption/templates/orchestration/template-registry.json')),
+      'templates/orchestration rides along');
+  } finally {
+    rmSync(target, { recursive: true, force: true });
+  }
+});

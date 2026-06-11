@@ -19,13 +19,18 @@ Group by `to_agent` (the dispatched agent); each entry is one dispatch.
 - **flags** — `FAILURE>20%` when failure rate > 20%; `UTIL>80%` when turn
   utilization > 80%.
 
-Each line is validated with `validateHandoffLog` from
-[schemas.mjs](../../../scripts/lib/orchestration/schemas.mjs);
+Each line is validated with `validateHandoffLog` from the kit's
+[schemas.mjs](../../../scripts/lib/orchestration/schemas.mjs)
+(kit-root path; resolution below);
 invalid lines are reported with their line number and excluded from stats.
 
 ## Run
 
-From the kit clone root, with the target's log path as the argument:
+Locate a kit root first (same resolution as ai-kit-check): a kit clone if you
+are in one; else the target's `.claude/ai-kit-adoption/` while the adoption
+tooling is still present (it carries `scripts/lib/` verbatim); else
+shallow-clone the kit repo (URL in `.claude/ai-kit.json` → `kitRepo`). From
+that root, with the target's log path as the argument:
 
 ```
 node --input-type=module -e '

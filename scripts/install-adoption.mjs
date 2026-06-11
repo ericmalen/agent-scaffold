@@ -16,9 +16,20 @@
 //   .claude/skills/skill-creator/          (baseline skill authoring, vendored from Anthropic)
 //   .claude/skills/agent-creator/          (baseline agent authoring)
 //   .claude/agents/docs-auditor.md         (baseline docs auditor)
+//   .claude/skills/retro/                   (orchestration lifecycle: checklist flywheel)
+//   .claude/skills/log-report/              (orchestration lifecycle: handoff-log analytics)
+//   .claude/skills/eval-runner/             (orchestration lifecycle: generated-agent evals)
 //
 // Deliberately NOT installed (kit-side only): .claude/skills/ai-kit-adopt
-// (entry point) and .claude/skills/validate-adoption (fixture validation harness).
+// (entry point), .claude/skills/validate-adoption (fixture validation harness),
+// and the orchestration discovery/generation meta-assets — agents
+// repo-analyst, requirements-interviewer, plan-synthesizer, scaffolder,
+// evaluator and skills structure-detector, dependency-mapper,
+// convention-detector, interview-guide, blueprint-generator,
+// handoff-validator, agent-instantiator, skill-instantiator, drift-checker —
+// which run FROM a kit clone against a target path (the ai-kit-adopt
+// pattern). templates/orchestration/ and scripts/lib/orchestration/ ride
+// along with the wholesale templates/ + scripts/lib copies below.
 
 import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
@@ -69,6 +80,9 @@ const copies = [
   ['.claude/skills/skill-creator', '.claude/skills/skill-creator'],
   ['.claude/skills/agent-creator', '.claude/skills/agent-creator'],
   ['.claude/agents/docs-auditor.md', '.claude/agents/docs-auditor.md'],
+  ['.claude/skills/retro', '.claude/skills/retro'],
+  ['.claude/skills/log-report', '.claude/skills/log-report'],
+  ['.claude/skills/eval-runner', '.claude/skills/eval-runner'],
 ];
 
 for (const [src, dst] of copies) {
