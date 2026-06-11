@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "name": "bad-enums",
+  "type": "hybrid",
+  "layers": [
+    {
+      "name": "core",
+      "path": "src",
+      "stack": "Node.js",
+      "testCmd": "npm test",
+      "buildCmd": null
+    }
+  ],
+  "internalEdges": [],
+  "packageManager": "",
+  "ci": 42,
+  "conventions": {
+    "naming": "kebab-case",
+    "branching": "main-only",
+    "commitStyle": "conventional-commits"
+  },
+  "gaps": []
+}

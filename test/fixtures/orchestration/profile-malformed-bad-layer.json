@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "name": "bad-layer",
+  "type": "monorepo",
+  "layers": [
+    {
+      "name": "api",
+      "path": "apps/api",
+      "buildCmd": "npm run build"
+    },
+    "not-an-object"
+  ],
+  "internalEdges": [
+    {
+      "from": "ui",
+      "to": "api"
+    },
+    {
+      "from": "api",
+      "to": "api"
+    }
+  ],
+  "packageManager": "pnpm",
+  "ci": "github-actions",
+  "conventions": {
+    "naming": "kebab-case",
+    "branching": "feature/*"
+  },
+  "gaps": ["one valid gap", 7]
+}

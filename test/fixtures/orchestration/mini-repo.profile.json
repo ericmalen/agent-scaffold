@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "name": "mini-repo",
+  "type": "single-package",
+  "layers": [
+    {
+      "name": "cli",
+      "path": ".",
+      "stack": "Node.js CLI (zero-dependency)",
+      "testCmd": "node --test",
+      "buildCmd": null
+    }
+  ],
+  "internalEdges": [],
+  "packageManager": "npm",
+  "ci": null,
+  "conventions": {
+    "naming": "snake_case files",
+    "branching": "dev/<initials>/<slug>",
+    "commitStyle": "freeform imperative"
+  },
+  "gaps": [
+    "no CI system",
+    "lint config present but no lint script"
+  ]
+}

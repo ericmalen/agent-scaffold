@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "name": "maxi-repo",
+  "type": "monorepo",
+  "layers": [
+    {
+      "name": "ui",
+      "path": "apps/ui",
+      "stack": "React + TypeScript + Vite",
+      "testCmd": "npm test --workspace ui",
+      "buildCmd": "npm run build --workspace ui"
+    },
+    {
+      "name": "api",
+      "path": "apps/api",
+      "stack": "Express + TypeScript",
+      "testCmd": "npm test --workspace api",
+      "buildCmd": "npm run build --workspace api"
+    },
+    {
+      "name": "db",
+      "path": "packages/db",
+      "stack": "Prisma + PostgreSQL",
+      "testCmd": "npm test --workspace db",
+      "buildCmd": null
+    },
+    {
+      "name": "shared",
+      "path": "packages/shared",
+      "stack": "TypeScript (Zod schemas)",
+      "testCmd": "npm test --workspace shared",
+      "buildCmd": "npm run build --workspace shared"
+    }
+  ],
+  "internalEdges": [
+    {
+      "from": "ui",
+      "to": "shared"
+    },
+    {
+      "from": "api",
+      "to": "shared"
+    }
+  ],
+  "packageManager": "npm",
+  "ci": "azure-devops",
+  "conventions": {
+    "naming": "kebab-case files, PascalCase React components",
+    "branching": "feature/<ticket>-<slug>",
+    "commitStyle": "conventional-commits"
+  },
+  "gaps": [
+    "no documented TDD policy",
+    "no security review gate in CI"
+  ]
+}

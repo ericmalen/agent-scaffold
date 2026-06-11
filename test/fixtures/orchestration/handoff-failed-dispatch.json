@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-06-10T14:02:11Z",
+  "from_agent": "feature-orchestrator",
+  "to_agent": "api-engineer",
+  "task_id": "T-003",
+  "artifacts": [],
+  "decision_summary": "Second failure on rate-limit task; returning T-003 to Backlog as blocked.",
+  "duration_ms": 312000,
+  "status": "failed",
+  "failure_reason": "test command exited non-zero after retry; specialist reported missing rate-limiter dependency",
+  "retry_count": 1
+}

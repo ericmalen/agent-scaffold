@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-06-10T15:20:44Z",
+  "from_agent": "feature-orchestrator",
+  "to_agent": "code-reviewer",
+  "task_id": "T-002",
+  "artifacts": ["apps/ui/src/locale-toggle.tsx"],
+  "decision_summary": "Review of bilingual toggle passed with no findings.",
+  "duration_ms": 95000,
+  "status": "success",
+  "retry_count": 0
+}
