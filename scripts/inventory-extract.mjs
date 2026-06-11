@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // inventory-extract — enumerate + extract AI-config content from a repo.
-// Plan §3. Pure mechanics, no classification beyond the enumerated surface
+// Pure mechanics, no classification beyond the enumerated surface
 // list; everything else is sweep-candidate triage for the AI plan phase.
 //
 // Usage: node scripts/inventory-extract.mjs [--root <dir>] [--out <dir>]
@@ -10,6 +10,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { extractFile, sweepFile, isBinary, classifySurface } from './lib/extract.mjs';
 
 const MIN_NODE_MAJOR = 20;
@@ -31,7 +32,7 @@ export function runInventory({ root, outDir, allowDirty = false, include = [] })
   const includeSet = new Set(include);
   root = resolve(root);
 
-  // Preconditions (hard, plan §5 — no degraded fallback)
+  // Preconditions (hard — no degraded fallback)
   const major = Number(process.versions.node.split('.')[0]);
   if (major < MIN_NODE_MAJOR) fail(`node >= ${MIN_NODE_MAJOR} required (found ${process.versions.node})`);
   const check = spawnSync('git', ['rev-parse', '--is-inside-work-tree'], { cwd: root, encoding: 'utf8' });
@@ -133,7 +134,7 @@ export function runInventory({ root, outDir, allowDirty = false, include = [] })
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === new URL(import.meta.url).pathname;
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isMain) {
   const args = process.argv.slice(2);

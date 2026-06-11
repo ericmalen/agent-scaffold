@@ -6,6 +6,7 @@
 // Exit:  0 = pass · 1 = findings above threshold (errors; with --strict, any)
 
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { readMarker } from './lib/audit/util.mjs';
 import {
   checkRootInstructions, checkShim, checkPathScoping, checkSkills,
@@ -63,7 +64,7 @@ export function audit({ root, strict = false }) {
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === new URL(import.meta.url).pathname;
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isMain) {
   const args = process.argv.slice(2);

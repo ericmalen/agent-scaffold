@@ -15,8 +15,9 @@
 
 import { readFileSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const kitRoot = resolve(dirname(new URL(import.meta.url).pathname), '..');
+const kitRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 // Bold rule definition: **R-NN · title** · <type> · <enforcement+severity>
 // Title may itself contain emphasis (e.g. *(compat)*), so match lazily to the
@@ -74,7 +75,7 @@ export function run(root = kitRoot) {
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === new URL(import.meta.url).pathname;
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isMain) {
   const args = process.argv.slice(2);

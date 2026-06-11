@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// report — generate the risk-ordered human review report (plan §8) from
+// report — generate the risk-ordered human review report from
 // manifest + nodes. Mechanical generation; the verifier and the human read
 // this, never spelunk commits.
 //
@@ -11,6 +11,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadManifest, loadInventory } from './lib/manifest.mjs';
 import { splitLinesKeepEnds } from './lib/extract.mjs';
 
@@ -172,7 +173,7 @@ export function generateReport({ root }) {
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === new URL(import.meta.url).pathname;
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isMain) {
   const args = process.argv.slice(2);

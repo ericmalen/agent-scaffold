@@ -1,15 +1,19 @@
 # Kit-repo CI (ADO primary) — integrity + regression gate for ai-kit itself.
 # Mirrored by .github/workflows/ci.yml. Keep the two in lockstep.
 #
-# Gates (V2-PLAN 4.1):
+# Gates:
 #   1. npm test            — unit suite (audit, materialize, extract, gates).
 #   2. rule-check-map      — every mechanical rule maps to a check (R-51).
 #   3. docs-consistency    — no v1 vocabulary drift, no broken doc links.
-#   4. build-starter + audit --strict — the published starter stays audit-clean.
+#   4. audit --root . --strict — the kit repo itself stays audit-clean.
+#   5. build-starter + audit --strict — the published starter stays audit-clean.
 # The starter is published as a pipeline artifact ("starter").
 trigger:
   branches:
     include: ['*']
+# NOTE: Azure Repos Git ignores YAML `pr:` triggers — PR validation requires a
+# branch build-validation policy pointing at this pipeline (the block below is
+# honored only when this YAML runs against a GitHub-hosted repo).
 pr:
   branches:
     include: ['*']
@@ -20,20 +24,21 @@ steps:
     fetchDepth: 1
   - task: NodeTool@0
     inputs:
-      versionSpec: '20.x'
-    displayName: Use Node 20
+      versionSpec: '22.x'
+    displayName: Use Node 22
   - bash: npm test
     displayName: Unit tests
   - bash: node scripts/rule-check-map.mjs
     displayName: rule↔check integrity (R-51)
   - bash: node scripts/docs-consistency.mjs
     displayName: docs consistency
+  - bash: node scripts/audit.mjs --root . --strict
+    displayName: kit self-audit --strict
   - bash: |
       set -euo pipefail
       OUT="$(Agent.TempDirectory)/starter"
       node scripts/build-starter.mjs "$OUT" --git
       node scripts/audit.mjs --root "$OUT" --strict
-      echo "##vso[task.setvariable variable=STARTER_DIR]$OUT"
     displayName: build starter + audit --strict
   - publish: $(Agent.TempDirectory)/starter
     artifact: starter

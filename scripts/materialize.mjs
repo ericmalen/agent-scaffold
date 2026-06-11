@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 // materialize — deterministically assemble the target tree from
-// nodes + manifest + kit templates + literals (plan §3/§5 step 4).
+// nodes + manifest + kit templates + literals.
 //
 // Conservation by construction: node bytes are copied verbatim from
 // .adoption/nodes/, never re-typed. The only non-node bytes in generated
 // output are: template bytes, literal bytes, and single "\n" separators
 // (inserted only when a chunk does not end with a newline).
 //
-// Assembly semantics (owner decision, plan §13b):
+// Assembly semantics (owner decision):
 // - Structured targets = targets with a kit template containing
 //   `<!-- ai-kit:slot:NAME -->` markers. Entries attach content to a slot;
 //   slot content is concatenated in MANIFEST ORDER and replaces the marker.
@@ -20,6 +20,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync, rmSync, rmdirSync, existsSync, readdirSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { loadManifest, loadInventory, validateShape, keepFiles } from './lib/manifest.mjs';
 import { stripJsonComments, splitLinesKeepEnds } from './lib/extract.mjs';
@@ -237,7 +238,7 @@ export function materialize({ root, templatesDir, outRoot = null }) {
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === new URL(import.meta.url).pathname;
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isMain) {
   const args = process.argv.slice(2);
@@ -250,7 +251,7 @@ if (isMain) {
   }
   if (!opt.templates) {
     // default: templates/ next to this script's package root
-    opt.templates = join(dirname(new URL(import.meta.url).pathname), '..', 'templates');
+    opt.templates = join(dirname(fileURLToPath(import.meta.url)), '..', 'templates');
   }
   try {
     const res = materialize({ root: opt.root, templatesDir: opt.templates, outRoot: opt.dryRun });

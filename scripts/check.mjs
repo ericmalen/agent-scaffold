@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// check — mechanical gates over manifest + inventory (plan §6).
+// check — mechanical gates over manifest + inventory.
 //   1. Completeness: every node and sweep candidate has exactly one disposition
 //   2. Tiling: split ranges exactly cover the node (gaps = explicit drops)
 //   3. Reproducibility: re-materializing equals the working tree byte-for-byte
@@ -14,11 +14,12 @@
 
 import { readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import {
   loadManifest, loadInventory, validateShape, entriesByNode,
-  keepFiles, outOfScopeFiles, isAllowedTarget, NODE_OPS,
+  keepFiles, outOfScopeFiles, isAllowedTarget,
 } from './lib/manifest.mjs';
 import { splitLinesKeepEnds } from './lib/extract.mjs';
 import { materialize } from './materialize.mjs';
@@ -106,7 +107,7 @@ export function check({ root, templatesDir, skipRepro = false }) {
     if (entry.op === 'merge' && !existsSync(join(adoptionDir, entry.literal))) {
       v('scope', `merge literal "${entry.literal}" does not exist under .adoption/`);
     }
-    if (entry.op === 'drop' && NODE_OPS.has(entry.op) && !entry.reason?.trim()) {
+    if (entry.op === 'drop' && !entry.reason?.trim()) {
       v('scope', `drop of ${entry.node} has an empty reason`);
     }
   }
@@ -156,7 +157,7 @@ export function check({ root, templatesDir, skipRepro = false }) {
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
-const isMain = process.argv[1] && resolve(process.argv[1]) === new URL(import.meta.url).pathname;
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isMain) {
   const args = process.argv.slice(2);
@@ -169,7 +170,7 @@ if (isMain) {
     else { console.error(`check: unknown flag ${args[i]}`); process.exit(2); }
   }
   if (!opt.templates) {
-    opt.templates = join(dirname(new URL(import.meta.url).pathname), '..', 'templates');
+    opt.templates = join(dirname(fileURLToPath(import.meta.url)), '..', 'templates');
   }
   const { violations } = check({ root: opt.root, templatesDir: opt.templates, skipRepro: opt.skipRepro });
   if (opt.json) {

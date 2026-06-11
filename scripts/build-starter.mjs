@@ -4,11 +4,12 @@
 // runnable directly. Usage: node scripts/build-starter.mjs <dir> [--git]
 
 import { resolve, dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { instantiate as instantiateTemplate } from './lib/template.mjs';
 
-const kitRoot = resolve(dirname(new URL(import.meta.url).pathname), '..');
+const kitRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 const [dir, ...flags] = process.argv.slice(2);
 if (!dir) {
@@ -52,7 +53,7 @@ const files = {
   'README.md': `# New Project
 
 Started from the ai-kit starter — this repo is pre-wired for AI-assisted
-coding with Claude Code and VS Code Copilot.
+coding with Claude Code and GitHub Copilot (VS Code).
 
 Next steps: fill in AGENTS.md (keep it under two pages), then delete this
 section. If your team uses GitHub.com Copilot code review, set

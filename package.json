@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "scripts": {
-    "test": "node --test 'test/**/*.test.mjs'",
+    "test": "node --test \"test/**/*.test.mjs\"",
     "docs-consistency": "node scripts/docs-consistency.mjs",
     "rule-check-map": "node scripts/rule-check-map.mjs"
   }
