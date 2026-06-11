@@ -10,6 +10,8 @@
 // A2/A4/A5.
 
 const REPO_TYPES = new Set(['monorepo', 'single-package']);
+const PIPELINE_WHEN = new Set(['scheduled', 'multi_day']);   // §9.3 / DD-4
+const SLOT_NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;             // kebab-case (DD-5)
 
 const isNonEmptyString = (v) => typeof v === 'string' && v.trim() !== '';
 const isStringOrNull = (v) => v === null || typeof v === 'string';
@@ -75,6 +77,99 @@ export function validateRepoProfile(profile) {
   }
 
   checkStringArray(profile.gaps, 'gaps', e);
+
+  return errors;
+}
+
+// ── orchestration-blueprint (A3) ────────────────────────────────────────────
+
+// Shared shape for the orchestrator config and each specialist entry.
+// Slot-coverage against actual templates is C1 lint / B7 handoff-validator
+// territory, not here.
+function checkAgentConfig(agent, where, e) {
+  if (!isPlainObject(agent)) {
+    e(`${where} must be an object`);
+    return;
+  }
+  if (!isNonEmptyString(agent.name)) e(`${where}.name must be a non-empty string`);
+  if (!isNonEmptyString(agent.templateId)) e(`${where}.templateId must be a non-empty string`);
+  // Version pins live in the generation manifest, never in the blueprint —
+  // deliberate tripwire, not generic unknown-key rejection (DD-13).
+  if ('templateVersion' in agent) {
+    e(`${where}.templateVersion is not allowed — version pins live in the generation manifest (DD-13)`);
+  }
+  if (!isPlainObject(agent.slots)) {
+    e(`${where}.slots must be an object`);
+  } else {
+    for (const [key, value] of Object.entries(agent.slots)) {
+      if (!SLOT_NAME_RE.test(key)) e(`${where}.slots: slot name "${key}" must be kebab-case (DD-5)`);
+      if (!isNonEmptyString(value)) e(`${where}.slots["${key}"] must be a non-empty string`);
+    }
+  }
+  if (!isNonEmptyString(agent.modelTier)) e(`${where}.modelTier must be a non-empty string`);
+  if (!Number.isInteger(agent.turnLimit) || agent.turnLimit < 1) {
+    e(`${where}.turnLimit must be a positive integer`);
+  }
+  if (!Array.isArray(agent.tools) || agent.tools.length === 0) {
+    e(`${where}.tools must be a non-empty array`);
+  } else {
+    agent.tools.forEach((tool, i) => {
+      if (!isNonEmptyString(tool)) e(`${where}.tools[${i}] must be a non-empty string`);
+    });
+  }
+  if (!isPlainObject(agent.evalRequirements)
+      || !Number.isInteger(agent.evalRequirements.minGoldens)
+      || agent.evalRequirements.minGoldens < 1) {
+    e(`${where}.evalRequirements.minGoldens must be a positive integer`);
+  }
+}
+
+export function validateBlueprint(blueprint) {
+  if (!isPlainObject(blueprint)) return ['blueprint must be an object'];
+  const errors = [];
+  const e = (m) => errors.push(m);
+
+  if (blueprint.schemaVersion !== 1) e(`schemaVersion must be 1 (got ${blueprint.schemaVersion})`);
+
+  if (!Array.isArray(blueprint.specialists) || blueprint.specialists.length === 0) {
+    e('specialists must be a non-empty array');
+  } else {
+    blueprint.specialists.forEach((s, i) => checkAgentConfig(s, `specialists[${i}]`, e));
+    const seen = new Set();
+    for (const s of blueprint.specialists) {
+      if (!isPlainObject(s) || !isNonEmptyString(s.name)) continue;
+      if (seen.has(s.name)) e(`specialists: duplicate name "${s.name}"`);
+      seen.add(s.name);
+    }
+  }
+
+  checkAgentConfig(blueprint.orchestrator, 'orchestrator', e);
+
+  // Key names verbatim from §9.3 — the one snake_case island in the kit.
+  const dr = blueprint.dispatch_rules;
+  if (!isPlainObject(dr)) {
+    e('dispatch_rules must be an object');
+  } else {
+    for (const field of ['subagent_max_scopes', 'agent_team_min_scopes']) {
+      if (!Number.isInteger(dr[field]) || dr[field] < 1) {
+        e(`dispatch_rules.${field} must be a positive integer`);
+      }
+    }
+    if (typeof dr.agent_team_on_cross_repo !== 'boolean') {
+      e('dispatch_rules.agent_team_on_cross_repo must be a boolean');
+    }
+    if (!Array.isArray(dr.pipeline_when)) {
+      e('dispatch_rules.pipeline_when must be an array');
+    } else {
+      dr.pipeline_when.forEach((v, i) => {
+        if (!PIPELINE_WHEN.has(v)) {
+          e(`dispatch_rules.pipeline_when[${i}] must be one of scheduled | multi_day (got ${v})`);
+        }
+      });
+    }
+  }
+
+  checkStringArray(blueprint.docs, 'docs', e);
 
   return errors;
 }

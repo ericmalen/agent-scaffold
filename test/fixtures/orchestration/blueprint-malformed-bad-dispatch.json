@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "specialists": [
+    {
+      "name": "generic-specialist",
+      "templateId": "generic-specialist",
+      "templateVersion": "1.2.0",
+      "slots": { "layer-path": "." },
+      "modelTier": "sonnet",
+      "turnLimit": 20,
+      "tools": ["Read", "Edit", "Bash"],
+      "evalRequirements": { "minGoldens": 2 }
+    }
+  ],
+  "orchestrator": {
+    "name": "feature-orchestrator",
+    "templateId": "orchestrator",
+    "slots": { "tasks-path": "tasks.md" },
+    "modelTier": "opus",
+    "turnLimit": 60,
+    "tools": ["Read", "Agent"],
+    "evalRequirements": { "minGoldens": 0 }
+  },
+  "dispatch_rules": {
+    "subagent_max_scopes": "2",
+    "agent_team_min_scopes": 3,
+    "agent_team_on_cross_repo": "yes",
+    "pipeline_when": ["nightly", "multi_day"]
+  },
+  "docs": "docs/orchestration/dispatch-rules.md"
+}

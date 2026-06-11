@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "specialists": [
+    {
+      "name": "api-engineer",
+      "slots": {
+        "LayerPath": "apps/api",
+        "test-cmd": ""
+      },
+      "modelTier": "sonnet",
+      "turnLimit": 0,
+      "tools": []
+    },
+    {
+      "name": "api-engineer",
+      "templateId": "api-engineer",
+      "slots": { "layer-path": "apps/api" },
+      "modelTier": "sonnet",
+      "turnLimit": 30,
+      "tools": ["Read", "Edit"],
+      "evalRequirements": { "minGoldens": 2 }
+    }
+  ],
+  "orchestrator": {
+    "name": "feature-orchestrator",
+    "templateId": "orchestrator",
+    "slots": { "tasks-path": "tasks.md" },
+    "modelTier": "opus",
+    "turnLimit": 60,
+    "tools": ["Read", "Agent"],
+    "evalRequirements": { "minGoldens": 2 }
+  },
+  "dispatch_rules": {
+    "subagent_max_scopes": 2,
+    "agent_team_min_scopes": 3,
+    "agent_team_on_cross_repo": true,
+    "pipeline_when": []
+  },
+  "docs": ["docs/orchestration/dispatch-rules.md"]
+}

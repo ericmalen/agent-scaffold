@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { validateRepoProfile } from '../scripts/lib/orchestration/schemas.mjs';
+import { validateRepoProfile, validateBlueprint } from '../scripts/lib/orchestration/schemas.mjs';
 
 const FIXTURES = join(import.meta.dirname, 'fixtures', 'orchestration');
 const loadFixture = (name) => JSON.parse(readFileSync(join(FIXTURES, name), 'utf8'));
@@ -69,5 +69,70 @@ test('validateRepoProfile: missing top-level fields all report', () => {
     'ci must be a string or null (null = no CI detected)',
     'conventions must be an object',
     'gaps must be an array',
+  ]);
+});
+
+// ── validateBlueprint (A3) ──────────────────────────────────────────────────
+
+test('validateBlueprint: AI Portal blueprint fixture validates clean', () => {
+  assert.deepEqual(validateBlueprint(loadFixture('ai-portal.blueprint.json')), []);
+});
+
+test('validateBlueprint: non-object inputs are rejected outright', () => {
+  for (const input of [null, undefined, [], 'blueprint', 42]) {
+    assert.deepEqual(validateBlueprint(input), ['blueprint must be an object']);
+  }
+});
+
+test('validateBlueprint: malformed fixture — wrong schemaVersion type, everything missing', () => {
+  assert.deepEqual(validateBlueprint(loadFixture('blueprint-malformed-empty.json')), [
+    'schemaVersion must be 1 (got 1)',
+    'specialists must be a non-empty array',
+    'orchestrator must be an object',
+    'dispatch_rules must be an object',
+    'docs must be an array',
+  ]);
+});
+
+test('validateBlueprint: malformed fixture — broken specialist entry and duplicate name', () => {
+  assert.deepEqual(validateBlueprint(loadFixture('blueprint-malformed-bad-specialist.json')), [
+    'specialists[0].templateId must be a non-empty string',
+    'specialists[0].slots: slot name "LayerPath" must be kebab-case (DD-5)',
+    'specialists[0].slots["test-cmd"] must be a non-empty string',
+    'specialists[0].turnLimit must be a positive integer',
+    'specialists[0].tools must be a non-empty array',
+    'specialists[0].evalRequirements.minGoldens must be a positive integer',
+    'specialists: duplicate name "api-engineer"',
+  ]);
+});
+
+test('validateBlueprint: malformed fixture — version pin tripwire, bad dispatch_rules, bad docs', () => {
+  assert.deepEqual(validateBlueprint(loadFixture('blueprint-malformed-bad-dispatch.json')), [
+    'specialists[0].templateVersion is not allowed — version pins live in the generation manifest (DD-13)',
+    'orchestrator.evalRequirements.minGoldens must be a positive integer',
+    'dispatch_rules.subagent_max_scopes must be a positive integer',
+    'dispatch_rules.agent_team_on_cross_repo must be a boolean',
+    'dispatch_rules.pipeline_when[0] must be one of scheduled | multi_day (got nightly)',
+    'docs must be an array',
+  ]);
+});
+
+test('validateBlueprint: missing top-level fields all report', () => {
+  assert.deepEqual(validateBlueprint({}), [
+    'schemaVersion must be 1 (got undefined)',
+    'specialists must be a non-empty array',
+    'orchestrator must be an object',
+    'dispatch_rules must be an object',
+    'docs must be an array',
+  ]);
+});
+
+test('validateBlueprint: non-object specialist and non-string tool entries report by index', () => {
+  const blueprint = loadFixture('ai-portal.blueprint.json');
+  blueprint.specialists.push('qa-agent');
+  blueprint.orchestrator.tools = ['Read', '', 'Agent'];
+  assert.deepEqual(validateBlueprint(blueprint), [
+    'specialists[4] must be an object',
+    'orchestrator.tools[1] must be a non-empty string',
   ]);
 });
