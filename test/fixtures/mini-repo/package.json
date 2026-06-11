@@ -1,0 +1,16 @@
+{
+  "name": "mini-repo",
+  "version": "1.0.0",
+  "description": "Tiny word-count CLI",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "wordy": "src/cli_main.mjs"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,5 @@
+# Inert fixture CI config — evidence for discovery, never executed.
+trigger: none
+pr: none
+steps:
+  - script: echo maxi-repo fixture
