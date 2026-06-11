@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-06-10T13:45:02Z",
+  "from_agent": "feature-orchestrator",
+  "to_agent": "api-engineer",
+  "task_id": "T-001",
+  "artifacts": ["apps/api/src/tag-routes.ts", "apps/api/test/tag-routes.test.mjs"],
+  "decision_summary": "Dispatched api layer of T-001; specialist added endpoint and tests, all green.",
+  "duration_ms": 184000,
+  "status": "success",
+  "retry_count": 0,
+  "model": "sonnet",
+  "turns_used": 14,
+  "turn_limit": 30
+}

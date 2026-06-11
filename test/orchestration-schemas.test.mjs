@@ -7,6 +7,7 @@ import {
   validateRepoProfile,
   validateDecisionsDoc,
   validateBlueprint,
+  validateHandoffLog,
   DECISION_ENUMS,
 } from '../scripts/lib/orchestration/schemas.mjs';
 
@@ -204,5 +205,75 @@ test('validateBlueprint: non-object specialist and non-string tool entries repor
   assert.deepEqual(validateBlueprint(blueprint), [
     'specialists[4] must be an object',
     'orchestrator.tools[1] must be a non-empty string',
+  ]);
+});
+
+// ── validateHandoffLog (A5) ─────────────────────────────────────────────────
+
+test('validateHandoffLog: success fixture with optional capture fields validates clean', () => {
+  assert.deepEqual(validateHandoffLog(loadFixture('handoff-success.json')), []);
+});
+
+test('validateHandoffLog: failed-dispatch fixture validates clean', () => {
+  assert.deepEqual(validateHandoffLog(loadFixture('handoff-failed-dispatch.json')), []);
+});
+
+test('validateHandoffLog: fixture omitting optional fields validates clean', () => {
+  assert.deepEqual(validateHandoffLog(loadFixture('handoff-minimal.json')), []);
+});
+
+test('validateHandoffLog: non-object inputs are rejected outright', () => {
+  for (const input of [null, undefined, [], 'entry', 42]) {
+    assert.deepEqual(validateHandoffLog(input), ['handoff-log entry must be an object']);
+  }
+});
+
+test('validateHandoffLog: missing required fields all report', () => {
+  assert.deepEqual(validateHandoffLog({}), [
+    'timestamp must be an ISO 8601 string (got undefined)',
+    'from_agent must be a non-empty string',
+    'to_agent must be a non-empty string',
+    'task_id must match T-### (got undefined)',
+    'artifacts must be an array',
+    'decision_summary must be a non-empty string',
+    'duration_ms must be a non-negative integer',
+    'status must be one of success | failed | blocked (got undefined)',
+    'retry_count must be a non-negative integer',
+  ]);
+});
+
+test('validateHandoffLog: failure_reason coupling to status enforced both ways', () => {
+  const success = loadFixture('handoff-success.json');
+  success.failure_reason = 'should not be here';
+  assert.deepEqual(validateHandoffLog(success), ['failure_reason must be absent or null on success']);
+
+  const failed = loadFixture('handoff-failed-dispatch.json');
+  delete failed.failure_reason;
+  assert.deepEqual(validateHandoffLog(failed), ['failure_reason must be a non-empty string when status is failed']);
+});
+
+test('validateHandoffLog: bad timestamp, status, and counters report', () => {
+  const entry = loadFixture('handoff-minimal.json');
+  entry.timestamp = 'yesterday-ish';
+  entry.status = 'crashed';
+  entry.duration_ms = -1;
+  entry.retry_count = 1.5;
+  assert.deepEqual(validateHandoffLog(entry), [
+    'timestamp must be an ISO 8601 string (got yesterday-ish)',
+    'duration_ms must be a non-negative integer',
+    'status must be one of success | failed | blocked (got crashed)',
+    'retry_count must be a non-negative integer',
+  ]);
+});
+
+test('validateHandoffLog: optional capture fields validated only when present', () => {
+  const entry = loadFixture('handoff-minimal.json');
+  entry.model = '';
+  entry.turns_used = 0;
+  entry.turn_limit = 'thirty';
+  assert.deepEqual(validateHandoffLog(entry), [
+    'model must be a non-empty string when present',
+    'turns_used must be a positive integer when present',
+    'turn_limit must be a positive integer when present',
   ]);
 });

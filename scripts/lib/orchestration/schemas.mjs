@@ -7,7 +7,8 @@
 //   validateRepoProfile        — docs/orchestration/repo-profile.json (A1)
 //   validateDecisionsDoc       — docs/orchestration/decisions.json (A2)
 //   validateBlueprint          — docs/orchestration/blueprint.json (A3)
-// Remaining two (task-backlog, handoff-log) land with A4/A5.
+//   validateTaskBacklog        — parsed tasks.md (A4; parser in parse-tasks.mjs)
+//   validateHandoffLog         — one handoff-log.jsonl entry (A5)
 
 const REPO_TYPES = new Set(['monorepo', 'single-package']);
 const PIPELINE_WHEN = new Set(['scheduled', 'multi_day']);   // §9.3 / DD-4
@@ -204,6 +205,115 @@ export function validateBlueprint(blueprint) {
   }
 
   checkStringArray(blueprint.docs, 'docs', e);
+
+  return errors;
+}
+
+// ── task-backlog (A4) ───────────────────────────────────────────────────────
+
+const TASK_ID_RE = /^T-\d{3,}$/;
+const BACKLOG_SECTIONS = ['backlog', 'inProgress', 'done'];
+
+// Validates the PARSED form ({ backlog, inProgress, done } — what
+// parseTasksMd emits and renderTasksMd consumes). Section membership encodes
+// status; semantic invariants beyond the parser's syntax checks live here so
+// programmatically built docs get the same gate.
+export function validateTaskBacklog(doc) {
+  if (!isPlainObject(doc)) return ['task backlog must be an object'];
+  const errors = [];
+  const e = (m) => errors.push(m);
+
+  const seen = new Set();
+  for (const section of BACKLOG_SECTIONS) {
+    if (!Array.isArray(doc[section])) {
+      e(`${section} must be an array`);
+      continue;
+    }
+    doc[section].forEach((t, i) => {
+      const where = `${section}[${i}]`;
+      if (!isPlainObject(t)) {
+        e(`${where} must be an object`);
+        return;
+      }
+      if (typeof t.id !== 'string' || !TASK_ID_RE.test(t.id)) {
+        e(`${where}.id must match T-### (got ${t.id})`);
+      } else if (seen.has(t.id)) {
+        e(`duplicate task id "${t.id}"`);
+      } else {
+        seen.add(t.id);
+      }
+      if (!isNonEmptyString(t.title)) e(`${where}.title must be a non-empty string`);
+      if (!Array.isArray(t.scope) || t.scope.length === 0) {
+        e(`${where}.scope must be a non-empty array`);
+      } else {
+        t.scope.forEach((s, j) => {
+          if (!isNonEmptyString(s)) e(`${where}.scope[${j}] must be a non-empty string`);
+        });
+      }
+      for (const field of ['owner', 'commit', 'blocked']) {
+        if (!(field in t) || !isStringOrNull(t[field])) {
+          e(`${where}.${field} must be a string or null`);
+        }
+      }
+      checkStringArray(t.ac, `${where}.ac`, e);
+      // Failure protocol (D2): a blocked task sits in Backlog awaiting
+      // re-dispatch — a blocked line anywhere else is a state error.
+      if (section !== 'backlog' && isNonEmptyString(t.blocked)) {
+        e(`${where} ("${t.id}") has a blocked line — blocked tasks belong in Backlog`);
+      }
+    });
+  }
+
+  return errors;
+}
+
+// ── handoff-log (A5) ────────────────────────────────────────────────────────
+
+const HANDOFF_STATUSES = new Set(['success', 'failed', 'blocked']);
+
+// Validates ONE handoff-log.jsonl entry (the orchestrator appends one entry
+// per dispatch/return, DD-11). `model`, `turns_used`, `turn_limit` stay
+// optional until capture is verified per runtime (D7). Log entries use
+// snake_case throughout, matching dispatch_rules (§9.3).
+export function validateHandoffLog(entry) {
+  if (!isPlainObject(entry)) return ['handoff-log entry must be an object'];
+  const errors = [];
+  const e = (m) => errors.push(m);
+
+  if (!isNonEmptyString(entry.timestamp) || Number.isNaN(Date.parse(entry.timestamp))) {
+    e(`timestamp must be an ISO 8601 string (got ${entry.timestamp})`);
+  }
+  for (const field of ['from_agent', 'to_agent']) {
+    if (!isNonEmptyString(entry[field])) e(`${field} must be a non-empty string`);
+  }
+  if (typeof entry.task_id !== 'string' || !TASK_ID_RE.test(entry.task_id)) {
+    e(`task_id must match T-### (got ${entry.task_id})`);
+  }
+  checkStringArray(entry.artifacts, 'artifacts', e);
+  if (!isNonEmptyString(entry.decision_summary)) e('decision_summary must be a non-empty string');
+  if (!Number.isInteger(entry.duration_ms) || entry.duration_ms < 0) {
+    e('duration_ms must be a non-negative integer');
+  }
+  if (!HANDOFF_STATUSES.has(entry.status)) {
+    e(`status must be one of ${[...HANDOFF_STATUSES].join(' | ')} (got ${entry.status})`);
+  }
+  if (!Number.isInteger(entry.retry_count) || entry.retry_count < 0) {
+    e('retry_count must be a non-negative integer');
+  }
+  if (entry.status === 'success') {
+    if (entry.failure_reason != null) e('failure_reason must be absent or null on success');
+  } else if (HANDOFF_STATUSES.has(entry.status) && !isNonEmptyString(entry.failure_reason)) {
+    e(`failure_reason must be a non-empty string when status is ${entry.status}`);
+  }
+  // Optional capture fields (D7) — validated only when present.
+  if ('model' in entry && !isNonEmptyString(entry.model)) {
+    e('model must be a non-empty string when present');
+  }
+  for (const field of ['turns_used', 'turn_limit']) {
+    if (field in entry && (!Number.isInteger(entry[field]) || entry[field] < 1)) {
+      e(`${field} must be a positive integer when present`);
+    }
+  }
 
   return errors;
 }
