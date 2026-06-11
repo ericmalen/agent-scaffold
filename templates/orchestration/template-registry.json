@@ -71,6 +71,10 @@
     "triage-rules": {
       "version": "1.0.0",
       "sha256": "93597737de504dc7b8ee9c6be4c4a29564dd91cb565ec0dce39f54e4d614bf32"
+    },
+    "agent-teams": {
+      "version": "1.0.0",
+      "sha256": "ed88bb5ec8996787935025eea14d62187fb6c857f01dc093168e743352a41b1f"
     }
   }
 }
