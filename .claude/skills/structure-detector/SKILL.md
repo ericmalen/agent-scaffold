@@ -1,6 +1,6 @@
 ---
 name: structure-detector
-description: Orchestration discovery step B1 — walks a target repo and identifies its layers/packages, the stack per layer, and test/build commands, producing the structural fields of repo-profile.json. Use during orchestration discovery of a target repo path (typically driven by the repo-analyst agent). Not for ai-kit adoption inventory and not general code search.
+description: Orchestration discovery step B1 — walks a target repo and identifies its layers/packages, the stack per layer, and test/build commands, producing the structural fields of repo-profile.json. Use when orchestration discovery of a target repo path begins (typically driven by the repo-analyst agent). Not for ai-kit adoption inventory and not general code search.
 ---
 
 # structure-detector
@@ -39,5 +39,6 @@ All inspection happens in the target repo path named by the caller.
 ## Output
 
 Report the structural fields as JSON matching the `validateRepoProfile`
-shape (`scripts/lib/orchestration/schemas.mjs`), plus the `gaps[]` entries
-found. The caller assembles and validates the full profile.
+shape ([schemas.mjs](../../../scripts/lib/orchestration/schemas.mjs)), plus
+the `gaps[]` entries found. The caller assembles and validates the full
+profile.
