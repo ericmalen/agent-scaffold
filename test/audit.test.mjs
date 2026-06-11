@@ -413,3 +413,54 @@ docs/nonexistent-thing.md
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+// ── R-47 in a linked git worktree (B3): .git is a "gitdir:" file, not a dir ──
+
+test('R-47: evaluates in a worktree checkout (.git is a gitdir: file)', () => {
+  const repo = makeRepo({
+    ...CONFORMANT,
+    '.gitignore': 'node_modules/\n', // does NOT cover .claude/settings.local.json
+    '.git': 'gitdir: /elsewhere/.git/worktrees/wt\n',
+  }, { git: false });
+  try {
+    const r47 = of(audit({ root: repo }), 'R-47');
+    assert.equal(r47.length, 1, 'R-47 must still evaluate when .git is a worktree pointer file');
+    assert.match(r47[0].message, /settings\.local\.json/);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+// ── R-23 false positive (link label that is path-shaped) ─────────────────────
+
+test('R-23: a path-shaped link LABEL is not flagged as a bare sibling path', () => {
+  const skill = (body) => ({
+    ...CONFORMANT,
+    '.claude/skills/README.md': '# Skills\n',
+    '.claude/skills/demo/SKILL.md': `---\nname: demo\ndescription: Does demo work when demoing.\n---\n\n# demo\n\n${body}\n`,
+    '.claude/skills/demo/references/architecture.md': '# Arch\n',
+  });
+  const linked = makeRepo(skill('See [references/architecture.md](references/architecture.md).'));
+  const bare = makeRepo(skill('See references/architecture.md for detail.'));
+  try {
+    assert.equal(of(audit({ root: linked }), 'R-23').length, 0, 'well-formed link must not fire R-23');
+    assert.ok(of(audit({ root: bare }), 'R-23').length >= 1, 'a truly bare path must still fire R-23');
+  } finally {
+    rmSync(linked, { recursive: true, force: true });
+    rmSync(bare, { recursive: true, force: true });
+  }
+});
+
+// ── R-45 (A4): a gitignored .vscode/settings.json passes on disk but won't ship ─
+
+test('R-45: gitignored .vscode/settings.json fires; an un-ignore negation clears it', () => {
+  const ignored = makeRepo({ ...CONFORMANT, '.gitignore': '.claude/settings.local.json\n.vscode/\n' });
+  const negated = makeRepo({ ...CONFORMANT, '.gitignore': '.claude/settings.local.json\n.vscode/\n!.vscode/settings.json\n' });
+  try {
+    assert.equal(of(audit({ root: ignored }), 'R-45').filter((f) => /gitignored/.test(f.message)).length, 1);
+    assert.equal(of(audit({ root: negated }), 'R-45').filter((f) => /gitignored/.test(f.message)).length, 0);
+  } finally {
+    rmSync(ignored, { recursive: true, force: true });
+    rmSync(negated, { recursive: true, force: true });
+  }
+});

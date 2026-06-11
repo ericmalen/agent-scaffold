@@ -107,20 +107,32 @@ Infer the proportionality tier, then CONFIRM with the human:
 When asked to refactor/reorganize existing docs to the standard:
 
 1. Classify each existing file by Diátaxis type (table above). One document,
-   one quadrant — if a file mixes types, split it before moving.
-2. Move each into `docs/<quadrant>/` (lazily-created subfolders; no empty
+   one quadrant — if a file mixes types, split it before moving, but only when
+   it cleanly cleaves into independently-useful docs. Otherwise classify by
+   dominant framing and note the mix — never fragment one coherent document
+   across folders.
+2. Decompose an overgrown README: if the README carries depth beyond
+   what-it-is + quickstart + links (inline how-to, reference tables, concept
+   explanations), extract each over-deep section into the matching
+   `docs/<quadrant>/` file (per [diataxis](references/diataxis.md)), leaving a
+   one-line pointer in the README. Treat each extracted section as a file to
+   classify per step 1. (The README is itself a doc, not just a link source.)
+3. Move each into `docs/<quadrant>/` (lazily-created subfolders; no empty
    ones). Files that are process artifacts — engineering plans, phase notes,
-   sandbox/validation results, meeting notes — are NOT reader docs: relocate
-   them OUT of `docs/` (a `notes/`/`.dev/` folder or git history), don't file
-   them in a quadrant.
-3. Rewrite every link that the moves break: inbound links from `README`,
+   sandbox/validation results, meeting notes, status/state reports (dated
+   health snapshots, dashboards) — are NOT reader docs: relocate them OUT of
+   `docs/`, defaulting to a `notes/` folder (visible, greppable, history
+   preserved via `git mv`; `.dev/` or git history are alternatives) — don't
+   file them in a quadrant.
+4. Rewrite every link that the moves break: inbound links from `README`,
    `AGENTS.md`/`CLAUDE.md`, `.claude/**`, and `spec/`; and intra-`docs/`
    links (same-quadrant stay `./sibling.md`, cross-quadrant become
    `../<otherquad>/sibling.md`). Anchors (`#section`) are unaffected.
-4. Update the docs index (the README listing, or `docs/README.md` if one
+5. Update the docs index (the README listing, or `docs/README.md` if one
    exists) to the new paths.
-5. Verify links resolve — run the repo's link check or adoption audit (or
-   grep for broken relative links); fix any break before finishing.
+6. Verify links resolve — run `node .claude/skills/docs/scripts/check-links.mjs`
+   (ships with this skill; resolves every relative Markdown link under the repo
+   and exits non-zero on a break). Fix any break before finishing.
 
 ## docs catch-up (human changed code without AI)
 

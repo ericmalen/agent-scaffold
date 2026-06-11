@@ -14,6 +14,16 @@ export function isDir(p) {
   try { return statSync(p).isDirectory(); } catch { return false; }
 }
 
+// True for a normal repo (.git is a directory) AND a linked git worktree
+// (.git is a "gitdir:" pointer FILE). R-47 only reads <root>/.gitignore, which
+// lives in the worktree root regardless, so the gitdir target is not resolved.
+export function isGitRepo(root) {
+  const dot = join(root, '.git');
+  if (isDir(dot)) return true;
+  const txt = readSafe(dot);
+  return txt != null && txt.startsWith('gitdir:');
+}
+
 const SKIP_DIRS = new Set([
   '.git', 'node_modules', '.adoption', 'dist', 'build', 'coverage',
   '.next', '.venv', 'target', 'out', '.turbo', '.cache',

@@ -4,7 +4,7 @@
 
 import { join, relative, dirname, basename } from 'node:path';
 import {
-  readSafe, exists, isDir, walk, parseFrontmatter, frontmatterKeys,
+  readSafe, exists, isDir, isGitRepo, walk, parseFrontmatter, frontmatterKeys,
   nonBlankLines, stripFences, lineOf, parseJsonc, finding as F, isAdoptionTooling, isVendored,
   isPayloadSkeleton,
 } from './util.mjs';
@@ -203,12 +203,15 @@ export function checkSkills(ctx) {
     if (VSCODE_BUILTINS.has(folder)) {
       out.push(F('R-22', 'info', rel, `Skill name "${folder}" collides with a VS Code built-in command.`));
     }
-    // R-23: sibling references must be Markdown links
+    // R-23: sibling references must be Markdown links. Strip well-formed links
+    // first so a path-shaped LABEL — e.g. [references/x.md](references/x.md) —
+    // isn't flagged as a bare path (the target is already a proper link).
     const stripped = stripFences(text);
-    const bare = stripped.match(/(?<!\]\()(?<![\w/.-])(references|examples|scripts)\/[\w./-]+\.(md|sh|mjs|js|py)/);
+    const noLinks = stripped.replace(/\[[^\]]*\]\([^)]*\)/g, '');
+    const bare = noLinks.match(/(?<!\]\()(?<![\w/.-])(references|examples|scripts)\/[\w./-]+\.(md|sh|mjs|js|py)/);
     if (bare) {
       out.push(F('R-23', 'warning', rel,
-        `Bare sibling path "${bare[0]}" — use a Markdown link so tools lazy-load it.`, { line: lineOf(stripped, new RegExp(bare[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))) }));
+        `Bare sibling path "${bare[0]}" — use a Markdown link so tools lazy-load it.`, { line: lineOf(noLinks, new RegExp(bare[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))) }));
     }
     if (/(^|\s)\.{1,2}\/[\w./-]+/m.test(stripped.replace(/\]\([^)]*\)/g, ''))) {
       out.push(F('R-23', 'warning', rel, 'Relative plain-text path (./ or ../) in body — use Markdown links.'));
@@ -402,6 +405,24 @@ const VSCODE_REQUIRED = {
   'explorer.fileNesting.enabled': true,
 };
 
+// Negation-aware: is .vscode/settings.json effectively gitignored? A later
+// "!.vscode/settings.json" un-ignores it, so order matters (last match wins).
+function vscodeSettingsIgnored(gi) {
+  const target = '.vscode/settings.json';
+  let ignored = false;
+  for (const raw of gi.split('\n')) {
+    let l = raw.trim();
+    if (!l || l.startsWith('#')) continue;
+    let neg = false;
+    if (l.startsWith('!')) { neg = true; l = l.slice(1); }
+    const pat = l.replace(/^\//, '').replace(/\/$/, '');
+    const matches = pat === target || pat === '.vscode' || pat === '**/.vscode'
+      || pat === '**/settings.json' || target.startsWith(pat + '/');
+    if (matches) ignored = !neg;
+  }
+  return ignored;
+}
+
 export function checkVscodeSettings(ctx) {
   const { root, compatMode } = ctx;
   const out = [];
@@ -439,6 +460,15 @@ export function checkVscodeSettings(ctx) {
   const nesting = parsed['explorer.fileNesting.patterns'];
   if (!nesting || nesting['AGENTS.md'] !== 'CLAUDE.md') {
     out.push(F('R-45', 'warning', rel, 'explorer.fileNesting.patterns must nest CLAUDE.md under AGENTS.md.'));
+  }
+  // R-45: a gitignored .vscode/settings.json satisfies this check on disk but
+  // never gets committed — the shared settings silently don't ship.
+  if (isGitRepo(root)) {
+    const gi = readSafe(join(root, '.gitignore'));
+    if (gi != null && vscodeSettingsIgnored(gi)) {
+      out.push(F('R-45', 'warning', rel,
+        '.vscode/settings.json is gitignored — it passes on disk but will not be committed; add "!.vscode/settings.json" or stop ignoring .vscode/.'));
+    }
   }
   return out;
 }
@@ -478,7 +508,7 @@ export function checkHygiene(ctx) {
   }
 
   // R-47 gitignore
-  if (isDir(join(root, '.git'))) {
+  if (isGitRepo(root)) {
     const gi = readSafe(join(root, '.gitignore'));
     if (gi == null) {
       out.push(F('R-47', 'info', '.gitignore', 'Missing .gitignore.'));

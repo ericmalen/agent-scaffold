@@ -85,8 +85,12 @@ for (const [src, dst] of copies) {
 
 console.log(`
 Done. Next, in the target repo:
-  1. Commit the tooling:  git add -A && git commit -m "chore: ai-kit adoption tooling"
+  1. Commit the tooling:  git add -A && git commit --no-verify -m "chore: ai-kit adoption tooling"
+     (use --no-verify on every adoption commit so a format-on-commit hook can't
+     rewrite generated files and break the reproducibility gate)
   2. Open your AI tool (Claude Code, or GitHub Copilot in VS Code AGENT MODE) and
      invoke the adopt-inventory skill.
 Adoption is fully reversible until you merge the ai-kit-adoption branch
-(the tooling itself is removed again before merge by adopt-verify).`);
+(the tooling itself is removed again before merge by adopt-verify).
+After merge, run "docs setup" to turn on the docs standard (tier + enforcement);
+the docs skill installs but stays dormant until you do.`);

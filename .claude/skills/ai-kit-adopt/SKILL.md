@@ -41,8 +41,13 @@ repo is untouched until THEY merge. Abort = delete the branch.
    node <path-to-this-kit-clone>/scripts/install-adoption.mjs <target-repo-path>
    cd <target-repo-path>
    git add -A
-   git commit -m "chore: ai-kit adoption tooling"
+   git commit --no-verify -m "chore: ai-kit adoption tooling"
    ```
+
+   Use `--no-verify` on every adoption commit (here and in each phase): a
+   format-on-commit hook (husky/lint-staged/prettier) would rewrite generated
+   files and break the byte-exact reproducibility gate. Harmless when no hook
+   exists; the hook stays live for normal development.
 
    **Bootstrap mode: stop here and follow "Bootstrap handoff" below.**
 4. Ask the user the two adoption questions (code review? path-scoping?).

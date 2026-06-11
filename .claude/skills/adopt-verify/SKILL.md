@@ -39,5 +39,9 @@ Preconditions: `check.mjs` and `audit.mjs` both exit 0 (re-run to confirm);
    `git diff main...ai-kit-adoption --color-moved=zebra --find-copies-harder`
    (per-iteration commits are individually reviewable). The USER merges and
    deletes the branch — never merge on their behalf.
+   Also tell them: the baseline `docs` skill is installed but its enforcement
+   (tier, `.claude/docs-paths.json`, hooks) stays OFF until they run `docs
+   setup` — point them there as the recommended next step (it needs human
+   tier confirmation, so adoption never runs it automatically).
 
 Abort at any point: `git checkout main && git branch -D ai-kit-adoption`.

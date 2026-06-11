@@ -198,6 +198,29 @@ export function materialize({ root, templatesDir, outRoot = null }) {
     generated[jm.file] = sha(output);
   }
 
+  // ── 3b. Guarantee R-47: .gitignore excludes personal settings ─────────────
+  // Idempotent, and deliberately NOT recorded in `generated`: the kit owns only
+  // this one line, not the whole file, so the reproducibility gate must never
+  // sha-compare a brownfield .gitignore it does not fully own. Coverage test
+  // mirrors the R-47 audit check so materialize and audit agree exactly.
+  {
+    const LOCAL = '.claude/settings.local.json';
+    const giOut = join(writeRoot, '.gitignore');
+    const giSrc = join(root, '.gitignore');
+    const cur = existsSync(giOut) ? readFileSync(giOut, 'utf8')
+      : existsSync(giSrc) ? readFileSync(giSrc, 'utf8') : null;
+    const lines = (cur ?? '').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+    const covered = lines.some((l) =>
+      l === LOCAL || l === 'settings.local.json' || l === '**/settings.local.json'
+      || (l.endsWith('/') && LOCAL.startsWith(l.replace(/^\//, ''))));
+    if (!covered) {
+      const next = cur == null || cur === '' ? LOCAL + '\n'
+        : cur + (cur.endsWith('\n') ? '' : '\n') + LOCAL + '\n';
+      mkdirSync(dirname(giOut), { recursive: true });
+      writeFileSync(giOut, next, 'utf8');
+    }
+  }
+
   // ── 4. Source-file lifecycle ───────────────────────────────────────────────
   // Extracted source files that are not keep-file and not regenerated as a
   // target are deleted (their nodes were dispositioned elsewhere).

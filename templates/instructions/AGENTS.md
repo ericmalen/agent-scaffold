@@ -18,10 +18,10 @@
 
 ## Do Not
 
+<!-- Prohibitions the agent can't infer from code (e.g. "never run destructive cmd X against prod"); leave just this note if there are none. -->
 <!-- ai-kit:slot:do-not -->
 
 ## More Context
-<!-- ai-kit:optional -->
 
 <!-- ai-kit:slot:more-context -->
 

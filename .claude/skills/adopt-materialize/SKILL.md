@@ -22,6 +22,15 @@ Preconditions: `.adoption/manifest.json` parses, and
    manifest entries, adjusting slots, or (sparingly, justified) a merge
    literal — then re-materialize. Commit each iteration:
    `git add -A && git commit -m "chore(adoption): materialize iteration <n>"`
+   **Pre-commit hooks:** if the target runs a formatter on commit (husky +
+   lint-staged + prettier is common) it can rewrite generated roots
+   (`AGENTS.md`/`CLAUDE.md` — `.claude/**` is usually already in
+   `.prettierignore`) and break the byte-exact reproducibility gate. Commit
+   adoption commits with `git commit --no-verify`: the repro gate is the
+   source of truth, and the hook only collides on generated files. Do NOT
+   hand-edit a generated file to satisfy the formatter — that is still
+   editing generated output. (`--no-verify` is for adoption commits only; the
+   hook stays live for normal development.)
 3. Converge the mechanical gates — loop until BOTH exit 0:
    - `node .claude/ai-kit-adoption/scripts/check.mjs --root . --templates .claude/ai-kit-adoption/templates`
    - `node .claude/ai-kit-adoption/scripts/audit.mjs --root .`

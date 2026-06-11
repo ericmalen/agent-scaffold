@@ -82,6 +82,36 @@ test('round-trip variant: all keep-file ⇒ tree untouched, gates pass', () => {
   }
 });
 
+test('R-47: materialize ensures .gitignore covers settings.local.json, idempotently', () => {
+  const { repo, inv } = setup('claude-only');
+  try {
+    const entries = inv.files.map((f) => ({ file: f.path, op: 'keep-file' }));
+    for (const c of inv.sweepCandidates) entries.push({ file: c.file, op: 'out-of-scope', reason: 'test' });
+    writeManifest(repo, { entries });
+    const LOCAL = '.claude/settings.local.json';
+
+    // brownfield: existing .gitignore lacking the line → line appended, existing kept
+    writeFileSync(join(repo, '.gitignore'), 'node_modules/\n');
+    const res = materialize({ root: repo, templatesDir: EMPTY_TEMPLATES });
+    let gi = readFileSync(join(repo, '.gitignore'), 'utf8');
+    assert.ok(gi.includes('node_modules/'), 'existing entries preserved');
+    assert.ok(gi.split('\n').filter((l) => l.trim() === LOCAL).length === 1, 'line added once');
+    assert.ok(!(LOCAL in res.generated), '.gitignore is not sha-tracked (partial ownership)');
+
+    // idempotent: a second materialize does not duplicate the line
+    materialize({ root: repo, templatesDir: EMPTY_TEMPLATES });
+    gi = readFileSync(join(repo, '.gitignore'), 'utf8');
+    assert.equal(gi.split('\n').filter((l) => l.trim() === LOCAL).length, 1, 'no duplicate on re-materialize');
+
+    // greenfield: no .gitignore → created with the line
+    rmSync(join(repo, '.gitignore'));
+    materialize({ root: repo, templatesDir: EMPTY_TEMPLATES });
+    assert.equal(readFileSync(join(repo, '.gitignore'), 'utf8'), LOCAL + '\n', 'greenfield .gitignore created');
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 // ── materializer behaviors ──────────────────────────────────────────────────
 
 test('slot assembly: nodes land under template headings, markers vanish, source deleted', () => {

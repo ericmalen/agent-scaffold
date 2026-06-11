@@ -51,12 +51,16 @@ test('no optional markers → text is returned unchanged', () => {
   assert.equal(stripEmptyOptionalSections(plain, new Set()), plain);
 });
 
-test('greenfield AGENTS template drops Overview/Architecture/More Context, keeps Do Not', () => {
+test('greenfield AGENTS template drops Overview/Architecture, keeps Do Not + More Context footer', () => {
   const tpl = readFileSync(join(KIT_ROOT, 'templates', 'instructions', 'AGENTS.md'), 'utf8');
   const out = instantiate(tpl); // greenfield: nothing filled
-  for (const gone of ['## Overview', '## Architecture', '## More Context']) {
+  for (const gone of ['## Overview', '## Architecture']) {
     assert.ok(!out.includes(gone), `${gone} should be removed in greenfield`);
   }
   assert.ok(out.includes('## Do Not'), 'Do Not stays (R-03)');
+  // More Context is non-optional: its footer always points adopters at the
+  // installed .claude/ assets, even on a greenfield repo with no routed content.
+  assert.ok(out.includes('## More Context'), 'More Context stays in greenfield');
+  assert.ok(out.includes('.claude/skills/'), 'footer points at installed assets');
   assert.ok(!out.includes('ai-kit:'), 'no leftover ai-kit markers');
 });
