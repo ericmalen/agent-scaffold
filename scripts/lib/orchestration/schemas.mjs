@@ -190,6 +190,12 @@ export function validateBlueprint(blueprint) {
         e(`dispatch_rules.${field} must be a positive integer`);
       }
     }
+    // Tiers must be ordered or every scope count routes to subagents and the
+    // team tier is dead data (DD-4).
+    if (Number.isInteger(dr.subagent_max_scopes) && Number.isInteger(dr.agent_team_min_scopes)
+        && dr.subagent_max_scopes >= dr.agent_team_min_scopes) {
+      e(`dispatch_rules tiers must be ordered: subagent_max_scopes (${dr.subagent_max_scopes}) must be < agent_team_min_scopes (${dr.agent_team_min_scopes})`);
+    }
     if (typeof dr.agent_team_on_cross_repo !== 'boolean') {
       e('dispatch_rules.agent_team_on_cross_repo must be a boolean');
     }

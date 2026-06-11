@@ -50,10 +50,10 @@ generation can run it deterministically with zero manual edits.
    but does not reject — full coverage is re-gated at generation time, when
    every referenced template must exist.
 
-3. **Eval + dispatch presence** — covered by the schema check
-   (`evalRequirements.minGoldens`, `dispatch_rules`); confirm the report
-   shows neither was defaulted to nonsense (e.g. `subagent_max_scopes` ≥
-   `agent_team_min_scopes` is a rejection — the tiers must be ordered).
+3. **Eval + dispatch presence** — fully covered by the schema check:
+   `evalRequirements.minGoldens`, `dispatch_rules` shape, and tier ordering
+   (`subagent_max_scopes` < `agent_team_min_scopes`) are all enforced by
+   `validateBlueprint`; no manual confirmation step.
 
 ## Verdict
 

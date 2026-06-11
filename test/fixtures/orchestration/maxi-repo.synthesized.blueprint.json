@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "specialists": [
+    {
+      "name": "ui-engineer",
+      "templateId": "ui-engineer",
+      "slots": {
+        "layer-path": "apps/ui",
+        "stack": "React + TypeScript + Vite",
+        "test-cmd": "npm test --workspace ui",
+        "conventions": "kebab-case files, PascalCase React components; feature/<ticket>-<slug>; conventional-commits"
+      },
+      "modelTier": "sonnet",
+      "turnLimit": 30,
+      "tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash"],
+      "evalRequirements": { "minGoldens": 2 }
+    },
+    {
+      "name": "api-engineer",
+      "templateId": "api-engineer",
+      "slots": {
+        "layer-path": "apps/api",
+        "stack": "Express + TypeScript",
+        "test-cmd": "npm test --workspace api",
+        "conventions": "kebab-case files, PascalCase React components; feature/<ticket>-<slug>; conventional-commits"
+      },
+      "modelTier": "sonnet",
+      "turnLimit": 30,
+      "tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash"],
+      "evalRequirements": { "minGoldens": 2 }
+    },
+    {
+      "name": "db-engineer",
+      "templateId": "db-engineer",
+      "slots": {
+        "layer-path": "packages/db",
+        "stack": "Prisma + PostgreSQL",
+        "test-cmd": "npm test --workspace db",
+        "conventions": "kebab-case files, PascalCase React components; feature/<ticket>-<slug>; conventional-commits"
+      },
+      "modelTier": "sonnet",
+      "turnLimit": 20,
+      "tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash"],
+      "evalRequirements": { "minGoldens": 2 }
+    },
+    {
+      "name": "shared-engineer",
+      "templateId": "generic-specialist",
+      "slots": {
+        "layer-path": "packages/shared",
+        "stack": "TypeScript (Zod schemas)",
+        "test-cmd": "npm test --workspace shared",
+        "conventions": "kebab-case files, PascalCase React components; feature/<ticket>-<slug>; conventional-commits"
+      },
+      "modelTier": "sonnet",
+      "turnLimit": 30,
+      "tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash"],
+      "evalRequirements": { "minGoldens": 2 }
+    },
+    {
+      "name": "code-reviewer",
+      "templateId": "code-reviewer",
+      "slots": {
+        "checklist-path": "docs/orchestration/checklists/review-checklist.md",
+        "conventions": "kebab-case files, PascalCase React components; feature/<ticket>-<slug>; conventional-commits"
+      },
+      "modelTier": "opus",
+      "turnLimit": 15,
+      "tools": ["Read", "Grep", "Glob"],
+      "evalRequirements": { "minGoldens": 2 }
+    },
+    {
+      "name": "qa-agent",
+      "templateId": "qa-agent",
+      "slots": {},
+      "modelTier": "sonnet",
+      "turnLimit": 20,
+      "tools": ["Read", "Grep", "Glob", "Bash"],
+      "evalRequirements": { "minGoldens": 2 }
+    },
+    {
+      "name": "security-reviewer",
+      "templateId": "security-reviewer",
+      "slots": {},
+      "modelTier": "opus",
+      "turnLimit": 15,
+      "tools": ["Read", "Grep", "Glob"],
+      "evalRequirements": { "minGoldens": 2 }
+    }
+  ],
+  "orchestrator": {
+    "name": "feature-orchestrator",
+    "templateId": "orchestrator",
+    "slots": {
+      "tasks-path": "tasks.md",
+      "handoff-log-path": "docs/orchestration/handoff-log.jsonl",
+      "dispatch-doc": "docs/orchestration/dispatch-rules.md"
+    },
+    "modelTier": "opus",
+    "turnLimit": 60,
+    "tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash", "Agent"],
+    "evalRequirements": { "minGoldens": 2 }
+  },
+  "dispatch_rules": {
+    "subagent_max_scopes": 2,
+    "agent_team_min_scopes": 3,
+    "agent_team_on_cross_repo": true,
+    "pipeline_when": ["scheduled", "multi_day"]
+  },
+  "docs": [
+    "docs/orchestration/dispatch-rules.md",
+    "docs/orchestration/tasks-format.md",
+    "docs/orchestration/handoff-logging.md"
+  ]
+}

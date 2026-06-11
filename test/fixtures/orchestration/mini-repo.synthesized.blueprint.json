@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "specialists": [
+    {
+      "name": "cli-engineer",
+      "templateId": "generic-specialist",
+      "slots": {
+        "layer-path": ".",
+        "stack": "Node.js CLI (zero-dependency)",
+        "test-cmd": "node --test",
+        "conventions": "snake_case files, dev/<initials>/<slug> branches, freeform imperative commits"
+      },
+      "modelTier": "sonnet",
+      "turnLimit": 30,
+      "tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash"],
+      "evalRequirements": { "minGoldens": 2 }
+    },
+    {
+      "name": "code-reviewer",
+      "templateId": "code-reviewer",
+      "slots": {
+        "checklist-path": "docs/orchestration/checklists/review-checklist.md",
+        "conventions": "snake_case files, dev/<initials>/<slug> branches, freeform imperative commits"
+      },
+      "modelTier": "opus",
+      "turnLimit": 15,
+      "tools": ["Read", "Grep", "Glob"],
+      "evalRequirements": { "minGoldens": 2 }
+    }
+  ],
+  "orchestrator": {
+    "name": "feature-orchestrator",
+    "templateId": "orchestrator",
+    "slots": {
+      "tasks-path": "tasks.md",
+      "handoff-log-path": "docs/orchestration/handoff-log.jsonl",
+      "dispatch-doc": "docs/orchestration/dispatch-rules.md"
+    },
+    "modelTier": "opus",
+    "turnLimit": 60,
+    "tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash", "Agent"],
+    "evalRequirements": { "minGoldens": 2 }
+  },
+  "dispatch_rules": {
+    "subagent_max_scopes": 2,
+    "agent_team_min_scopes": 3,
+    "agent_team_on_cross_repo": true,
+    "pipeline_when": ["scheduled", "multi_day"]
+  },
+  "docs": [
+    "docs/orchestration/dispatch-rules.md",
+    "docs/orchestration/tasks-format.md",
+    "docs/orchestration/handoff-logging.md"
+  ]
+}
