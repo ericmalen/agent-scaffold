@@ -25,7 +25,9 @@ plus a `gaps[]` entry.
    (→ `null` + gap).
 4. **Lint/format config.** Presence of eslint/prettier/biome/editorconfig
    configs — these harden the naming/style claims and get named in the
-   report. Absence of any linter is a `gaps[]` entry.
+   report. Absence of any linter is a `gaps[]` entry; so is a config that
+   no script runs (e.g. eslint config but no `lint` script in the
+   manifest) — present-but-unenforced tooling is a gap, not a convention.
 5. **CI.** CI config files (`.github/workflows/`, `azure-pipelines.yml`,
    etc.) → `ci` value (e.g. `github-actions`, `azure-devops`); none → `null`
    + gap.
