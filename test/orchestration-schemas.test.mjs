@@ -10,8 +10,8 @@ const loadFixture = (name) => JSON.parse(readFileSync(join(FIXTURES, name), 'utf
 
 // ── validateRepoProfile (A1) ────────────────────────────────────────────────
 
-test('validateRepoProfile: AI Portal profile fixture validates clean', () => {
-  assert.deepEqual(validateRepoProfile(loadFixture('ai-portal.profile.json')), []);
+test('validateRepoProfile: maxi-repo profile fixture validates clean', () => {
+  assert.deepEqual(validateRepoProfile(loadFixture('maxi-repo.profile.json')), []);
 });
 
 test('validateRepoProfile: mini-repo profile fixture validates clean', () => {
@@ -74,8 +74,8 @@ test('validateRepoProfile: missing top-level fields all report', () => {
 
 // ── validateBlueprint (A3) ──────────────────────────────────────────────────
 
-test('validateBlueprint: AI Portal blueprint fixture validates clean', () => {
-  assert.deepEqual(validateBlueprint(loadFixture('ai-portal.blueprint.json')), []);
+test('validateBlueprint: maxi-repo blueprint fixture validates clean', () => {
+  assert.deepEqual(validateBlueprint(loadFixture('maxi-repo.blueprint.json')), []);
 });
 
 test('validateBlueprint: non-object inputs are rejected outright', () => {
@@ -128,7 +128,7 @@ test('validateBlueprint: missing top-level fields all report', () => {
 });
 
 test('validateBlueprint: modelTier must be a logical tier, not a concrete model id', () => {
-  const blueprint = loadFixture('ai-portal.blueprint.json');
+  const blueprint = loadFixture('maxi-repo.blueprint.json');
   blueprint.specialists[0].modelTier = 'opus-4';   // model id, not a tier
   blueprint.orchestrator.modelTier = 'sonet';      // typo
   assert.deepEqual(validateBlueprint(blueprint), [
@@ -138,7 +138,7 @@ test('validateBlueprint: modelTier must be a logical tier, not a concrete model 
 });
 
 test('validateBlueprint: non-object specialist and non-string tool entries report by index', () => {
-  const blueprint = loadFixture('ai-portal.blueprint.json');
+  const blueprint = loadFixture('maxi-repo.blueprint.json');
   blueprint.specialists.push('qa-agent');
   blueprint.orchestrator.tools = ['Read', '', 'Agent'];
   assert.deepEqual(validateBlueprint(blueprint), [

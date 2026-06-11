@@ -60,6 +60,6 @@ never decisions or blueprints.
 ## Documents
 
 scripts/lib/orchestration/schemas.mjs
-test/fixtures/orchestration/ai-portal.profile.json
+test/fixtures/orchestration/maxi-repo.profile.json
 test/fixtures/orchestration/mini-repo.profile.json
 docs/agent-orchestration-plan.md
