@@ -12,6 +12,9 @@
 const REPO_TYPES = new Set(['monorepo', 'single-package']);
 const PIPELINE_WHEN = new Set(['scheduled', 'multi_day']);   // §9.3 / DD-4
 const SLOT_NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;             // kebab-case (DD-5)
+// Logical tiers, not concrete model ids — ids churn with releases; the
+// scaffolder (C4) owns the tier → concrete-model map.
+const MODEL_TIERS = new Set(['haiku', 'sonnet', 'opus']);
 
 const isNonEmptyString = (v) => typeof v === 'string' && v.trim() !== '';
 const isStringOrNull = (v) => v === null || typeof v === 'string';
@@ -106,7 +109,9 @@ function checkAgentConfig(agent, where, e) {
       if (!isNonEmptyString(value)) e(`${where}.slots["${key}"] must be a non-empty string`);
     }
   }
-  if (!isNonEmptyString(agent.modelTier)) e(`${where}.modelTier must be a non-empty string`);
+  if (!MODEL_TIERS.has(agent.modelTier)) {
+    e(`${where}.modelTier must be one of ${[...MODEL_TIERS].join(' | ')} (got ${agent.modelTier})`);
+  }
   if (!Number.isInteger(agent.turnLimit) || agent.turnLimit < 1) {
     e(`${where}.turnLimit must be a positive integer`);
   }

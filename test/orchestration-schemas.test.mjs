@@ -127,6 +127,16 @@ test('validateBlueprint: missing top-level fields all report', () => {
   ]);
 });
 
+test('validateBlueprint: modelTier must be a logical tier, not a concrete model id', () => {
+  const blueprint = loadFixture('ai-portal.blueprint.json');
+  blueprint.specialists[0].modelTier = 'opus-4';   // model id, not a tier
+  blueprint.orchestrator.modelTier = 'sonet';      // typo
+  assert.deepEqual(validateBlueprint(blueprint), [
+    'specialists[0].modelTier must be one of haiku | sonnet | opus (got opus-4)',
+    'orchestrator.modelTier must be one of haiku | sonnet | opus (got sonet)',
+  ]);
+});
+
 test('validateBlueprint: non-object specialist and non-string tool entries report by index', () => {
   const blueprint = loadFixture('ai-portal.blueprint.json');
   blueprint.specialists.push('qa-agent');
