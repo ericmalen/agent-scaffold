@@ -16,16 +16,20 @@ Run after structure-detector; its layer list is the input.
 1. **Internal edges.** For each layer's manifest, list `dependencies` /
    `devDependencies` entries that name another layer of the same repo
    (workspace protocol `workspace:*`, matching package names, or relative
-   `file:` links). Record as `consumer → provider` edges. Zero edges →
-   report "no internal dependencies" and move on.
+   `file:` links). Record as `consumer → provider` edges, marking dev-only
+   edges (e.g. shared test utils) — they matter less for ordering. Zero
+   edges → report "no internal dependencies" and move on. A layer with no
+   recognizable manifest is reported as a gap for the caller's `gaps[]`,
+   never silently skipped.
 2. **Key external deps per layer.** From each layer's manifest, the
    handful of dependencies that define what the layer IS (framework, ORM,
    schema library, build tool) — not the full list. These confirm or refine
    the layer's `stack` string.
 3. **Ordering signal.** From the internal edges, note which layers are
    providers (e.g. a shared types package consumed by ui and api). Providers
-   change first when a task spans layers — this feeds dispatch ordering in
-   the generated orchestrator's docs, not the profile schema.
+   change first when a task spans layers — state this ordering in the
+   report. No profile or blueprint field carries it, so the report is its
+   only record.
 
 ## Output
 

@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "agents": {
     "orchestrator": {
-      "version": "1.0.0",
-      "sha256": "97f696f609b8a160b11884818693a652594bb84cb2d3115ccd352dfbb78a592a"
+      "version": "1.0.1",
+      "sha256": "030f39dbe9ef51192757df551301cf550c2986a8f68e5c48811a6e9285a67fc5"
     },
     "ui-engineer": {
       "version": "1.0.0",

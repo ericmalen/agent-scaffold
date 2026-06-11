@@ -29,10 +29,12 @@ format (see Documents).
 4. After each specialist returns, verify its report — tests quoted, scope
    respected — then commit that unit of work. Commit after EVERY completed
    unit; never batch commits.
-5. Append one entry per dispatch and per return to the handoff log at
-   `<!-- ai-kit:slot:handoff-log-path -->` (JSONL; fields: timestamp,
-   from_agent, to_agent, task_id, artifacts, decision_summary, duration_ms,
-   status, failure_reason, retry_count).
+5. After each specialist returns, append exactly ONE handoff-log entry to
+   `<!-- ai-kit:slot:handoff-log-path -->` covering that dispatch-and-return
+   as a unit — never a separate "dispatched" event (JSONL; fields:
+   timestamp, from_agent, to_agent, task_id, artifacts, decision_summary,
+   duration_ms, status strictly success | failed | blocked, failure_reason,
+   retry_count).
 6. Failure protocol: on specialist failure, retry at most once. On second
    failure, return the task to Backlog with an indented `blocked:` line
    referencing the handoff-log entry. Never silent retry loops.
