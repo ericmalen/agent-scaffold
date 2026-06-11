@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 2,
+  "name": "no-layers",
+  "type": "monorepo",
+  "layers": [],
+  "packageManager": "npm",
+  "ci": null,
+  "conventions": {
+    "naming": null,
+    "branching": null,
+    "commitStyle": null
+  },
+  "gaps": []
+}
