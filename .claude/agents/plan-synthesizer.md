@@ -17,7 +17,12 @@ only file it writes.
    in the kit clone — specialist selection per layer evidence, policy-driven
    additions, slot values from the profile, the defaults table. Where no
    rule covers a layer, use `generic-specialist`; never invent a slot value
-   the profile cannot evidence (report instead).
+   the profile cannot evidence (report instead). Compute
+   `dispatch_rules.dispatch_order` with
+   `deriveDispatchOrder(profile.layers, profile.internalEdges)`
+   (`scripts/lib/orchestration/dispatch-order.mjs`) before validating —
+   never hand-order; a cycle error aborts synthesis with the errors
+   reported verbatim.
 3. Gate the candidate with `.claude/skills/handoff-validator/SKILL.md`
    (schema check + slot dry-run, from the kit clone). REJECT → fix the
    candidate per the error lines and re-gate; never write a rejected
@@ -41,4 +46,5 @@ only file it writes.
 .claude/skills/blueprint-generator/SKILL.md
 .claude/skills/handoff-validator/SKILL.md
 scripts/lib/orchestration/schemas.mjs
+scripts/lib/orchestration/dispatch-order.mjs
 test/fixtures/orchestration/maxi-repo.blueprint.json

@@ -4,6 +4,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { instantiateTemplate } from '../scripts/lib/orchestration/instantiate.mjs';
+import { renderDispatchOrder } from '../scripts/lib/orchestration/dispatch-order.mjs';
 import { validateGenerationManifest, validateTaskBacklog } from '../scripts/lib/orchestration/schemas.mjs';
 import { parseTasksMd } from '../scripts/lib/orchestration/parse-tasks.mjs';
 
@@ -22,13 +23,17 @@ const BLUEPRINTS = [
 ];
 
 // Same derivation the instantiator skills use: declared slots + the
-// injected quartet from blueprint fields.
-const slotMapFor = (agent) => ({
+// injected quartet from blueprint fields, plus the rendered dispatch order
+// on the orchestrator only.
+const slotMapFor = (agent, bp) => ({
   ...agent.slots,
   name: agent.name,
   tools: agent.tools.join(', '),
   'model-tier': agent.modelTier,
   'turn-limit': String(agent.turnLimit),
+  ...(agent === bp.orchestrator
+    ? { 'dispatch-order': renderDispatchOrder(bp.dispatch_rules.dispatch_order) }
+    : {}),
 });
 
 for (const fixture of BLUEPRINTS) {
@@ -37,7 +42,7 @@ for (const fixture of BLUEPRINTS) {
     test(`C1 lint: ${fixture} → ${agent.name} (${agent.templateId}) instantiates clean`, () => {
       const path = join(TEMPLATES, `${agent.templateId}.template.md`);
       assert.ok(existsSync(path), `template ${agent.templateId}.template.md missing`);
-      const { content, errors } = instantiateTemplate(readFileSync(path, 'utf8'), slotMapFor(agent));
+      const { content, errors } = instantiateTemplate(readFileSync(path, 'utf8'), slotMapFor(agent, bp));
       assert.deepEqual(errors, []);
       assert.ok(!content.includes('ai-kit:slot'), 'no marker text survives');
       assert.match(content, new RegExp(`^name: ${agent.name}$`, 'm'));

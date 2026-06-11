@@ -9,9 +9,14 @@ thresholds are data, not judgment — they live in
   "subagent_max_scopes": 2,
   "agent_team_min_scopes": 3,
   "agent_team_on_cross_repo": true,
-  "pipeline_when": ["scheduled", "multi_day"]
+  "pipeline_when": ["scheduled", "multi_day"],
+  "dispatch_order": ["shared", "ui", "api", "db"]
 }
 ```
+
+`dispatch_order` is derived by discovery from the repo's internal dependency
+edges (providers first); it is data, not judgment — never reorder it by hand.
+An empty array means the repo has no internal ordering constraints.
 
 The orchestrator counts the layers in a task's `scope:` line (see
 `tasks-format.md`) and applies the first matching rule:
@@ -27,7 +32,8 @@ The orchestrator counts the layers in a task's `scope:` line (see
 - `scope: api` — one layer → subagent path; dispatch the api specialist
   in-session.
 - `scope: ui, shared` — two layers → still subagents; dispatch both
-  specialists in-session, shared first if ui depends on it.
+  specialists in-session, in `dispatch_order` (shared before ui — the
+  provider changes first).
 - `scope: api, db, shared` — three layers → agent team; per-layer sessions
   coordinate on the shared task list, and only the orchestrator session
   writes `tasks.md` and the handoff log.

@@ -45,13 +45,30 @@ test('validateRepoProfile: malformed fixture — bad type enum, empty packageMan
   ]);
 });
 
-test('validateRepoProfile: malformed fixture — broken layer entries, conventions, gaps', () => {
+test('validateRepoProfile: malformed fixture — broken layer entries, edges, conventions, gaps', () => {
   assert.deepEqual(validateRepoProfile(loadFixture('profile-malformed-bad-layer.json')), [
     'layers[0].stack must be a non-empty string',
     'layers[0].testCmd must be a string or null (null = not detected)',
     'layers[1] must be an object',
+    'internalEdges[0].from "ui" is not a layer name',
+    'internalEdges[1] is a self-edge ("api")',
     'conventions.commitStyle must be a string or null (null = not detected)',
     'gaps[1] must be a non-empty string',
+  ]);
+});
+
+test('validateRepoProfile: internalEdges entries checked for shape, strings, duplicates', () => {
+  const profile = loadFixture('maxi-repo.profile.json');
+  profile.internalEdges = [
+    'ui->shared',
+    { from: 'ui' },
+    { from: 'api', to: 'shared' },
+    { from: 'api', to: 'shared' },
+  ];
+  assert.deepEqual(validateRepoProfile(profile), [
+    'internalEdges[0] must be an object ({ from: consumer, to: provider })',
+    'internalEdges[1].to must be a non-empty string layer name',
+    'internalEdges: duplicate edge api→shared',
   ]);
 });
 
@@ -71,6 +88,7 @@ test('validateRepoProfile: missing top-level fields all report', () => {
     'name must be a non-empty string',
     'type must be one of monorepo | single-package (got undefined)',
     'layers must be a non-empty array',
+    'internalEdges must be an array ([] = no internal dependencies)',
     'packageManager must be a non-empty string',
     'ci must be a string or null (null = no CI detected)',
     'conventions must be an object',
@@ -174,7 +192,23 @@ test('validateBlueprint: malformed fixture — version pin tripwire, bad dispatc
     'dispatch_rules.subagent_max_scopes must be a positive integer',
     'dispatch_rules.agent_team_on_cross_repo must be a boolean',
     'dispatch_rules.pipeline_when[0] must be one of scheduled | multi_day (got nightly)',
+    'dispatch_rules.dispatch_order: duplicate layer "api"',
     'docs must be an array',
+  ]);
+});
+
+test('validateBlueprint: dispatch_order required ([] = unconstrained) and item-checked', () => {
+  const missing = loadFixture('maxi-repo.blueprint.json');
+  delete missing.dispatch_rules.dispatch_order;
+  assert.deepEqual(validateBlueprint(missing), [
+    'dispatch_rules.dispatch_order must be an array of layer names ([] = no internal ordering constraints)',
+  ]);
+
+  const bad = loadFixture('maxi-repo.blueprint.json');
+  bad.dispatch_rules.dispatch_order = ['shared', '', 3];
+  assert.deepEqual(validateBlueprint(bad), [
+    'dispatch_rules.dispatch_order[1] must be a non-empty string',
+    'dispatch_rules.dispatch_order[2] must be a non-empty string',
   ]);
 });
 
@@ -305,12 +339,14 @@ test('validateHandoffLog: optional capture fields validated only when present', 
   ]);
 });
 
-test('validateBlueprint: reserved slot names rejected (quartet shadowing guard)', () => {
+test('validateBlueprint: reserved slot names rejected (injected-slot shadowing guard)', () => {
   const blueprint = loadFixture('maxi-repo.blueprint.json');
   blueprint.specialists[0].slots.name = 'shadow';
   blueprint.orchestrator.slots['turn-limit'] = '99';
+  blueprint.orchestrator.slots['dispatch-order'] = 'shared first';
   assert.deepEqual(validateBlueprint(blueprint), [
     'specialists[0].slots: "name" is reserved (injected from blueprint fields at instantiation)',
     'orchestrator.slots: "turn-limit" is reserved (injected from blueprint fields at instantiation)',
+    'orchestrator.slots: "dispatch-order" is reserved (injected from blueprint fields at instantiation)',
   ]);
 });

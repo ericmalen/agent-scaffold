@@ -43,6 +43,15 @@ test('planGeneration: mini synthesized blueprint plans agents + docs, no paired 
   assert.deepEqual(skillPaths, []); // generic-specialist + code-reviewer pair with nothing
 });
 
+test('planGeneration: orchestrator carries the rendered dispatch order, per target', () => {
+  const orchOf = (fixture) => planGeneration(loadFixture(fixture), registry, readTemplate)
+    .files.find((f) => f.path === '.claude/agents/feature-orchestrator.md');
+  // maxi: provider-first chain from dispatch_rules.dispatch_order
+  assert.match(orchOf('maxi-repo.synthesized.blueprint.json').content, /shared → ui → api → db/);
+  // mini: no internal edges → the fixed unconstrained phrase (outputs differ where fixtures differ, DD-12)
+  assert.match(orchOf('mini-repo.synthesized.blueprint.json').content, /no internal ordering constraints/);
+});
+
 test('planGeneration: deterministic — repeat runs produce deeply equal plans and manifests', () => {
   const bp = loadFixture('maxi-repo.synthesized.blueprint.json');
   const first = planGeneration(bp, registry, readTemplate);

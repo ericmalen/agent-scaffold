@@ -10,6 +10,16 @@
     },
     "not-an-object"
   ],
+  "internalEdges": [
+    {
+      "from": "ui",
+      "to": "api"
+    },
+    {
+      "from": "api",
+      "to": "api"
+    }
+  ],
   "packageManager": "pnpm",
   "ci": "github-actions",
   "conventions": {

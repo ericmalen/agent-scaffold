@@ -15,6 +15,7 @@
 
 import { createHash } from 'node:crypto';
 import { instantiateTemplate } from './instantiate.mjs';
+import { renderDispatchOrder } from './dispatch-order.mjs';
 
 const sha256 = (text) => createHash('sha256').update(text, 'utf8').digest('hex');
 
@@ -67,7 +68,13 @@ export function planGeneration(blueprint, registry, readTemplate) {
       continue;
     }
     if (!checkPin(reg, source, `agent template ${agent.templateId}`)) continue;
-    const { content, errors: instErrors } = instantiateTemplate(source, agentSlotMap(agent));
+    // The orchestrator additionally gets the rendered dispatch order —
+    // injected (like the quartet) so the blueprint can't drift from its own
+    // dispatch_rules.dispatch_order.
+    const slots = agent === blueprint.orchestrator
+      ? { ...agentSlotMap(agent), 'dispatch-order': renderDispatchOrder(blueprint.dispatch_rules?.dispatch_order) }
+      : agentSlotMap(agent);
+    const { content, errors: instErrors } = instantiateTemplate(source, slots);
     if (instErrors.length) {
       instErrors.forEach((m) => e(`agent ${agent.name}: ${m}`));
       continue;

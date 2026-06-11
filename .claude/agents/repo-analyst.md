@@ -20,8 +20,10 @@ never decisions or blueprints.
    value is `null` where the schema allows, plus a `gaps[]` entry):
    - `structure-detector` (B1): `name`, `type`, `packageManager`, `layers[]`
      with stacks and test/build commands.
-   - `dependency-mapper` (B2): internal edges and key external deps; refines
-     layer `stack` strings. "No internal dependencies" is a normal result.
+   - `dependency-mapper` (B2): internal edges (merged into
+     `internalEdges[]`; `[]` = none found, a recorded fact, not an omission)
+     and key external deps; refines layer `stack` strings. "No internal
+     dependencies" is a normal result.
    - `convention-detector` (B3): `conventions.*` and `ci`, each with one
      line of evidence.
 4. Assemble the profile (`schemaVersion: 1`) and validate it BEFORE writing,

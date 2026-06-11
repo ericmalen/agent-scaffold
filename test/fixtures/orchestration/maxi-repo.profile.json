@@ -32,6 +32,16 @@
       "buildCmd": "npm run build --workspace shared"
     }
   ],
+  "internalEdges": [
+    {
+      "from": "ui",
+      "to": "shared"
+    },
+    {
+      "from": "api",
+      "to": "shared"
+    }
+  ],
   "packageManager": "npm",
   "ci": "azure-devops",
   "conventions": {

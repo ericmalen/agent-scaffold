@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "agents": {
     "orchestrator": {
-      "version": "1.0.1",
-      "sha256": "030f39dbe9ef51192757df551301cf550c2986a8f68e5c48811a6e9285a67fc5"
+      "version": "1.1.0",
+      "sha256": "1bafd235cd197c0b664c6acb72aaf578daa82c22443f3cfc81baae3a49ed894d"
     },
     "ui-engineer": {
       "version": "1.0.0",
@@ -53,8 +53,8 @@
   },
   "docs": {
     "dispatch-rules": {
-      "version": "1.0.0",
-      "sha256": "b4666b9ff7f3a501d0a4335f7c7f7bb550fe75f42a1390123cbb573785c6b73f"
+      "version": "1.1.0",
+      "sha256": "8ae2ff69eaa4ee755488227eb214007ff3bf85b26fb7c8c63d7b37c51fd0379d"
     },
     "tasks-format": {
       "version": "1.0.0",

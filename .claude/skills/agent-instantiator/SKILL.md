@@ -32,12 +32,18 @@ consumed by the scaffolder's manifest, not by this single-asset step.
    | `model-tier` | `entry.modelTier` |
    | `turn-limit` | `String(entry.turnLimit)` |
 
+   The orchestrator additionally gets the injected `dispatch-order` slot —
+   `renderDispatchOrder(bp.dispatch_rules.dispatch_order)` from
+   [dispatch-order.mjs](../../../scripts/lib/orchestration/dispatch-order.mjs).
+   Specialists never get it (an unused slot is an error).
+
 2. Instantiate the template strictly. From the kit clone root:
 
    ```
    node --input-type=module -e '
    import { readFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
    import { instantiateTemplate } from "./scripts/lib/orchestration/instantiate.mjs";
+   import { renderDispatchOrder } from "./scripts/lib/orchestration/dispatch-order.mjs";
    const [bpPath, agentName, target] = process.argv.slice(1);
    const bp = JSON.parse(readFileSync(bpPath, "utf8"));
    const entry = [...bp.specialists, bp.orchestrator].find((a) => a.name === agentName);
@@ -46,6 +52,7 @@ consumed by the scaffolder's manifest, not by this single-asset step.
    if (!existsSync(tplPath)) { console.error(`missing template ${tplPath}`); process.exit(1); }
    const slots = { ...entry.slots, name: entry.name, tools: entry.tools.join(", "),
      "model-tier": entry.modelTier, "turn-limit": String(entry.turnLimit) };
+   if (entry.name === bp.orchestrator.name) slots["dispatch-order"] = renderDispatchOrder(bp.dispatch_rules?.dispatch_order);
    const { content, errors } = instantiateTemplate(readFileSync(tplPath, "utf8"), slots);
    if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
    mkdirSync(`${target}/.claude/agents`, { recursive: true });

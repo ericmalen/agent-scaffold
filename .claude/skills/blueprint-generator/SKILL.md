@@ -51,7 +51,12 @@ Orchestrator: `tasks-path` (`tasks.md`), `handoff-log-path`
 `evalRequirements.minGoldens: 2` everywhere. `dispatch_rules` defaults:
 `{"subagent_max_scopes": 2, "agent_team_min_scopes": 3,
 "agent_team_on_cross_repo": true, "pipeline_when": ["scheduled",
-"multi_day"]}`. `docs`: dispatch-rules.md, tasks-format.md,
+"multi_day"]}`. `dispatch_rules.dispatch_order` is DERIVED, never
+hand-ordered: `deriveDispatchOrder(profile.layers, profile.internalEdges)`
+in [dispatch-order.mjs](../../../scripts/lib/orchestration/dispatch-order.mjs);
+`[]` when the profile
+has no edges; a cycle is an error — stop and report, don't reorder.
+`docs`: dispatch-rules.md, tasks-format.md,
 handoff-logging.md (under `docs/orchestration/`). Never set
 `templateVersion` — pins live in the generation manifest.
 

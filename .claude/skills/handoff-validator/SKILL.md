@@ -30,6 +30,7 @@ generation can run it deterministically with zero manual edits.
    node --input-type=module -e '
    import { readFileSync, existsSync } from "node:fs";
    import { instantiateTemplate } from "./scripts/lib/orchestration/instantiate.mjs";
+   import { renderDispatchOrder } from "./scripts/lib/orchestration/dispatch-order.mjs";
    const bp = JSON.parse(readFileSync(process.argv[1], "utf8"));
    let fail = false;
    for (const a of [...bp.specialists, bp.orchestrator]) {
@@ -37,6 +38,7 @@ generation can run it deterministically with zero manual edits.
      if (!existsSync(path)) { console.log(`SKIP ${a.name}: template ${a.templateId} not yet authored`); continue; }
      const slots = { ...a.slots, name: a.name, tools: a.tools.join(", "),
        "model-tier": a.modelTier, "turn-limit": String(a.turnLimit) };
+     if (a.name === bp.orchestrator.name) slots["dispatch-order"] = renderDispatchOrder(bp.dispatch_rules?.dispatch_order);
      const { errors } = instantiateTemplate(readFileSync(path, "utf8"), slots);
      if (errors.length) { fail = true; console.error(`FAIL ${a.name}:\n  ` + errors.join("\n  ")); }
      else console.log(`ok ${a.name}`);
@@ -44,6 +46,10 @@ generation can run it deterministically with zero manual edits.
    process.exit(fail ? 1 : 0);
    ' <blueprint.json>
    ```
+
+   Besides the injected quartet (name/tools/model-tier/turn-limit), the
+   orchestrator additionally gets `dispatch-order`, rendered via
+   `renderDispatchOrder` from `dispatch_rules.dispatch_order`.
 
    Any `FAIL` (missing or unused slot, malformed marker) REJECTS the
    blueprint. A `SKIP` (template not yet authored) is reported to the caller

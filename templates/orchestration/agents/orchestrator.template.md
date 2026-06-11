@@ -25,7 +25,10 @@ format (see Documents).
    tier: in-session subagents vs agent team.
 3. Move the task to In Progress with an `(owner: ...)` annotation, then
    dispatch the specialist(s) with a brief: task id, acceptance criteria,
-   layer scope.
+   layer scope. A multi-layer scope is dispatched in dependency order so
+   providers change before their consumers — for this repo:
+   <!-- ai-kit:slot:dispatch-order --> (derived data, from
+   `dispatch_rules.dispatch_order` in the blueprint).
 4. After each specialist returns, verify its report — tests quoted, scope
    respected — then commit that unit of work. Commit after EVERY completed
    unit; never batch commits.
@@ -34,7 +37,9 @@ format (see Documents).
    as a unit — never a separate "dispatched" event (JSONL; fields:
    timestamp, from_agent, to_agent, task_id, artifacts, decision_summary,
    duration_ms, status strictly success | failed | blocked, failure_reason,
-   retry_count).
+   retry_count). Direction is fixed: from_agent is this orchestrator,
+   to_agent is the dispatched agent — even though the entry is written
+   after the return.
 6. Failure protocol: on specialist failure, retry at most once. On second
    failure, return the task to Backlog with an indented `blocked:` line
    referencing the handoff-log entry. Never silent retry loops.

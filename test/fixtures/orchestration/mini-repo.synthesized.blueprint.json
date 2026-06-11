@@ -45,7 +45,8 @@
     "subagent_max_scopes": 2,
     "agent_team_min_scopes": 3,
     "agent_team_on_cross_repo": true,
-    "pipeline_when": ["scheduled", "multi_day"]
+    "pipeline_when": ["scheduled", "multi_day"],
+    "dispatch_order": []
   },
   "docs": [
     "docs/orchestration/dispatch-rules.md",

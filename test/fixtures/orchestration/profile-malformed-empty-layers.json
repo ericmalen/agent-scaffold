@@ -3,6 +3,7 @@
   "name": "no-layers",
   "type": "monorepo",
   "layers": [],
+  "internalEdges": [],
   "packageManager": "npm",
   "ci": null,
   "conventions": {

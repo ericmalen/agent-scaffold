@@ -11,6 +11,7 @@
       "buildCmd": null
     }
   ],
+  "internalEdges": [],
   "packageManager": "",
   "ci": 42,
   "conventions": {

@@ -17,8 +17,10 @@ const SLOT_NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;             // kebab-case (DD-5
 // Logical tiers, not concrete model ids — ids churn with releases; the
 // scaffolder (C4) owns the tier → concrete-model map.
 const MODEL_TIERS = new Set(['haiku', 'sonnet', 'opus']);
-// Slot names the instantiators inject from blueprint fields (the quartet).
-const RESERVED_SLOTS = new Set(['name', 'tools', 'model-tier', 'turn-limit']);
+// Slot names the instantiators inject from blueprint fields: the quartet on
+// every agent, plus dispatch-order on the orchestrator (rendered from
+// dispatch_rules.dispatch_order).
+const RESERVED_SLOTS = new Set(['name', 'tools', 'model-tier', 'turn-limit', 'dispatch-order']);
 
 const isNonEmptyString = (v) => typeof v === 'string' && v.trim() !== '';
 const isStringOrNull = (v) => v === null || typeof v === 'string';
@@ -67,6 +69,39 @@ export function validateRepoProfile(profile) {
           e(`${where}.${field} must be a string or null (null = not detected)`);
         }
       }
+    });
+  }
+
+  // Internal dependency edges (B2): { from: consumer, to: provider }, both
+  // layer names. [] is the normal single-package / no-internal-deps result —
+  // required so "none found" is a recorded fact, not an omission.
+  if (!Array.isArray(profile.internalEdges)) {
+    e('internalEdges must be an array ([] = no internal dependencies)');
+  } else {
+    const layerNames = new Set(
+      (Array.isArray(profile.layers) ? profile.layers : [])
+        .filter(isPlainObject).map((l) => l.name).filter(isNonEmptyString),
+    );
+    const seenEdges = new Set();
+    profile.internalEdges.forEach((edge, i) => {
+      const where = `internalEdges[${i}]`;
+      if (!isPlainObject(edge)) {
+        e(`${where} must be an object ({ from: consumer, to: provider })`);
+        return;
+      }
+      for (const field of ['from', 'to']) {
+        if (!isNonEmptyString(edge[field])) {
+          e(`${where}.${field} must be a non-empty string layer name`);
+        } else if (layerNames.size > 0 && !layerNames.has(edge[field])) {
+          e(`${where}.${field} "${edge[field]}" is not a layer name`);
+        }
+      }
+      if (isNonEmptyString(edge.from) && edge.from === edge.to) {
+        e(`${where} is a self-edge ("${edge.from}")`);
+      }
+      const key = `${edge.from}→${edge.to}`;
+      if (seenEdges.has(key)) e(`internalEdges: duplicate edge ${edge.from}→${edge.to}`);
+      seenEdges.add(key);
     });
   }
 
@@ -212,6 +247,23 @@ export function validateBlueprint(blueprint) {
         if (!PIPELINE_WHEN.has(v)) {
           e(`dispatch_rules.pipeline_when[${i}] must be one of scheduled | multi_day (got ${v})`);
         }
+      });
+    }
+    // Derived by deriveDispatchOrder from profile internalEdges (§9.3):
+    // provider-first total order of layer names, [] = no internal ordering
+    // constraints. Shape-only here; agreement with the profile is the
+    // synthesizer's contract (B8).
+    if (!Array.isArray(dr.dispatch_order)) {
+      e('dispatch_rules.dispatch_order must be an array of layer names ([] = no internal ordering constraints)');
+    } else {
+      const seenLayers = new Set();
+      dr.dispatch_order.forEach((v, i) => {
+        if (!isNonEmptyString(v)) {
+          e(`dispatch_rules.dispatch_order[${i}] must be a non-empty string`);
+          return;
+        }
+        if (seenLayers.has(v)) e(`dispatch_rules.dispatch_order: duplicate layer "${v}"`);
+        seenLayers.add(v);
       });
     }
   }
