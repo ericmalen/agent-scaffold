@@ -21,7 +21,9 @@ fixes; writes nothing, gates everything.
    re-scaffold as a prerequisite, then continue.
 3. Run `eval-runner` at the RELEASE tier only: every generated agent, each
    golden 5 times, a golden passes at >= 4/5, `minGoldens` quota enforced.
-   Never present a smoke run or a single pass as a gate verdict.
+   Never present a smoke run or a single pass as a gate verdict. Honor
+   eval-runner's isolation and session-lifetime rules: disposable copy per
+   run, and complete-and-judge the batch before ending the turn.
 4. Emit one health report: drift sections, per-agent eval tables,
    BELOW-QUOTA list, overall verdict. PASS only when drift is all-MATCH,
    no agent is below quota, and every golden passes at >= 4/5; anything

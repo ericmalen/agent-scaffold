@@ -62,11 +62,26 @@ tier the situation calls for:
 
 ## Run
 
-From the target repo root, one invocation per run:
+**Mutation isolation — every golden runs in a disposable git copy of the
+target, never in the live target.** Some goldens mutate state (the
+orchestrator's end-to-end goldens commit, move tasks lines, append to the
+handoff log), and any agent can misbehave — that misbehavior must land in a
+throwaway copy, and each repeat of a golden must start from the same clean
+base. Per run: `cp -R <target> <scratch>`, record the base commit, invoke in
+the scratch copy, judge from its transcript plus `git diff <base>` and
+untracked files, then delete the copy.
+
+One invocation per run, from the scratch copy's root:
 
 ```
 claude --agent <agent-name> -p "<task from the golden>" --allowedTools <agent's tools from its blueprint entry>
 ```
+
+**Session lifetime — finish the batch before ending the turn.** When this
+procedure itself runs headless, background jobs die with the session: never
+end a turn with runs still pending in background shells. Either block until
+every run has completed and judge in the same session, or hand the batch to
+a driver that outlives the session and judge in a later invocation.
 
 Then judge — the runner is the judge. For each property in the golden's
 `expectedProperties`: one property = one verdict (HOLDS or FAILS, with one
