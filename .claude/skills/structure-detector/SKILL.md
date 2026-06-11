@@ -22,19 +22,31 @@ All inspection happens in the target repo path named by the caller.
    `single-package`.
 3. **Layers.** One entry per declared package/workspace; for a
    single-package repo, exactly one entry with `path: "."`. Per layer:
-   - `name`: the package's short name (workspace folder name).
+   - `name`: the package's short name (workspace folder name). For a
+     single-package repo, a short role word read from the manifest (`bin`
+     entry → "cli", a server entry point → "api"), falling back to the
+     package name — the layer name should say what the layer IS, not
+     repeat the repo name.
    - `path`: root-relative folder.
-   - `stack`: from actual dependencies in that package's manifest — name the
-     framework(s) that define the layer (e.g. "React + TypeScript + Vite",
-     "Express + TypeScript", "Prisma + PostgreSQL"). Refine with
-     dependency-mapper output when available.
+   - `stack`: from actual dependencies in that package's manifest, refined
+     by framework config inside the layer — some defining facts live only
+     there (e.g. `schema.prisma` datasource names the database engine).
+     Name the framework(s) that define the layer (e.g. "React + TypeScript
+     + Vite", "Express + TypeScript", "Prisma + PostgreSQL"). A layer with
+     no framework dependencies still needs a non-empty stack: describe the
+     runtime role from manifest signals (`bin`, `type`, `engines`), e.g.
+     "Node.js CLI (zero-dependency)". Refine with dependency-mapper output
+     when available.
    - `testCmd` / `buildCmd`: the runnable command for THAT layer, derived
      from declared scripts (workspace form, e.g. `npm test --workspace api`,
-     when the root manages packages). A script that does not exist is `null`
-     plus a `gaps[]` entry — never invent a command.
+     when the root manages packages). A missing test script is `null` plus
+     a `gaps[]` entry — untested code matters to orchestration dispatch. A
+     missing build script is just `null`, no gap: many packages
+     legitimately have nothing to build. Never invent a command.
 4. **Verify commands.** Where cheap and side-effect-free, run each detected
    test command once to confirm it executes; a command that errors out is
-   reported in `gaps[]`, not silently kept.
+   reported in `gaps[]`, not silently kept. Build commands are detected
+   from scripts only, never run.
 
 ## Output
 
