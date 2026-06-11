@@ -6,6 +6,7 @@
   "chat.useCustomAgentHooks": true,
   "chat.subagents.allowInvocationsFromSubagents": true,
   "chat.tools.terminal.enableAutoApprove": false,
+  "chat.tools.terminal.autoApprove": {},
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": { "AGENTS.md": "CLAUDE.md" }
 }

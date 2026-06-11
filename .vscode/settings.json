@@ -4,10 +4,8 @@
   // Copilot, Cursor, Codex, Aider, Gemini CLI, and others read it directly.
   // Claude Code reads CLAUDE.md, which imports AGENTS.md via `@AGENTS.md`.
   "chat.useAgentsMdFile": true,
-  // Nested AGENTS.md files in subdirectories scope conventions to one subtree.
-  // They load automatically when Copilot works in that directory, on top of
-  // the root AGENTS.md, and are discovered by every AGENTS.md-aware tool.
-  "chat.useNestedAgentsMdFiles": true,
+  // (chat.useNestedAgentsMdFiles is set only when the nested-AGENTS.md compat
+  // mechanism is in use — this repo has none; see R-45/R-53.)
   // CLAUDE.md only imports AGENTS.md — Copilot already reads AGENTS.md natively,
   // so leave this off to avoid loading the same content twice.
   "chat.useClaudeMdFile": false,

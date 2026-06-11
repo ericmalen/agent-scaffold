@@ -68,11 +68,22 @@ Run the bundled audit and fix findings by rule ID.
   "chat.useCustomAgentHooks": true,
   "chat.subagents.allowInvocationsFromSubagents": true,
   "chat.tools.terminal.enableAutoApprove": false,
+  "chat.tools.terminal.autoApprove": {},
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": { "AGENTS.md": "CLAUDE.md" }
 }
 `,
 };
+
+// CONFORMANT's .vscode/settings.json with key overrides (null = delete key).
+function vscodeSettings(overrides = {}) {
+  const base = JSON.parse(CONFORMANT['.vscode/settings.json']);
+  for (const [k, v] of Object.entries(overrides)) {
+    if (v === null) delete base[k];
+    else base[k] = v;
+  }
+  return JSON.stringify(base, null, 2) + '\n';
+}
 
 test('conformant repo produces zero findings', () => {
   const repo = makeRepo(CONFORMANT);
@@ -153,20 +164,15 @@ test('violations repo: expected rules fire', () => {
 test('R-09: codeReview=true requires copilot-instructions.md (short, pointing at AGENTS.md)', () => {
   const repo = makeRepo({
     ...CONFORMANT,
-    '.claude/ai-kit.json': '{ "kit": "1.0.0", "githubCodeReview": true }\n',
+    '.claude/ai-kit.json': '{ "kit": "1.0.0", "adoptedAt": "2026-06-10", "githubCodeReview": true }\n',
   });
   try {
     let report = audit({ root: repo });
     assert.equal(of(report, 'R-09').length, 1); // missing file
 
-    writeFileSync(join(repo, '.github', 'copilot-instructions.md'), 'See AGENTS.md.\n', { flag: 'w' });
-  } catch (e) {
-    // .github does not exist yet
     mkdirSync(join(repo, '.github'), { recursive: true });
     writeFileSync(join(repo, '.github', 'copilot-instructions.md'), 'See AGENTS.md.\n');
-  }
-  try {
-    const report = audit({ root: repo });
+    report = audit({ root: repo });
     assert.equal(of(report, 'R-09').length, 0);
 
     // oversized file fires
@@ -260,6 +266,109 @@ test('CLI: exit 0 on clean, exit 1 with --strict on any finding', () => {
   } finally {
     rmSync(cleanRepo, { recursive: true, force: true });
     rmSync(todoRepo, { recursive: true, force: true });
+  }
+});
+
+// ── R-45 completeness: auto-approve map + compat-key direction ──────────────
+
+test('R-45: terminal auto-approve map must be present and empty', () => {
+  const cases = [
+    [vscodeSettings({ 'chat.tools.terminal.autoApprove': null }), 1], // absent → fires
+    [vscodeSettings({ 'chat.tools.terminal.autoApprove': { ls: true } }), 1], // non-empty → fires
+    [vscodeSettings({ 'chat.tools.terminal.autoApprove': [] }), 0], // empty array OK
+    [vscodeSettings({}), 0], // empty object OK (CONFORMANT default)
+  ];
+  for (const [settings, expected] of cases) {
+    const repo = makeRepo({ ...CONFORMANT, '.vscode/settings.json': settings });
+    try {
+      const hits = of(audit({ root: repo }), 'R-45').filter((f) => /autoApprove/.test(f.message));
+      assert.equal(hits.length, expected, settings);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  }
+});
+
+test('R-45: compat key without compat mechanism fires (reverse direction)', () => {
+  const repo = makeRepo({
+    ...CONFORMANT,
+    '.vscode/settings.json': vscodeSettings({ 'chat.useNestedAgentsMdFiles': true }),
+  });
+  try {
+    const r45 = of(audit({ root: repo }), 'R-45');
+    assert.equal(r45.length, 1, JSON.stringify(r45));
+    assert.match(r45[0].message, /useNestedAgentsMdFiles/);
+    assert.match(r45[0].message, /R-53/);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('payload skeletons (ai-kit:slot markers) do not trigger compat mode', () => {
+  const skeleton = '# <!-- ai-kit:slot:intro -->\n\n<!-- ai-kit:optional -->\n## Overview\n';
+  const live = '# Sub scope\nShort and focused.\n';
+  const skeletonRepo = makeRepo({ ...CONFORMANT, 'templates/instructions/AGENTS.md': skeleton });
+  const liveRepo = makeRepo({ ...CONFORMANT, 'templates/instructions/AGENTS.md': live });
+  try {
+    // Skeleton: not live config — no compat, no nested-key requirement, zero findings.
+    assert.deepEqual(audit({ root: skeletonRepo }).findings, []);
+    // Same path without markers IS live nested config → compat requirements fire.
+    const fired = rules(audit({ root: liveRepo }));
+    assert.ok(fired.includes('R-45'), `expected R-45 (nested key); fired: ${fired.join(', ')}`);
+    assert.ok(fired.includes('R-15'), `expected R-15 (missing shim); fired: ${fired.join(', ')}`);
+  } finally {
+    rmSync(skeletonRepo, { recursive: true, force: true });
+    rmSync(liveRepo, { recursive: true, force: true });
+  }
+});
+
+// ── R-50 marker content validation ──────────────────────────────────────────
+
+test('R-50: unparseable marker and missing fields fire', () => {
+  const badJson = makeRepo({ ...CONFORMANT, '.claude/ai-kit.json': '{ not json\n' });
+  const missingFields = makeRepo({ ...CONFORMANT, '.claude/ai-kit.json': '{ "kit": "abc" }\n' });
+  try {
+    const r1 = of(audit({ root: badJson }), 'R-50');
+    assert.equal(r1.length, 1);
+    assert.match(r1[0].message, /not valid JSON/);
+
+    const r2 = of(audit({ root: missingFields }), 'R-50');
+    assert.equal(r2.length, 1);
+    assert.match(r2[0].message, /adoptedAt, githubCodeReview/);
+  } finally {
+    rmSync(badJson, { recursive: true, force: true });
+    rmSync(missingFields, { recursive: true, force: true });
+  }
+});
+
+// ── R-48 per-asset READMEs + R-54 stray prompt files ────────────────────────
+
+test('R-48: per-asset README fires; vendored skill exempt', () => {
+  const repo = makeRepo({
+    ...CONFORMANT,
+    '.claude/skills/some-skill/SKILL.md': '---\nname: some-skill\ndescription: Does x. Use when y.\n---\nbody\n',
+    '.claude/skills/some-skill/README.md': 'per-asset readme\n', // → fires
+    '.claude/skills/vend/UPSTREAM': 'https://example.com @ abc\n',
+    '.claude/skills/vend/SKILL.md': '---\nname: vend\ndescription: vendored, used when testing\n---\nbody\n',
+    '.claude/skills/vend/README.md': 'upstream ships one\n', // vendored → exempt
+  });
+  try {
+    const r48 = of(audit({ root: repo }), 'R-48').filter((f) => /Per-asset/.test(f.message));
+    assert.equal(r48.length, 1, JSON.stringify(r48));
+    assert.equal(r48[0].file, '.claude/skills/some-skill/README.md');
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('R-54: stray *.prompt.md outside .github/prompts fires', () => {
+  const repo = makeRepo({ ...CONFORMANT, 'tools/old.prompt.md': 'legacy prompt\n' });
+  try {
+    const r54 = of(audit({ root: repo }), 'R-54');
+    assert.equal(r54.length, 1);
+    assert.equal(r54[0].file, 'tools/old.prompt.md');
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
   }
 });
 

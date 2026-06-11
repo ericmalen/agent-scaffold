@@ -16,7 +16,7 @@ export function isDir(p) {
 
 const SKIP_DIRS = new Set([
   '.git', 'node_modules', '.adoption', 'dist', 'build', 'coverage',
-  '.next', '.venv', 'target', 'out', '.turbo', '.cache', 'v1-reference',
+  '.next', '.venv', 'target', 'out', '.turbo', '.cache',
   'ai-kit-adoption', // adoption-time tooling dir (.claude/ai-kit-adoption)
 ]);
 
@@ -36,6 +36,13 @@ export function isAdoptionTooling(rel) {
 // skips style rules (R-20..R-25) for these; load-critical rules still apply.
 export function isVendored(root, rel) {
   return existsSync(join(root, dirname(rel), 'UPSTREAM'));
+}
+
+// Template payload skeletons — files carrying ai-kit slot/optional markers are
+// kit payload, not live configuration; live-config checks skip them
+// (spec/rules.md: Audit exemptions).
+export function isPayloadSkeleton(text) {
+  return /<!--\s*ai-kit:(slot|optional)/.test(text ?? '');
 }
 
 // Recursive walk yielding absolute file paths; skips junk dirs.

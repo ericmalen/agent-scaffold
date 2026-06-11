@@ -6,6 +6,7 @@ import { join, relative, dirname, basename } from 'node:path';
 import {
   readSafe, exists, isDir, walk, parseFrontmatter, frontmatterKeys,
   nonBlankLines, stripFences, lineOf, parseJsonc, finding as F, isAdoptionTooling, isVendored,
+  isPayloadSkeleton,
 } from './util.mjs';
 
 // ── R-01..R-09: root instructions ───────────────────────────────────────────
@@ -92,7 +93,11 @@ export function checkPathScoping(ctx) {
     ? [...walk(rulesDir)].filter((p) => p.endsWith('.md') && basename(p) !== 'README.md')
     : [];
   const nestedAgents = [...walk(root)]
-    .filter((p) => basename(p) === 'AGENTS.md' && relative(root, p) !== 'AGENTS.md');
+    .filter((p) => basename(p) === 'AGENTS.md' && relative(root, p) !== 'AGENTS.md')
+    // Payload skeletons (ai-kit slot/optional markers) are template payload, not
+    // live config — they neither trigger compat mode nor get audited as nested
+    // instructions (spec/rules.md: Audit exemptions).
+    .filter((p) => !isPayloadSkeleton(readSafe(p)));
 
   ctx.compatMode = nestedAgents.length > 0;
 
@@ -224,7 +229,12 @@ export function checkSkills(ctx) {
 // ── R-27..R-35: agents ──────────────────────────────────────────────────────
 
 const MODEL_ALIASES = new Set(['sonnet', 'opus', 'haiku', 'inherit']);
-const DEPRECATED_MODEL_RE = /^claude-3|^claude-(opus|sonnet)-4(-[01])?$|^claude-(opus|sonnet)-4$/;
+// Tracked deprecated/retired model-ID patterns (R-35). List tracked — update as
+// Anthropic retires IDs (same discipline as the R-22 built-ins list).
+const DEPRECATED_MODEL_PATTERNS = [
+  /^claude-3/, // all 3.x IDs
+  /^claude-(opus|sonnet)-4(-[01])?$/, // claude-{opus,sonnet}-4, -4-0, -4-1
+];
 
 export function checkAgents(ctx) {
   const { root } = ctx;
@@ -270,7 +280,7 @@ export function checkAgents(ctx) {
     }
     const model = frontmatter.model;
     if (model && !MODEL_ALIASES.has(model)) {
-      if (DEPRECATED_MODEL_RE.test(model)) {
+      if (DEPRECATED_MODEL_PATTERNS.some((re) => re.test(model))) {
         out.push(F('R-35', 'warning', rel, `model "${model}" is deprecated/retired — use sonnet/opus/haiku/inherit or a current full ID.`));
       } else if (!/^claude-/.test(model)) {
         out.push(F('R-35', 'warning', rel, `model "${model}" is not a recognized alias or claude-* ID.`));
@@ -293,7 +303,9 @@ export function checkReferences(ctx) {
     const rel = relative(root, abs).replace(/\\/g, '/');
     if (isAdoptionTooling(rel)) continue;
     const base = basename(abs);
-    if (base === 'AGENTS.md' && rel !== 'AGENTS.md') targets.push({ abs, agentDocs: false });
+    if (base === 'AGENTS.md' && rel !== 'AGENTS.md') {
+      if (!isPayloadSkeleton(readSafe(abs))) targets.push({ abs, agentDocs: false });
+    }
     else if (rel.startsWith('.claude/rules/') && abs.endsWith('.md') && base !== 'README.md') targets.push({ abs, agentDocs: false });
     else if (rel.startsWith('.claude/skills/') && base === 'SKILL.md') targets.push({ abs, agentDocs: false });
     else if (rel.startsWith('.claude/agents/') && abs.endsWith('.md') && base !== 'README.md') targets.push({ abs, agentDocs: true });
@@ -396,7 +408,7 @@ export function checkVscodeSettings(ctx) {
   const rel = '.vscode/settings.json';
   const text = readSafe(join(root, rel));
   if (text == null) {
-    out.push(F('R-45', 'warning', rel, 'Missing .vscode/settings.json (required key set, spec Part 4).'));
+    out.push(F('R-45', 'warning', rel, 'Missing .vscode/settings.json (required key set, R-45).'));
     return out;
   }
   const parsed = parseJsonc(text);
@@ -410,6 +422,19 @@ export function checkVscodeSettings(ctx) {
     if (parsed[key] !== val) {
       out.push(F('R-45', 'warning', rel, `"${key}" must be ${JSON.stringify(val)} (found: ${JSON.stringify(parsed[key])}).`));
     }
+  }
+  // R-45: empty terminal auto-approve rule map must be present (empty {} or []).
+  const auto = parsed['chat.tools.terminal.autoApprove'];
+  const autoEmpty = (Array.isArray(auto) && auto.length === 0)
+    || (auto != null && typeof auto === 'object' && !Array.isArray(auto) && Object.keys(auto).length === 0);
+  if (!autoEmpty) {
+    out.push(F('R-45', 'warning', rel,
+      `"chat.tools.terminal.autoApprove" must be present and empty (found: ${JSON.stringify(auto)}).`));
+  }
+  // R-45/R-53: the compat key may exist ONLY while the compat mechanism is active.
+  if (!compatMode && parsed['chat.useNestedAgentsMdFiles'] === true) {
+    out.push(F('R-45', 'warning', rel,
+      '"chat.useNestedAgentsMdFiles" is set but no live nested AGENTS.md exist — the compat key belongs only with the compat mechanism (R-53).'));
   }
   const nesting = parsed['explorer.fileNesting.patterns'];
   if (!nesting || nesting['AGENTS.md'] !== 'CLAUDE.md') {
@@ -431,6 +456,9 @@ export function checkHygiene(ctx) {
   for (const abs of walk(root)) {
     if (abs.endsWith('.chatmode.md')) {
       out.push(F('R-42', 'warning', relative(root, abs).replace(/\\/g, '/'), 'Deprecated .chatmode.md file — rename/convert to a custom agent.'));
+    } else if (abs.endsWith('.prompt.md')) {
+      // R-54: lingering migration sources anywhere in the tree (parity with R-42).
+      out.push(F('R-54', 'warning', relative(root, abs).replace(/\\/g, '/'), 'Lingering *.prompt.md migration source — convert to a user-invocable skill.'));
     }
   }
 
@@ -465,16 +493,37 @@ export function checkHygiene(ctx) {
     }
   }
 
-  // R-48 asset folder READMEs
+  // R-48 asset folder READMEs — exactly one per folder, no per-asset READMEs.
   for (const dirRel of ['.claude/agents', '.claude/skills', '.claude/rules']) {
     if (isDir(join(root, dirRel)) && !exists(join(root, dirRel, 'README.md'))) {
       out.push(F('R-48', 'info', dirRel, 'Asset folder is missing its README.md.'));
     }
   }
+  for (const sub of ['agents', 'skills', 'rules']) {
+    const dir = join(root, '.claude', sub);
+    if (!isDir(dir)) continue;
+    for (const abs of walk(dir)) {
+      if (basename(abs) !== 'README.md') continue;
+      const rel = relative(root, abs).replace(/\\/g, '/');
+      if (rel === `.claude/${sub}/README.md`) continue; // the sanctioned folder README
+      if (isAdoptionTooling(rel)) continue;
+      const segs = rel.split('/');
+      if (sub === 'skills' && segs.length > 3
+        && isVendored(root, [...segs.slice(0, 3), 'SKILL.md'].join('/'))) continue;
+      out.push(F('R-48', 'info', rel, 'Per-asset README — R-48 allows exactly one README.md per asset folder.'));
+    }
+  }
 
-  // R-50 maintenance surface
+  // R-50 maintenance surface — marker present AND carrying its required fields.
   if (!marker.present) {
     out.push(F('R-50', 'warning', '.claude/ai-kit.json', 'Kit marker missing — record kit version, adoptedAt, githubCodeReview.'));
+  } else if (marker.invalid) {
+    out.push(F('R-50', 'warning', '.claude/ai-kit.json', 'Kit marker is not valid JSON — re-record kit, adoptedAt, githubCodeReview.'));
+  } else {
+    const missing = ['kit', 'adoptedAt', 'githubCodeReview'].filter((k) => marker[k] === undefined);
+    if (missing.length > 0) {
+      out.push(F('R-50', 'warning', '.claude/ai-kit.json', `Kit marker missing required field(s): ${missing.join(', ')}.`));
+    }
   }
   if (!exists(join(root, '.claude', 'skills', 'ai-kit-check', 'SKILL.md'))) {
     out.push(F('R-50', 'warning', '.claude/skills/ai-kit-check', 'Permanent ai-kit-check skill is not installed (post-adoption drift surface).'));
