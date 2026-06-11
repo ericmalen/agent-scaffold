@@ -28,6 +28,12 @@ Policy-driven additions from `decisions.json`:
 
 Always: one `feature-orchestrator` (templateId `orchestrator`).
 
+Names are derived, not invented — the same inputs must yield the same
+roster: engineer specialists are `<layer-name>-engineer` (layer name from
+the profile, e.g. `ui-engineer`, `shared-engineer`, `cli-engineer`);
+policy agents keep their templateId as name (`code-reviewer`, `qa-agent`,
+`security-reviewer`); the orchestrator is always `feature-orchestrator`.
+
 ## Slot values (from the profile, per agent)
 
 Engineer specialists: `layer-path`, `stack`, `test-cmd` (the layer's

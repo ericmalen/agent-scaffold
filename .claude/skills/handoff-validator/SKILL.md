@@ -6,11 +6,12 @@ description: Orchestration discovery gate B7 — checks an orchestration bluepri
 # handoff-validator
 
 The gate between Discovery and Generation: a blueprint passes only if
-generation can run it deterministically with zero manual edits.
+generation can run it deterministically with zero manual edits. Both checks
+run from the kit clone.
 
 ## Checks
 
-1. **Schema** — from the kit clone:
+1. **Schema** —
 
    ```
    node --input-type=module -e '
@@ -22,39 +23,38 @@ generation can run it deterministically with zero manual edits.
    ' <blueprint.json>
    ```
 
-2. **Slot completeness** — for the orchestrator and each specialist, dry-run
-   strict instantiation against its template
-   (`templates/orchestration/agents/<templateId>.template.md`):
+2. **Generation dry-run** — run the real generation planner
+   (`planGeneration`, the same code the scaffolder executes) against the
+   kit's registry and templates, discarding the planned files:
 
    ```
    node --input-type=module -e '
    import { readFileSync, existsSync } from "node:fs";
-   import { instantiateTemplate } from "./scripts/lib/orchestration/instantiate.mjs";
-   import { renderDispatchOrder } from "./scripts/lib/orchestration/dispatch-order.mjs";
+   import { planGeneration } from "./scripts/lib/orchestration/scaffold.mjs";
    const bp = JSON.parse(readFileSync(process.argv[1], "utf8"));
-   let fail = false;
-   for (const a of [...bp.specialists, bp.orchestrator]) {
-     const path = `templates/orchestration/agents/${a.templateId}.template.md`;
-     if (!existsSync(path)) { console.log(`SKIP ${a.name}: template ${a.templateId} not yet authored`); continue; }
-     const slots = { ...a.slots, name: a.name, tools: a.tools.join(", "),
-       "model-tier": a.modelTier, "turn-limit": String(a.turnLimit) };
-     if (a.name === bp.orchestrator.name) slots["dispatch-order"] = renderDispatchOrder(bp.dispatch_rules?.dispatch_order);
-     const { errors } = instantiateTemplate(readFileSync(path, "utf8"), slots);
-     if (errors.length) { fail = true; console.error(`FAIL ${a.name}:\n  ` + errors.join("\n  ")); }
-     else console.log(`ok ${a.name}`);
-   }
-   process.exit(fail ? 1 : 0);
+   const registry = JSON.parse(readFileSync("templates/orchestration/template-registry.json", "utf8"));
+   const where = { agent: (id) => `templates/orchestration/agents/${id}.template.md`,
+     skill: (id) => `templates/orchestration/skills/${id}.template.md`,
+     doc: (id) => `templates/orchestration/docs/${id}.md` };
+   const readTemplate = (kind, id) =>
+     existsSync(where[kind](id)) ? readFileSync(where[kind](id), "utf8") : null;
+   const { errors } = planGeneration(bp, registry, readTemplate);
+   if (errors.length) { console.error(errors.join("\n")); process.exit(1); }
+   console.log("generation dry-run ok");
    ' <blueprint.json>
    ```
 
-   Besides the injected quartet (name/tools/model-tier/turn-limit), the
-   orchestrator additionally gets `dispatch-order`, rendered via
-   `renderDispatchOrder` from `dispatch_rules.dispatch_order`.
-
-   Any `FAIL` (missing or unused slot, malformed marker) REJECTS the
-   blueprint. A `SKIP` (template not yet authored) is reported to the caller
-   but does not reject — full coverage is re-gated at generation time, when
-   every referenced template must exist.
+   One pass, zero reimplementation, covers: slot completeness for the
+   orchestrator and every specialist (including the injected
+   name/tools/model-tier/turn-limit quartet and the orchestrator's rendered
+   dispatch-order), every paired skill instantiated from its specialist's
+   slots, every `blueprint.docs` entry resolving in the registry, registry
+   sha256 pin agreement, and generated-path collisions. Because the dry-run
+   and the scaffolder share `planGeneration`, the gate's verdict is by
+   construction the verdict generation would give — the two cannot drift.
+   The blueprint's templateId vocabulary is closed (everything
+   blueprint-generator may emit is registry-pinned), so an unresolvable id
+   is a defect, never a "not yet authored" state to wave through.
 
 3. **Eval + dispatch presence** — fully covered by the schema check:
    `evalRequirements.minGoldens`, `dispatch_rules` shape, and tier ordering
@@ -63,6 +63,14 @@ generation can run it deterministically with zero manual edits.
 
 ## Verdict
 
-Report PASS / REJECT with the error lines verbatim. On REJECT the caller
-fixes the blueprint (or the upstream profile/decisions) and re-runs — never
-hand-edit generated downstream files to compensate.
+Report PASS / REJECT with the error lines verbatim, and route the fix by
+error class:
+
+- slot errors, `not in registry`, duplicate generated path — blueprint
+  defects: the caller fixes the blueprint (or the upstream
+  profile/decisions) and re-runs.
+- `missing from kit`, `drifted from registry pin` — kit defects: author the
+  missing template or bump the version and re-pin in the kit; the blueprint
+  is innocent.
+
+Never hand-edit generated downstream files to compensate.
