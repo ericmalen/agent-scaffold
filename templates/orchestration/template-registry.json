@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "agents": {
+    "orchestrator": { "version": "1.0.0" },
+    "ui-engineer": { "version": "1.0.0" },
+    "api-engineer": { "version": "1.0.0" },
+    "db-engineer": { "version": "1.0.0" },
+    "generic-specialist": { "version": "1.0.0" },
+    "code-reviewer": { "version": "1.0.0" },
+    "qa-agent": { "version": "1.0.0" },
+    "security-reviewer": { "version": "1.0.0" }
+  },
+  "skills": {
+    "api-testing": { "version": "1.0.0", "pairsWith": "api-engineer" },
+    "ui-component-pattern": { "version": "1.0.0", "pairsWith": "ui-engineer" },
+    "db-migration": { "version": "1.0.0", "pairsWith": "db-engineer" }
+  }
+}

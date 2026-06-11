@@ -9,6 +9,7 @@
 //   validateBlueprint          — docs/orchestration/blueprint.json (A3)
 //   validateTaskBacklog        — parsed tasks.md (A4; parser in parse-tasks.mjs)
 //   validateHandoffLog         — one handoff-log.jsonl entry (A5)
+//   validateGenerationManifest — docs/orchestration/generation-manifest.json (C4)
 
 const REPO_TYPES = new Set(['monorepo', 'single-package']);
 const PIPELINE_WHEN = new Set(['scheduled', 'multi_day']);   // §9.3 / DD-4
@@ -269,6 +270,54 @@ export function validateTaskBacklog(doc) {
       }
     });
   }
+
+  return errors;
+}
+
+// ── generation-manifest (C4) ────────────────────────────────────────────────
+
+const SEMVER_RE = /^\d+\.\d+\.\d+$/;
+const SHA256_RE = /^[a-f0-9]{64}$/;
+
+// Scaffolder-owned record of every generated file (DD-13): path → template
+// id, pinned template version, content SHA. Deliberately NO timestamps —
+// re-scaffolding the same blueprint must be byte-identical, manifest
+// included.
+export function validateGenerationManifest(manifest) {
+  if (!isPlainObject(manifest)) return ['generation manifest must be an object'];
+  const errors = [];
+  const e = (m) => errors.push(m);
+
+  if (manifest.schemaVersion !== 1) e(`schemaVersion must be 1 (got ${manifest.schemaVersion})`);
+
+  if (!Array.isArray(manifest.generated) || manifest.generated.length === 0) {
+    e('generated must be a non-empty array');
+    return errors;
+  }
+  const seen = new Set();
+  manifest.generated.forEach((entry, i) => {
+    const where = `generated[${i}]`;
+    if (!isPlainObject(entry)) {
+      e(`${where} must be an object`);
+      return;
+    }
+    if (!isNonEmptyString(entry.path)) {
+      e(`${where}.path must be a non-empty string`);
+    } else {
+      if (entry.path.startsWith('/') || entry.path.split('/').includes('..')) {
+        e(`${where}.path must be root-relative without ".." (got ${entry.path})`);
+      }
+      if (seen.has(entry.path)) e(`generated: duplicate path "${entry.path}"`);
+      seen.add(entry.path);
+    }
+    if (!isNonEmptyString(entry.templateId)) e(`${where}.templateId must be a non-empty string`);
+    if (typeof entry.templateVersion !== 'string' || !SEMVER_RE.test(entry.templateVersion)) {
+      e(`${where}.templateVersion must be semver x.y.z (got ${entry.templateVersion})`);
+    }
+    if (typeof entry.sha256 !== 'string' || !SHA256_RE.test(entry.sha256)) {
+      e(`${where}.sha256 must be a 64-char lowercase hex digest`);
+    }
+  });
 
   return errors;
 }

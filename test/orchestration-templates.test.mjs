@@ -4,6 +4,8 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { instantiateTemplate } from '../scripts/lib/orchestration/instantiate.mjs';
+import { validateGenerationManifest, validateTaskBacklog } from '../scripts/lib/orchestration/schemas.mjs';
+import { parseTasksMd } from '../scripts/lib/orchestration/parse-tasks.mjs';
 
 const FIXTURES = join(import.meta.dirname, 'fixtures', 'orchestration');
 const TEMPLATES = join(import.meta.dirname, '..', 'templates', 'orchestration', 'agents');
@@ -43,6 +45,36 @@ for (const fixture of BLUEPRINTS) {
   }
 }
 
+// C2: each skill template instantiates clean from its paired specialist's
+// blueprint slots alone (no quartet — skills carry no agent identity).
+const SKILL_TEMPLATES = join(import.meta.dirname, '..', 'templates', 'orchestration', 'skills');
+const registry = JSON.parse(
+  readFileSync(join(import.meta.dirname, '..', 'templates', 'orchestration', 'template-registry.json'), 'utf8'),
+);
+
+for (const [skillId, meta] of Object.entries(registry.skills)) {
+  test(`C2 lint: ${skillId} instantiates from its paired specialist's slots`, () => {
+    const bp = loadFixture('maxi-repo.synthesized.blueprint.json');
+    const specialist = bp.specialists.find((s) => s.templateId === meta.pairsWith);
+    assert.ok(specialist, `no maxi specialist uses template ${meta.pairsWith}`);
+    const tpl = readFileSync(join(SKILL_TEMPLATES, `${skillId}.template.md`), 'utf8');
+    const { content, errors } = instantiateTemplate(tpl, specialist.slots);
+    assert.deepEqual(errors, []);
+    assert.ok(!content.includes('ai-kit:slot'));
+    assert.match(content, new RegExp(`^name: ${skillId}$`, 'm'));
+  });
+}
+
+test('C2 lint: registry and shipped templates cover each other exactly', () => {
+  const agentFiles = readdirSync(TEMPLATES).filter((f) => f.endsWith('.template.md')).map((f) => f.replace('.template.md', ''));
+  const skillFiles = readdirSync(SKILL_TEMPLATES).filter((f) => f.endsWith('.template.md')).map((f) => f.replace('.template.md', ''));
+  assert.deepEqual(agentFiles.sort(), Object.keys(registry.agents).sort());
+  assert.deepEqual(skillFiles.sort(), Object.keys(registry.skills).sort());
+  for (const [skillId, meta] of Object.entries(registry.skills)) {
+    assert.ok(registry.agents[meta.pairsWith], `${skillId} pairsWith unknown template ${meta.pairsWith}`);
+  }
+});
+
 test('C1 lint: every shipped template is referenced by at least one fixture blueprint', () => {
   const referenced = new Set(
     BLUEPRINTS.flatMap((f) => {
@@ -56,4 +88,55 @@ test('C1 lint: every shipped template is referenced by at least one fixture blue
   for (const id of shipped) {
     assert.ok(referenced.has(id), `template ${id} is orphaned — no fixture blueprint references it`);
   }
+});
+
+// ── generation-manifest validator (C4 contract) ─────────────────────────────
+
+const SHA = 'a'.repeat(64);
+const ENTRY = { path: '.claude/agents/api-engineer.md', templateId: 'api-engineer', templateVersion: '1.0.0', sha256: SHA };
+
+test('validateGenerationManifest: well-formed manifest validates clean', () => {
+  assert.deepEqual(validateGenerationManifest({ schemaVersion: 1, generated: [ENTRY] }), []);
+});
+
+test('validateGenerationManifest: non-object and empty shapes rejected', () => {
+  assert.deepEqual(validateGenerationManifest(null), ['generation manifest must be an object']);
+  assert.deepEqual(validateGenerationManifest({}), [
+    'schemaVersion must be 1 (got undefined)',
+    'generated must be a non-empty array',
+  ]);
+});
+
+test('validateGenerationManifest: bad entries report per field', () => {
+  const manifest = {
+    schemaVersion: 1,
+    generated: [
+      { ...ENTRY, path: '/abs/path', templateVersion: 'v1', sha256: 'beef' },
+      { ...ENTRY, path: '.claude/../escape.md' },
+      'not-an-entry',
+    ],
+  };
+  assert.deepEqual(validateGenerationManifest(manifest), [
+    'generated[0].path must be root-relative without ".." (got /abs/path)',
+    'generated[0].templateVersion must be semver x.y.z (got v1)',
+    'generated[0].sha256 must be a 64-char lowercase hex digest',
+    'generated[1].path must be root-relative without ".." (got .claude/../escape.md)',
+    'generated[2] must be an object',
+  ]);
+});
+
+test('validateGenerationManifest: duplicate paths rejected', () => {
+  assert.deepEqual(validateGenerationManifest({ schemaVersion: 1, generated: [ENTRY, { ...ENTRY }] }), [
+    'generated: duplicate path ".claude/agents/api-engineer.md"',
+  ]);
+});
+
+// ── D1: seeded maxi-repo tasks.md ───────────────────────────────────────────
+
+test('D1: maxi-repo fixture tasks.md parses and validates with 3 scoped backlog items', () => {
+  const text = readFileSync(join(import.meta.dirname, 'fixtures', 'maxi-repo', 'tasks.md'), 'utf8');
+  const { doc, errors } = parseTasksMd(text);
+  assert.deepEqual(errors, []);
+  assert.deepEqual(validateTaskBacklog(doc), []);
+  assert.deepEqual(doc.backlog.map((t) => t.scope.length), [1, 2, 3]);
 });
